@@ -5319,30 +5319,24 @@ window.HL_MAP = {
     updateTrDir();
     startLevel();          // 학습 패널 상태 준비
 
-    // [핵심 수정] 첫 접속 시 에러 방지를 위해 최소한의 빈 데이터(안전장치)를 세팅합니다.
-    if(!localStorage.getItem('eng_flashcards_today_v1')){
+    // [핵심 수정 1] 첫 접속 시 localStorage 데이터가 비어있어도 에러가 나서 화면이 깨지지 않도록 빈 기본값({})을 강제로 심어줍니다.
+    if(!localStorage.getItem('eng_flashcards_today_v1') || localStorage.getItem('eng_flashcards_today_v1') === 'null'){
       localStorage.setItem('eng_flashcards_today_v1', '{}');
     }
+    if(!localStorage.getItem('eng_flashcards_stats_v1')){
+      localStorage.setItem('eng_flashcards_stats_v1', '{}');
+    }
 
-    // 파이어베이스 로그인 여부를 즉시 체크합니다.
-    if(window.FB && window.FB.auth){
-      var user = window.FB.auth.currentUser;
-      if(user) {
-        // 1. 이미 로그인된 상태라면 안전하게 오늘의 학습을 보여줍니다.
-        section='today'; activePanel='today';
-        switchPanel();
-        try { openToday(); } catch(e) { console.error(e); }
-      } else {
-        // 2. 로그인이 안 된 상태라면 존재하지 않는 'auth' 대신, 
-        //    실제 구글 로그인 버튼이 존재하는 'options'(설정) 화면으로 보냅니다.
-        section='options'; activePanel='options';
-        switchPanel();
-        try { if(typeof renderOptions==='function') renderOptions(); } catch(e){}
-      }
-    } else {
-      // 파이어베이스가 아직 준비 안 됐다면 우선 설정 화면으로 안전하게 진입
-      section='options'; activePanel='options';
-      switchPanel();
+    // [핵심 수정 2] 무조건 '오늘의 학습'을 메인 첫 화면으로 안전하게 진입시킵니다.
+    section='today'; 
+    activePanel='today';   
+    switchPanel();
+
+    // 빈 데이터 구조가 확보되었으므로 이제 안심하고 오늘의 학습 화면을 렌더링합니다. (에러 발생 안 함)
+    try {
+      openToday();
+    } catch(e) {
+      console.error("초기 렌더링 우회:", e);
     }
 
   }catch(err){
