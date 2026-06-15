@@ -256,7 +256,8 @@
   .tr-loading{font-size:13px;color:var(--text2);margin-top:12px;display:none;}
   .tr-loading.show{display:block;}
 
-  .footer{margin-top:26px;font-size:12px;color:var(--text3);text-align:center;line-height:1.6;}
+  .footer{margin-top:18px;font-size:12px;color:var(--text3);text-align:center;line-height:1.4;}
+  .footer a{color:var(--text2);text-decoration:underline;}
 
   /* top tabs (오늘의 학습 / 통계 / 저장 관리) */
   .top-tabs{display:flex;justify-content:flex-start;gap:8px;margin-bottom:8px;flex-wrap:wrap;}
@@ -445,6 +446,8 @@
   .acct-btn{flex:1;border:1px solid var(--border);background:var(--surface2);color:var(--text);
     border-radius:11px;padding:11px 12px;font-size:13.5px;font-weight:700;cursor:pointer;}
   .acct-btn.primary{background:var(--indigo);color:#fff;border-color:transparent;}
+  .acct-line{font-size:13px;color:var(--text);margin-bottom:3px;line-height:1.5;}
+  .acct-line .acct-lab{display:inline-block;min-width:84px;font-size:11.5px;font-weight:700;color:var(--text3);}
   /* ===== Chunks ===== */
   .chunk-head{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
   .chunk-prog-wrap{flex:1;min-width:0;}
@@ -738,7 +741,7 @@
   </div>
 
   <div class="footer">
-    © 2026 Zero. All rights reserved.
+    For questions or requests, contact <a href="mailto:mintae.kim0827@gmail.com">mintae.kim0827@gmail.com</a>
   </div>
 </div>
 
@@ -4208,10 +4211,16 @@ window.HL_MAP = {
       return;
     }
 
+    var GOOGLE_ICON = '<svg viewBox="0 0 24 24" width="15" height="15" style="vertical-align:-2px;"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.84 14.1a6.6 6.6 0 0 1 0-4.2V7.06H2.18a11 11 0 0 0 0 9.88l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z"/></svg>';
     var u = window.AUTH.currentUser && window.AUTH.currentUser();
     if(u){
-      var who = u.isGuest ? '게스트로 로그인됨' : ('구글 계정: '+(u.name||u.email||'로그인됨'));
-      dsc.innerHTML = who + (u.isGuest ? '<br>게스트 기록은 이 브라우저에만 남아요. 구글 로그인하면 클라우드에 안전하게 보관돼요.' : '<br>이 계정으로 다른 기기에서도 같은 기록을 볼 수 있어요.');
+      if(u.isGuest){
+        dsc.innerHTML = '게스트로 로그인됨<br>게스트 기록은 이 브라우저에만 남아요. 구글 로그인하면 클라우드에 안전하게 보관돼요.';
+      } else {
+        var acct = (u.email||'') + (u.name ? (' / '+u.name) : '');
+        dsc.innerHTML = '<div class="acct-line"><span class="acct-lab">로그인 방식</span> '+GOOGLE_ICON+' Google</div>'
+                      + '<div class="acct-line"><span class="acct-lab">로그인 계정명</span> '+escHtml(acct||'로그인됨')+'</div>';
+      }
       head.appendChild(dsc); sec.appendChild(head);
 
       var btnRow=document.createElement('div'); btnRow.style.display='flex'; btnRow.style.gap='8px';
