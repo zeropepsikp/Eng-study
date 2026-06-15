@@ -5287,7 +5287,7 @@ window.HL_MAP = {
   });
 
 
-  // ---------- init ----------
+// ---------- init ----------
   try{
     if(!LEVEL_DATA) throw new Error('표현 데이터를 불러오지 못했어요.');
     if(!STATS) throw new Error('통계 모듈을 불러오지 못했어요.');
@@ -5317,12 +5317,33 @@ window.HL_MAP = {
     })();
     
     updateTrDir();
-    startLevel();          // 학습 패널 상태 준비(기본 레벨)
-    
-    // [확인] 첫 접속 시 무조건 auth 화면을 로드하여 파이어베이스 인증 체크 결과를 대기합니다.
-    section='auth'; 
-    activePanel='auth';   
-    switchPanel();
+    startLevel();          // 학습 패널 상태 준비
+
+    // [핵심 수정] 첫 접속 시 에러 방지를 위해 최소한의 빈 데이터(안전장치)를 세팅합니다.
+    if(!localStorage.getItem('eng_flashcards_today_v1')){
+      localStorage.setItem('eng_flashcards_today_v1', '{}');
+    }
+
+    // 파이어베이스 로그인 여부를 즉시 체크합니다.
+    if(window.FB && window.FB.auth){
+      var user = window.FB.auth.currentUser;
+      if(user) {
+        // 1. 이미 로그인된 상태라면 안전하게 오늘의 학습을 보여줍니다.
+        section='today'; activePanel='today';
+        switchPanel();
+        try { openToday(); } catch(e) { console.error(e); }
+      } else {
+        // 2. 로그인이 안 된 상태라면 존재하지 않는 'auth' 대신, 
+        //    실제 구글 로그인 버튼이 존재하는 'options'(설정) 화면으로 보냅니다.
+        section='options'; activePanel='options';
+        switchPanel();
+        try { if(typeof renderOptions==='function') renderOptions(); } catch(e){}
+      }
+    } else {
+      // 파이어베이스가 아직 준비 안 됐다면 우선 설정 화면으로 안전하게 진입
+      section='options'; activePanel='options';
+      switchPanel();
+    }
 
   }catch(err){
     var c=document.getElementById('card-body');
