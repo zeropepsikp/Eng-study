@@ -513,7 +513,6 @@
   .cstat-dots .d.on{background:var(--green);}
 </style>
 
-<!--
 ================================================================================
   🔥 Firebase (구글 로그인 + 사용자별 클라우드 저장)  — 전부 무료 요금제로 동작
 ================================================================================
@@ -589,13 +588,14 @@
 
   // ② (A) 여기에 내 firebaseConfig 붙여넣기 ↓↓↓ (2번 단계에서 복사한 값)
   const firebaseConfig = {
-    apiKey: "여기에_내_apiKey",
-    authDomain: "여기에_내_authDomain",      // 예: my-english-app.firebaseapp.com
-    projectId: "여기에_내_projectId",
-    storageBucket: "여기에_내_storageBucket",
-    messagingSenderId: "여기에_내_messagingSenderId",
-    appId: "여기에_내_appId"
-  };
+  apiKey: "AIzaSyAoZbOuVwyP0mSGLAHbbKgwgF35WzvWOAE",
+  authDomain: "zero-engapp.firebaseapp.com",
+  projectId: "zero-engapp",
+  storageBucket: "zero-engapp.firebasestorage.app",
+  messagingSenderId: "282005572728",
+  appId: "1:282005572728:web:59aae39f9e25c73fa1718d",
+  measurementId: "G-CL4ENWNQPW"
+};
 
   // ③ 초기화 + 다른 스크립트에서 쓸 수 있게 window에 노출
   const app  = initializeApp(firebaseConfig);
@@ -619,7 +619,7 @@
 ================================================================================
   여기까지가 <head>에 들어가는 Firebase SDK/config 부분 (주석 해제 대상)
 ================================================================================
--->
+
 
 </head>
 <body>
@@ -5206,7 +5206,6 @@ window.HL_MAP = {
     return '<ul>'+notes.slice(0,7).map(function(n){return '<li>'+n+'</li>';}).join('')+'</ul>';
   }
 
-/*
 ================================================================================
   🔥 [FIREBASE LOGIC]  — 로그인 상태 관리 + 사용자별 클라우드 동기화
 ================================================================================
@@ -5353,7 +5352,6 @@ window.HL_MAP = {
 ================================================================================
   여기까지가 [FIREBASE LOGIC] 블록 (주석 해제 대상)
 ================================================================================
-*/
 
   // ---------- init ----------
   try{
