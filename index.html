@@ -5144,28 +5144,7 @@ window.HL_MAP = {
     return '<ul>'+notes.slice(0,7).map(function(n){return '<li>'+n+'</li>';}).join('')+'</ul>';
   }
 
-================================================================================
-  🔥 [FIREBASE LOGIC]  — 로그인 상태 관리 + 사용자별 클라우드 동기화
-================================================================================
-  이 블록은 <head>의 Firebase SDK 블록과 "세트"입니다.
-  둘 다 주석을 풀어야 동작합니다. (head 블록 먼저, 그다음 이 블록)
 
-  하는 일:
-   · 구글 로그인 / 게스트(익명) 로그인 / 로그아웃 을 window.AUTH 로 제공
-   · 같은 기기에서는 로그인 자동 유지 (head의 browserLocalPersistence)
-   · 로그인하면: 클라우드(Firestore)의 내 기록을 불러와 이 기기와 "병합"
-   · 학습 중 기록이 바뀔 때마다: 클라우드에 자동 저장(디바운스 1.5초)
-   · 설정 > 옵션의 계정 섹션 UI(renderAccountSection)와 연결됨
-
-  저장 대상(이 앱이 쓰는 localStorage 키 전부):
-    - eng_flashcards_stats_v1     (레벨/오늘의학습 정답 기록)
-    - eng_flashcards_reallife_on  (Real-Life 출제 on/off)
-    - eng_flashcards_today_v1     (오늘의 학습 진행 세션)
-    - eng_chunks_progress_v1      (청크 streak 진행)
-  → 이 키들을 한 사용자 문서(users/{uid})에 통째로 저장/복원합니다.
-
-  주석 해제 방법: 이 블록을 감싼 슬래시-별표 / 별표-슬래시 한 쌍만 지우면 됩니다.
-  ──────────────────────────────────────────────────────────────────────────
 
   // 동기화할 localStorage 키 목록 (위 4개)
   var SYNC_KEYS = [
