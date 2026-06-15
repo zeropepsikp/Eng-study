@@ -2367,7 +2367,6 @@ var CHUNK_DATA = {
     blurb: "내가 뭘 하려는지 말하는 틀. 회화에서 가장 자주 쓰는 부품이에요.",
     color: "info",
     chunks: [
-      {en:"I want to", ko:"~하고 싶어", ex:[{en:"I want to go home.",ko:"집에 가고 싶어."},{en:"I want to try this.",ko:"이거 해보고 싶어."}]},
       {en:"I don't want to", ko:"~하기 싫어", ex:[{en:"I don't want to wait.",ko:"기다리기 싫어."}]},
       {en:"I'd like to", ko:"~하고 싶은데요 (공손)", ex:[{en:"I'd like to order.",ko:"주문하고 싶은데요."},{en:"I'd like to ask something.",ko:"뭐 좀 묻고 싶은데요."}]},
       {en:"I need to", ko:"~해야 해 (필요)", ex:[{en:"I need to leave now.",ko:"지금 가야 해."},{en:"I need to check it.",ko:"확인해봐야 해."}]},
@@ -2383,7 +2382,6 @@ var CHUNK_DATA = {
       {en:"I used to", ko:"예전엔 ~했었어", ex:[{en:"I used to live there.",ko:"예전엔 거기 살았어."}]},
       {en:"I'm not ready to", ko:"아직 ~할 준비가 안 됐어", ex:[{en:"I'm not ready to decide.",ko:"아직 결정 못 하겠어."}]},
       {en:"Let me", ko:"내가 ~할게 / ~하게 해줘", ex:[{en:"Let me check.",ko:"내가 확인해볼게."},{en:"Let me think.",ko:"생각 좀 해볼게."}]},
-      {en:"Let's", ko:"~하자", ex:[{en:"Let's go.",ko:"가자."},{en:"Let's talk later.",ko:"나중에 얘기하자."}]},
       {en:"I'll just", ko:"그냥 ~할게", ex:[{en:"I'll just wait here.",ko:"그냥 여기서 기다릴게."}]},
       {en:"I might", ko:"~할지도 몰라", ex:[{en:"I might be late.",ko:"늦을지도 몰라."}]},
       {en:"I was about to say", ko:"막 ~라고 말하려던 참이었어", ex:[{en:"I was about to say that.",ko:"막 그 말 하려던 참이었어."}]}
@@ -4579,6 +4577,23 @@ window.HL_MAP = {
   }
 
 
+  // 청크 예시 풀: 표현당 최대 10개(CHUNK_EX10) → 없으면 기존 ex 사용
+  function chunkExPool(ch){
+    var p = (window.CHUNK_EX10 && ch && CHUNK_EX10[ch.en]) ? CHUNK_EX10[ch.en] : null;
+    if(p && p.length) return p;
+    return (ch && ch.ex) ? ch.ex : [];
+  }
+  // 풀에서 서로 다른 2개 인덱스를 무작위로 (가능하면 직전 조합과 다르게)
+  function pickTwoEx(n, prev){
+    if(n<=1) return [0];
+    if(n===2) return [0,1];
+    var a,b,tries=0;
+    do{ a=Math.floor(Math.random()*n); b=Math.floor(Math.random()*n); tries++; }
+    while((a===b || (prev && prev.length===2 && ((a===prev[0]&&b===prev[1])||(a===prev[1]&&b===prev[0])))) && tries<60);
+    if(a===b) b=(a+1)%n;
+    return [a,b];
+  }
+
   function renderChunk(){
     var wrap=$('chunk-card-wrap'); if(!wrap) return;
     var cat=curChunkCat, d=CHUNK_DATA[cat];
@@ -4633,7 +4648,7 @@ window.HL_MAP = {
         var ko=document.createElement('div'); ko.className='chunk-ko'; ko.textContent=ch.ko;
         body.appendChild(lab); body.appendChild(ko);
         var fh=document.createElement('div'); fh.className='chunk-fliphint';
-        fh.textContent = item.graded ? 'Tap to see the chunk again' : '먼저 머릿속(또는 입모양)으로 만들어 보세요';
+        fh.textContent = item.graded ? 'Tap to see the chunk again' : 'Tap to see the chunk';
         body.appendChild(fh);
       } else {
         var lab2=document.createElement('div'); lab2.className='chunk-side'; lab2.style.color=col.fg; lab2.textContent='English chunk';
@@ -4642,24 +4657,35 @@ window.HL_MAP = {
         enRow.appendChild(en); enRow.appendChild(spkBtn(ch.en,'mini'));
         var cHint=chunkHintBtn(ch.en, cat); if(cHint) enRow.appendChild(cHint);
         body.appendChild(lab2); body.appendChild(enRow);
-        // substitution 예시
-        if(ch.ex && ch.ex.length){
-          var ex=document.createElement('div'); ex.className='chunk-ex';
-          ch.ex.forEach(function(e){
-            var row=document.createElement('div'); row.className='ex-item';
-            var rowTop=document.createElement('div'); rowTop.style.display='flex'; rowTop.style.alignItems='center'; rowTop.style.gap='6px';
-            var enL=document.createElement('div'); enL.className='ex-en'; enL.style.flex='1'; enL.textContent=e.en;
-            rowTop.appendChild(enL); rowTop.appendChild(spkBtn(e.en,'small'));
-            var koL=document.createElement('div'); koL.className='ex-ko'; koL.textContent=e.ko;
-            row.appendChild(rowTop); row.appendChild(koL);
-            ex.appendChild(row);
-          });
-          body.appendChild(ex);
+        // 예시: 표현당 최대 10개 풀에서 항상 2개를 무작위 노출 + '다른 예시' 버튼 (오늘의 학습 정답카드와 통일)
+        var pool=chunkExPool(ch);
+        if(pool && pool.length){
+          if(!item.exPick || !item.exPick.length){ item.exPick=pickTwoEx(pool.length, null); }
+          var exBlock=document.createElement('div'); exBlock.className='ex-block'; exBlock.style.display='block'; exBlock.style.marginTop='12px';
+          var exHead=document.createElement('div'); exHead.className='ex-head';
+          var exLab=document.createElement('span'); exLab.className='lab'; exLab.textContent='Examples';
+          var exRf=document.createElement('button'); exRf.className='refresh-ex'; exRf.innerHTML='↻ 다른 예시';
+          exRf.addEventListener('click',function(ev){ ev.stopPropagation(); item.exPick=pickTwoEx(pool.length, item.exPick); paintChunkEx(); });
+          exHead.appendChild(exLab); exHead.appendChild(exRf);
+          exBlock.appendChild(exHead);
+          var exList=document.createElement('div'); exList.className='ex-list';
+          exBlock.appendChild(exList);
+          function paintChunkEx(){
+            exList.innerHTML='';
+            item.exPick.forEach(function(idx){
+              var e=pool[idx]; if(!e) return;
+              var row=document.createElement('div'); row.className='ex-item';
+              var txt=document.createElement('div'); txt.style.flex='1';
+              var enL=document.createElement('div'); enL.className='ex-en'; enL.textContent=e.en;
+              var koL=document.createElement('div'); koL.className='ex-ko'; koL.textContent=e.ko;
+              txt.appendChild(enL); txt.appendChild(koL);
+              row.appendChild(txt); row.appendChild(spkBtn(e.en,'small'));
+              exList.appendChild(row);
+            });
+          }
+          paintChunkEx();
+          body.appendChild(exBlock);
         }
-        // 무성 조음 안내
-        var art=document.createElement('div'); art.className='chunk-articulate';
-        art.innerHTML='🤫 소리 내지 말고 <b>입모양만</b>으로 이 덩어리를 3번 — 생각 없이 나올 때까지.';
-        body.appendChild(art);
         var fh2=document.createElement('div'); fh2.className='chunk-fliphint'; fh2.textContent='Tap for Korean';
         body.appendChild(fh2);
       }
