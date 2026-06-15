@@ -184,7 +184,7 @@
   .spk.small svg{width:15px;height:15px;}
 
   /* nav buttons */
-  .nav{display:flex;gap:8px;margin-top:16px;}
+  .nav{display:flex;gap:8px;margin-top:8px;}
   .nav button{flex:1 1 0;padding:13px 8px;border-radius:12px;
     border:none;background:var(--surface2);color:var(--text2);font-weight:600;
     font-size:14px;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .15s;}
@@ -278,7 +278,7 @@
   .speak-toggle.on .st-knob::after{left:15px;}
 
   /* 말하기/적기 입력 줄 */
-  .speak-wrap{margin-top:14px;width:100%;flex:1 1 100%;}
+  .speak-wrap{margin-top:5px;width:100%;flex:1 1 100%;}
   .speak-input{width:100%;box-sizing:border-box;padding:14px 16px;border-radius:12px;
     border:1.5px solid var(--border2);background:var(--surface);color:var(--text);
     font-size:16px;font-family:var(--font);outline:none;transition:border-color .15s;}
@@ -298,13 +298,18 @@
   .speak-dunno{background:var(--coral-bg);color:var(--coral);font-weight:600;}
   .speak-dunno:hover{filter:brightness(0.97);}
   .speak-hint{display:block;width:100%;font-size:12px;color:var(--text3);margin-top:8px;text-align:center;}
-  .speak-result{margin-top:14px;padding:14px;border-radius:12px;text-align:center;
-    font-size:15px;font-weight:700;}
+  .speak-result{margin-top:5px;width:100%;box-sizing:border-box;
+    padding:6px 12px;border-radius:10px;text-align:left;
+    font-size:14px;font-weight:600;line-height:1.35;
+    display:flex;align-items:center;gap:7px;
+    flex-wrap:nowrap;white-space:nowrap;overflow:hidden;}
+  .speak-result .sr-tag{font-weight:800;flex:0 0 auto;}
   .speak-result.correct{background:var(--green-bg);color:var(--green);}
   .speak-result.wrong{background:var(--coral-bg);color:var(--coral);}
-  .speak-your-answer{margin-top:9px;padding-top:9px;border-top:1px solid rgba(0,0,0,0.08);
-    font-size:14px;font-weight:600;color:var(--text);word-break:break-word;}
-  .ya-lab{display:inline-block;font-size:11px;font-weight:600;color:var(--text3);margin-right:6px;}
+  /* 입력이 길어도 높이 고정: 한 줄 유지 + 넘치면 말줄임(...) */
+  .speak-your-answer{font-size:13.5px;font-weight:600;color:var(--text);
+    flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .ya-lab{font-size:11px;font-weight:600;color:var(--text3);margin-right:5px;}
 
   /* 한글 + 미니 스피커 */
   .ko-row{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;}
@@ -2723,62 +2728,14 @@ window.HL_MAP = {
   }
   function save(){
     try{ localStorage.setItem(KEY, JSON.stringify(store)); }catch(e){}
-    scheduleFileSave();   // 파일이 연결돼 있으면 디바운스로 자동 기록
   }
   load();
 
-  // ---------- 연결된 파일에 자동 저장 (File System Access API) ----------
-  var fileHandle = null;       // 연결된 progress.json 핸들
-  var saveTimer = null;
-  var onFileStatus = null;     // UI 콜백
+  // ---------- 수동 내보내기/불러오기 (모든 브라우저) ----------
+  var onFileStatus = null;     // UI 상태 콜백
   function setFileStatusCb(cb){ onFileStatus = cb; }
   function notify(msg, ok){ if(onFileStatus) onFileStatus(msg, ok); }
   function serialize(){ return JSON.stringify(store, null, 0); }
-  function scheduleFileSave(){
-    if(!fileHandle) return;
-    if(saveTimer) clearTimeout(saveTimer);
-    saveTimer = setTimeout(writeFile, 1000);  // 마지막 변경 1초 뒤 1회 기록
-  }
-  async function writeFile(){
-    if(!fileHandle) return;
-    try{
-      var w = await fileHandle.createWritable();
-      await w.write(serialize());
-      await w.close();
-      notify('저장됨 · '+new Date().toLocaleTimeString(), true);
-    }catch(e){ notify('파일 저장 실패 (권한 확인)', false); }
-  }
-  function fileSupported(){
-    return typeof window!=='undefined' && 'showSaveFilePicker' in window && 'showOpenFilePicker' in window;
-  }
-  // 새 파일을 만들어 연결 (없으면 생성, 이후 자동 저장)
-  async function connectNewFile(){
-    if(!fileSupported()) { notify('이 브라우저는 파일 자동저장을 지원하지 않아요 (크롬·엣지 데스크톱).', false); return false; }
-    try{
-      fileHandle = await window.showSaveFilePicker({
-        suggestedName:'english_progress.json',
-        types:[{description:'JSON', accept:{'application/json':['.json']}}]
-      });
-      await writeFile();
-      notify('파일 연결됨 · 이제 자동 저장돼요', true);
-      return true;
-    }catch(e){ if(e && e.name!=='AbortError') notify('파일 연결 취소/실패', false); return false; }
-  }
-  // 기존 파일을 열어 연결 (불러오기 + 이후 자동 저장)
-  async function connectExistingFile(){
-    if(!fileSupported()) { notify('이 브라우저는 파일 연결을 지원하지 않아요.', false); return false; }
-    try{
-      var hs = await window.showOpenFilePicker({ types:[{description:'JSON', accept:{'application/json':['.json']}}], multiple:false });
-      fileHandle = hs[0];
-      var f = await fileHandle.getFile();
-      var txt = await f.text();
-      importFromText(txt);
-      notify('파일에서 불러옴 · 이제 자동 저장돼요', true);
-      return true;
-    }catch(e){ if(e && e.name!=='AbortError') notify('파일 열기 실패', false); return false; }
-  }
-
-  // ---------- 수동 내보내기/불러오기 (모든 브라우저) ----------
   function exportDownload(){
     try{
       var blob = new Blob([serialize()], {type:'application/json'});
@@ -2809,8 +2766,6 @@ window.HL_MAP = {
     r.onerror = function(){ notify('파일 읽기 실패', false); if(done) done(false); };
     r.readAsText(file);
   }
-  function isFileConnected(){ return !!fileHandle; }
-
   function cell(lv, ei, bi){
     var s = store.stats;
     s[lv] = s[lv] || {};
@@ -2980,9 +2935,7 @@ window.HL_MAP = {
     resetAll:resetAll, resetLevel:resetLevel, resetDaily:resetDaily,
     dailyAll:dailyAll, dailyFor:dailyFor, todayCount:todayCount, dailyTotals:dailyTotals, todayKey:todayKey,
     isDue:isDue, dueCount:dueCount,
-    // 파일 저장/불러오기
-    fileSupported:fileSupported, isFileConnected:isFileConnected,
-    connectNewFile:connectNewFile, connectExistingFile:connectExistingFile,
+    // 수동 내보내기/불러오기
     exportDownload:exportDownload, importFile:importFile, setFileStatusCb:setFileStatusCb,
     raw:function(){ return store.stats; }
   };
@@ -3554,15 +3507,15 @@ window.HL_MAP = {
     if(submitted){
       var res=document.createElement('div');
       res.className='speak-result '+(result==='ok'?'correct':'wrong');
-      var head=document.createElement('div');
-      head.innerHTML = (result==='ok') ? '✓ Correct!' : '✕ Incorrect. Check the answer.';
-      res.appendChild(head);
+      var tag=document.createElement('span'); tag.className='sr-tag';
+      tag.textContent = (result==='ok') ? '\u2713 Correct' : '\u2715 Incorrect';
+      res.appendChild(tag);
       if(userInput==='\u0000DUNNO'){
-        var dk=document.createElement('div'); dk.className='speak-your-answer';
+        var dk=document.createElement('span'); dk.className='speak-your-answer';
         dk.innerHTML='<span class="ya-lab">You pressed</span> Don\u2019t know';
         res.appendChild(dk);
       } else if(userInput){
-        var yours=document.createElement('div'); yours.className='speak-your-answer';
+        var yours=document.createElement('span'); yours.className='speak-your-answer';
         yours.innerHTML='<span class="ya-lab">You wrote</span> '+escHtml(userInput);
         res.appendChild(yours);
       }
@@ -4779,22 +4732,13 @@ window.HL_MAP = {
     wrap.innerHTML='';
     var box=document.createElement('div'); box.className='backup-box';
     var title=document.createElement('div'); title.className='backup-title';
-    title.innerHTML='💾 Save / Backup';
+    title.innerHTML='💾 Export / Import';
     box.appendChild(title);
     var desc=document.createElement('div'); desc.className='backup-desc';
+    desc.innerHTML='기록을 파일로 내보내거나, 내보낸 파일을 불러올 수 있어요.';
     box.appendChild(desc);
 
     var row=document.createElement('div'); row.className='backup-row';
-
-    if(STATS.fileSupported()){
-      var connBtn=document.createElement('button'); connBtn.className='backup-btn primary';
-      connBtn.textContent = STATS.isFileConnected() ? '✓ File linked (auto-saving)' : '📂 Link a file for auto-save';
-      connBtn.addEventListener('click',function(){ STATS.connectNewFile().then(function(){ renderBackup(); }); });
-      row.appendChild(connBtn);
-      desc.innerHTML='Once linked, every grade auto-saves to that <b>progress.json</b> (Chrome/Edge desktop).<br>Picking an existing file loads it and keeps auto-saving. The link resets on refresh, so re-link in a new session.';
-    } else {
-      desc.innerHTML='This device/browser doesn\'t support file auto-save (all mobile included). Use <b>Export/Import</b> below to move your records. Auto-save still works within this device.';
-    }
 
     var exp=document.createElement('button'); exp.className='backup-btn';
     exp.textContent='⬇ Export';
@@ -4815,11 +4759,6 @@ window.HL_MAP = {
     var status=document.createElement('div'); status.className='backup-status'; status.id='backup-status';
     box.appendChild(status);
     wrap.appendChild(box);
-
-    // 안내
-    var info=document.createElement('div'); info.className='acc-note';
-    info.innerHTML='Your records <b>auto-save</b> in this browser by default. The options above are for moving devices or backups.';
-    wrap.appendChild(info);
   }
 
   function renderOverall(wrap){
