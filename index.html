@@ -526,6 +526,16 @@
   .lb-txt b{font-size:14.5px;font-weight:800;}
   .lb-sub{font-size:11.5px;opacity:.92;line-height:1.4;}
   .lb-arrow{font-size:22px;flex:0 0 auto;opacity:.85;font-weight:700;}
+  /* 로그인 완료 시 작은 환영 바 */
+  .welcome-bar{display:flex;align-items:center;gap:8px;width:100%;
+    padding:8px 12px;margin-bottom:14px;border-radius:11px;
+    background:var(--surface2);border:1px solid var(--border);}
+  .wb-txt{flex:1;min-width:0;font-size:13px;font-weight:700;color:var(--text2);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .wb-logout{flex:0 0 auto;width:30px;height:30px;display:flex;align-items:center;justify-content:center;
+    border:none;background:transparent;color:var(--text3);cursor:pointer;border-radius:8px;}
+  .wb-logout:hover{color:var(--text);background:var(--seg);}
+  .wb-logout svg{width:17px;height:17px;}
 </style>
 
 <!-- 🔥 Firebase 활성화됨 (구글 로그인 + 사용자별 클라우드 저장). 설정/해제 안내는 README 참고. -->
@@ -583,6 +593,13 @@
     </span>
     <span class="lb-arrow" aria-hidden="true">›</span>
   </button>
+  <!-- 로그인 완료 시: 작은 환영 바 (구글 계정명 + 로그아웃) -->
+  <div class="welcome-bar" id="welcome-bar" style="display:none;">
+    <span class="wb-txt" id="wb-txt">Welcome</span>
+    <button class="wb-logout" id="wb-logout" aria-label="Sign out" title="Sign out">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    </button>
+  </div>
   <!-- 레벨별 학습: 헤더(제목 + 물음표 + 말하기 토글) — 서브탭 위 -->
   <div class="today-head" id="study-head" style="display:none;">
     <div class="study-head-left">
@@ -5282,10 +5299,13 @@ window.HL_MAP = {
   // 비로그인(게스트 포함)일 때만 상단 배너 표시. 클릭하면 구글 로그인 팝업.
   function updateLoginBanner(){
     var b = document.getElementById('login-banner');
+    var wb = document.getElementById('welcome-bar');
     if(!b) return;
     var u = _fbUser;
-    // 구글 계정으로 로그인된 경우에만 숨김. 미로그인 또는 게스트면 표시.
-    var needLogin = !u || u.isGuest;
+    var loggedInGoogle = u && !u.isGuest;   // 구글 계정 로그인 완료
+    var needLogin = !loggedInGoogle;        // 미로그인 또는 게스트면 로그인 권유
+
+    // 큰 로그인 카드
     b.style.display = needLogin ? 'flex' : 'none';
     if(needLogin && u && u.isGuest){
       b.querySelector('.lb-txt b').textContent = '게스트로 사용 중';
@@ -5294,10 +5314,21 @@ window.HL_MAP = {
       b.querySelector('.lb-txt b').textContent = '구글 로그인이 필요해요';
       b.querySelector('.lb-sub').textContent = '로그인하면 학습 기록이 저장되고 다른 기기에서도 이어집니다. 탭하여 로그인';
     }
+
+    // 작은 환영 바
+    if(wb){
+      wb.style.display = loggedInGoogle ? 'flex' : 'none';
+      if(loggedInGoogle){
+        var nm = (u.name || (u.email ? u.email.split('@')[0] : '') || 'there');
+        document.getElementById('wb-txt').textContent = 'Welcome, ' + nm + '!';
+      }
+    }
   }
-  (function wireLoginBanner(){
+  (function wireLoginBars(){
     var b = document.getElementById('login-banner');
     if(b){ b.addEventListener('click', function(){ window.AUTH.signInGoogle(); }); }
+    var lo = document.getElementById('wb-logout');
+    if(lo){ lo.addEventListener('click', function(){ window.AUTH.signOutUser(); }); }
   })();
 
   // 로그인 상태 변화 감지 → _fbUser 갱신 + 클라우드 동기화 + 설정 화면 갱신
