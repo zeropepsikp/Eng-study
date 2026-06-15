@@ -701,12 +701,6 @@
     <div id="stats-body"></div>
   </div>
 
-  <!-- BACKUP PANEL (설정 > 저장) -->
-  <div class="panel" id="panel-backup">
-    <div class="blurb">학습 기록을 파일로 백업하거나, 다른 기기로 옮길 수 있어요.</div>
-    <div id="backup-body"></div>
-  </div>
-
   <!-- OPTIONS PANEL (설정 > 옵션) -->
   <div class="panel" id="panel-options">
     <div class="section-title">Options</div>
@@ -3215,7 +3209,7 @@ window.HL_MAP = {
     if(sec==='today') openToday();
     else if(sec==='study') openLevel(curLevel);
     else if(sec==='chunks') openChunkCat(curChunkCat);
-    else if(sec==='settings'){ if(settingsSub==='backup') renderBackup(); else if(settingsSub==='options') renderOptions(); else renderStats(); }
+    else if(sec==='settings'){ if(settingsSub==='options') renderOptions(); else renderStats(); }
     window.scrollTo(0,0);
   }
 
@@ -3243,14 +3237,14 @@ window.HL_MAP = {
   // 설정: 상단 서브탭 (통계 / 저장)
   function buildSettingsSubtabs(){
     settingsSubtabs.innerHTML='';
-    [['stats','Stats'],['options','Options'],['backup','Backup']].forEach(function(s){
+    [['stats','Stats'],['options','Options']].forEach(function(s){
       var b=document.createElement('button');
       b.className='subtab'+(settingsSub===s[0]?' active':'');
       b.textContent=s[1];
       b.addEventListener('click',function(){
         settingsSub=s[0]; activePanel=s[0];
         switchPanel();
-        if(s[0]==='backup') renderBackup(); else if(s[0]==='options') renderOptions(); else renderStats();
+        if(s[0]==='options') renderOptions(); else renderStats();
       });
       settingsSubtabs.appendChild(b);
     });
@@ -3281,7 +3275,6 @@ window.HL_MAP = {
     $('panel-translate').classList.toggle('show', activePanel==='translate');
     $('panel-today').classList.toggle('show', activePanel==='today');
     $('panel-stats').classList.toggle('show', activePanel==='stats');
-    $('panel-backup').classList.toggle('show', activePanel==='backup');
     $('panel-options').classList.toggle('show', activePanel==='options');
     $('panel-chunks').classList.toggle('show', activePanel==='chunks');
     // 서브탭 표시 여부
@@ -4208,6 +4201,7 @@ window.HL_MAP = {
       dsc.textContent='지금은 이 기기에만 저장돼요. Firebase 설정을 마치면 구글 로그인으로 여러 기기에서 기록을 동기화할 수 있어요.';
       head.appendChild(dsc); sec.appendChild(head);
       wrap.appendChild(sec);
+      renderExportImport(wrap);
       return;
     }
 
@@ -4245,6 +4239,8 @@ window.HL_MAP = {
       sec.appendChild(btnRow2);
     }
     wrap.appendChild(sec);
+    // 계정 섹션 아래에 Export/Import 카드
+    renderExportImport(wrap);
   }
 
   // ============================================================
@@ -4736,19 +4732,13 @@ window.HL_MAP = {
     }
   }
 
-  function renderBackup(){
-    var wrap=$('backup-body');
-    wrap.innerHTML='';
+  function renderExportImport(wrap){
     var box=document.createElement('div'); box.className='backup-box';
     var title=document.createElement('div'); title.className='backup-title';
     title.innerHTML='💾 Export / Import';
     box.appendChild(title);
-    var desc=document.createElement('div'); desc.className='backup-desc';
-    desc.innerHTML='기록을 파일로 내보내거나, 내보낸 파일을 불러올 수 있어요.';
-    box.appendChild(desc);
 
     var row=document.createElement('div'); row.className='backup-row';
-
     var exp=document.createElement('button'); exp.className='backup-btn';
     exp.textContent='⬇ Export';
     exp.addEventListener('click',function(){ STATS.exportDownload(); });
@@ -4758,7 +4748,7 @@ window.HL_MAP = {
     var impInput=document.createElement('input'); impInput.type='file'; impInput.accept='.json,application/json'; impInput.style.display='none';
     impInput.addEventListener('change',function(){
       if(impInput.files && impInput.files[0]){
-        STATS.importFile(impInput.files[0], function(ok){ if(ok){ renderBackup(); } });
+        STATS.importFile(impInput.files[0], function(ok){ if(ok && activePanel==='options'){ renderOptions(); } });
       }
     });
     impLabel.appendChild(impInput);
@@ -4767,6 +4757,9 @@ window.HL_MAP = {
     box.appendChild(row);
     var status=document.createElement('div'); status.className='backup-status'; status.id='backup-status';
     box.appendChild(status);
+    var note=document.createElement('div'); note.className='backup-desc'; note.style.marginTop='8px';
+    note.textContent='로그인을 원치 않으면 JSON 파일로 직접 내보내고 불러와 로컬에서 기록을 관리할 수 있어요.';
+    box.appendChild(note);
     wrap.appendChild(box);
   }
 
