@@ -528,8 +528,8 @@
   .lb-arrow{font-size:22px;flex:0 0 auto;opacity:.85;font-weight:700;}
   /* 로그인 완료 시 작은 환영 바 */
   .welcome-bar{display:flex;align-items:center;gap:8px;width:100%;
-    padding:8px 12px;margin-bottom:14px;border-radius:11px;
-    background:var(--surface2);border:1px solid var(--border);}
+    padding:2px 4px;margin-bottom:12px;
+    background:transparent;border:none;}
   .wb-txt{flex:1;min-width:0;font-size:13px;font-weight:700;color:var(--text2);
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .wb-logout{flex:0 0 auto;width:30px;height:30px;display:flex;align-items:center;justify-content:center;
@@ -2361,6 +2361,7 @@ window.LEVEL_DATA = LEVEL_DATA;
 var CHUNK_DATA = {
   1: {
     name: "Intentions",
+    abbr: "Intent",
     ko: "의도·하고싶다·해야한다",
     blurb: "내가 뭘 하려는지 말하는 틀. 회화에서 가장 자주 쓰는 부품이에요.",
     color: "info",
@@ -2390,6 +2391,7 @@ var CHUNK_DATA = {
 
   2: {
     name: "Opinions",
+    abbr: "Opinion",
     ko: "의견·생각·느낌",
     blurb: "내 생각·확신·감정을 꺼내는 틀. 대화를 '나' 중심으로 끌고 가는 부품이에요.",
     color: "green",
@@ -2421,6 +2423,7 @@ var CHUNK_DATA = {
 
   3: {
     name: "Questions",
+    abbr: "Ask",
     ko: "질문·요청·확인",
     blurb: "묻고 부탁하고 확인하는 틀. 대화의 공을 상대에게 넘기는 부품이에요.",
     color: "amber",
@@ -2454,6 +2457,7 @@ var CHUNK_DATA = {
 
   4: {
     name: "Reactions",
+    abbr: "React",
     ko: "맞장구·반응·추임새",
     blurb: "대화를 끊기지 않게 굴리는 짧은 반응들. 거의 통째로 입에 붙여야 하는 부품이에요.",
     color: "coral",
@@ -2493,6 +2497,7 @@ var CHUNK_DATA = {
 
   5: {
     name: "Connectors",
+    abbr: "Connect",
     ko: "연결·전환·흐름",
     blurb: "짧은 문장을 길게 잇고 말의 흐름을 만드는 부품. 이게 붙으면 말이 '문장'처럼 들려요.",
     color: "slate",
@@ -4371,7 +4376,7 @@ window.HL_MAP = {
       (function(c){
         var b=document.createElement('button');
         b.className='subtab'+(activePanel==='chunks' && String(curChunkCat)===String(c) ? ' active':'');
-        b.textContent=CHUNK_DATA[c].name;
+        b.textContent=CHUNK_DATA[c].abbr || CHUNK_DATA[c].name;
         b.title=CHUNK_DATA[c].ko;
         b.addEventListener('click',function(){
           activePanel='chunks'; section='chunks'; openChunkCat(c); switchPanel();
@@ -4951,7 +4956,7 @@ window.HL_MAP = {
         var on = String(statsChunkCat)===String(c);
         b.className='cstat-cat'+(on?' on':'');
         if(on){ b.style.background=col.fg; }
-        b.innerHTML=escHtml(d.name)+' <span class="cc-frac">'+st.learned+'/'+st.total+'</span>';
+        b.innerHTML=escHtml(d.abbr || d.name)+' <span class="cc-frac">'+st.learned+'/'+st.total+'</span>';
         b.addEventListener('click',function(){ statsChunkCat=c; renderStats(); });
         cats.appendChild(b);
       })(c);
