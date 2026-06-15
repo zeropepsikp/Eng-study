@@ -5142,6 +5142,7 @@ window.HL_MAP = {
 
 
   // 동기화할 localStorage 키 목록 (위 4개)
+// 동기화할 localStorage 키 목록 (위 4개)
   var SYNC_KEYS = [
     'eng_flashcards_stats_v1',
     'eng_flashcards_reallife_on',
@@ -5192,15 +5193,15 @@ window.HL_MAP = {
       var local = collectLocal();
       var merged = mergeData(local, cloud);
       applyToLocal(merged);
+      
       // 병합 결과를 바로 클라우드에도 올려 양쪽 일치
       return window.FB.setDoc(ref, merged, { merge:true }).then(function(){
-        // 화면 갱신 (현재 보고 있는 패널 다시 그림)
+        // [수정] 로그인/데이터 동기화가 성공했으므로 메인 화면('today')으로 상태를 변경하고 진입시킵니다.
+        section = 'today'; 
+        activePanel = 'today';
+        
         try{ if(typeof switchPanel==='function') switchPanel(); }catch(e){}
-        try{
-          if(activePanel==='today' && typeof renderToday==='function') renderToday();
-          else if(activePanel==='chunks' && typeof renderChunk==='function') renderChunk();
-          else if(activePanel==='stats' && typeof renderStats==='function') renderStats();
-        }catch(e){}
+        try{ if(typeof renderToday==='function') renderToday(); }catch(e){}
       });
     });
   }
@@ -5233,13 +5234,23 @@ window.HL_MAP = {
       });
     },
     signInGuest: function(){
-      window.FB.signInAnonymously(window.FB.auth).catch(function(e){
+      window.FB.signInAnonymously(window.FB.auth).then(function(){
+        // [추가] 게스트 로그인 성공 시 바로 메인 화면으로 진입시킵니다.
+        section = 'today';
+        activePanel = 'today';
+        if(typeof switchPanel==='function') switchPanel();
+        if(typeof renderToday==='function') renderToday();
+      }).catch(function(e){
         alert('게스트 로그인 실패: ' + (e && e.message ? e.message : e));
       });
     },
     signOutUser: function(){
       window.FB.signOut(window.FB.auth).then(function(){
-        // 로그아웃해도 이 기기의 localStorage 기록은 남겨둠(다음 로그인 시 병합).
+        // [수정] 로그아웃 시 사용자를 완전히 아웃시키고 초기 로그인(auth) 화면으로 돌려보냅/니다.
+        _fbUser = null;
+        section = 'auth';
+        activePanel = 'auth';
+        if(typeof switchPanel==='function') switchPanel();
         try{ if(typeof renderOptions==='function') renderOptions(); }catch(e){}
       });
     }
@@ -5254,9 +5265,23 @@ window.HL_MAP = {
         name: user.displayName,
         email: user.email
       };
-      if(!user.isAnonymous){ pullFromCloud(user.uid); }   // 구글 로그인 시 클라우드 병합
+      
+      if(!user.isAnonymous){ 
+        // 구글 로그인 사용자라면 데이터를 땡겨오고 렌더링 (pullFromCloud가 화면전환까지 처리)
+        pullFromCloud(user.uid); 
+      } else {
+        // 게스트 로그인 상태라면 오늘 화면으로 보냄
+        section = 'today';
+        activePanel = 'today';
+        if(typeof switchPanel==='function') switchPanel();
+        if(typeof renderToday==='function') renderToday();
+      }
     } else {
       _fbUser = null;
+      // 비로그인 상태일 때는 안전하게 로그인 창을 띄우고 홀딩
+      section = 'auth';
+      activePanel = 'auth';
+      if(typeof switchPanel==='function') switchPanel();
     }
     try{ if(activePanel==='options' && typeof renderOptions==='function') renderOptions(); }catch(e){}
   });
@@ -5290,11 +5315,15 @@ window.HL_MAP = {
         });
       }
     })();
+    
     updateTrDir();
     startLevel();          // 학습 패널 상태 준비(기본 레벨)
-    section='auth'; activePanel='auth';   // 첫 접속 = 오늘의 학습
+    
+    // [확인] 첫 접속 시 무조건 auth 화면을 로드하여 파이어베이스 인증 체크 결과를 대기합니다.
+    section='auth'; 
+    activePanel='auth';   
     switchPanel();
-    //openToday();
+
   }catch(err){
     var c=document.getElementById('card-body');
     if(c){ c.innerHTML='<div style="font-size:14px;color:var(--text2);line-height:1.6;text-align:center;">화면을 불러오는 중 문제가 생겼어요.<br>페이지를 새로고침해 주세요.<br><br><span style="font-size:11px;color:var(--text3);">('+(err&&err.message?err.message:'unknown')+')</span></div>'; }
