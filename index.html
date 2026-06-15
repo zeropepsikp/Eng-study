@@ -5385,9 +5385,9 @@ window.HL_MAP = {
     })();
     updateTrDir();
     startLevel();          // 학습 패널 상태 준비(기본 레벨)
-    section='today'; activePanel='today';   // 첫 접속 = 오늘의 학습
+    section='auth'; activePanel='auth';   // 첫 접속 = 오늘의 학습
     switchPanel();
-    openToday();
+    //openToday();
   }catch(err){
     var c=document.getElementById('card-body');
     if(c){ c.innerHTML='<div style="font-size:14px;color:var(--text2);line-height:1.6;text-align:center;">화면을 불러오는 중 문제가 생겼어요.<br>페이지를 새로고침해 주세요.<br><br><span style="font-size:11px;color:var(--text3);">('+(err&&err.message?err.message:'unknown')+')</span></div>'; }
