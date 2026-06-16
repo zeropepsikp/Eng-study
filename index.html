@@ -2058,23 +2058,6 @@ LEVEL_DATA[6] = {
       ]
     },
     {
-      pattern: "비례 (the more ~, the more ~)",
-      ko: "~할수록 더 ~해",
-      desc: "두 가지가 함께 변하는 비례 관계. 'the 비교급 ~, the 비교급 ~'.",
-      bank: [
-        {en:"The more I travel, the more I realize how little I know.", lit:"여행할수록 내가 얼마나 모르는지 더 깨닫는다.", free:"여행할수록 내가 얼마나 모르는지 깨달아."},
-        {en:"The more you practice, the easier it gets.", lit:"연습할수록 더 쉬워진다.", free:"연습할수록 쉬워져."},
-        {en:"The longer I waited, the more nervous I became.", lit:"오래 기다릴수록 더 긴장됐다.", free:"기다릴수록 더 긴장되더라."},
-        {en:"The more I learn, the more I want to know.", lit:"배울수록 더 알고 싶어진다.", free:"배울수록 더 알고 싶어져."},
-        {en:"The harder you try, the better the results.", lit:"더 열심히 할수록 결과가 더 좋다.", free:"열심히 할수록 결과가 좋아져."},
-        {en:"The more we talked, the closer we became.", lit:"이야기할수록 우리는 더 가까워졌다.", free:"얘기할수록 더 친해졌어."},
-        {en:"The colder it gets, the more I want to stay home.", lit:"추워질수록 집에 더 있고 싶어진다.", free:"추워질수록 집에만 있고 싶어."},
-        {en:"The more you give, the more you receive.", lit:"더 줄수록 더 받는다.", free:"줄수록 더 받게 돼."},
-        {en:"The busier I am, the more organized I have to be.", lit:"바쁠수록 더 체계적이어야 한다.", free:"바쁠수록 더 정리를 잘해야 해."},
-        {en:"The more I think about it, the less sense it makes.", lit:"생각할수록 더 말이 안 된다.", free:"생각할수록 더 말이 안 돼."}
-      ]
-    },
-    {
       pattern: "분사구문 + 결과 (Having ~, 주어 ~)",
       ko: "~해 와서, ~하게 됐어",
       desc: "분사구문으로 배경을 깔고 주절로 결론. 'Having ~한 채로, 나는 ~'.",
@@ -2400,7 +2383,6 @@ var CHUNK_DATA = {
       {en:"I guess", ko:"나 ~인가 봐 / 그런 듯", ex:[{en:"I guess so.",ko:"그런가 봐."},{en:"I guess you're busy.",ko:"바쁜가 보네."}]},
       {en:"I'm not sure", ko:"나 잘 모르겠어 / 확실치 않아", ex:[{en:"I'm not sure yet.",ko:"아직 잘 모르겠어."},{en:"I'm not sure if it's true.",ko:"사실인지 모르겠어."}]},
       {en:"I believe", ko:"나 ~라고 믿어 / 확신해", ex:[{en:"I believe you.",ko:"널 믿어."}]},
-      {en:"I feel like", ko:"나 ~인 느낌이야", ex:[{en:"I feel like it's too much.",ko:"너무 과한 느낌이야."}]},
       {en:"It seems like", ko:"~인 것 같아 (정황상)", ex:[{en:"It seems like a good idea.",ko:"좋은 생각 같아."}]},
       {en:"It looks like", ko:"~인 것 같아 (보기에)", ex:[{en:"It looks like rain.",ko:"비 올 것 같아."}]},
       {en:"In my opinion", ko:"내 생각엔", ex:[{en:"In my opinion, it's fine.",ko:"내 생각엔 괜찮아."}]},
@@ -2413,7 +2395,6 @@ var CHUNK_DATA = {
       {en:"I agree", ko:"나 동의해", ex:[{en:"I agree with you.",ko:"네 말에 동의해."}]},
       {en:"I don't mind", ko:"난 상관없어 / 괜찮아", ex:[{en:"I don't mind waiting.",ko:"기다려도 괜찮아."}]},
       {en:"It depends", ko:"상황에 따라 달라", ex:[{en:"It depends on the time.",ko:"시간에 따라 달라."}]},
-      {en:"That's why", ko:"그래서 ~인 거야", ex:[{en:"That's why I called.",ko:"그래서 전화한 거야."}]},
       {en:"The thing is", ko:"문제는/사실은 말이야", ex:[{en:"The thing is, I'm broke.",ko:"문제는, 나 돈이 없어."}]},
       {en:"What I mean is", ko:"내 말은 ~라는 거야", ex:[{en:"What I mean is, it's late.",ko:"내 말은, 너무 늦었다는 거야."}]},
       {en:"I'd say", ko:"나 ~인 것 같은데 (조심스레)", ex:[{en:"I'd say it's worth it.",ko:"그럴 가치 있는 것 같아."}]}
@@ -2466,7 +2447,6 @@ var CHUNK_DATA = {
       {en:"That makes sense.", ko:"그렇구나 / 말 되네.", ex:[]},
       {en:"No worries.", ko:"괜찮아 / 신경 쓰지 마.", ex:[]},
       {en:"Never mind.", ko:"아냐, 됐어.", ex:[]},
-      {en:"Of course.", ko:"당연하지.", ex:[]},
       {en:"Exactly.", ko:"바로 그거야 / 맞아.", ex:[]},
       {en:"I see.", ko:"아 그렇구나.", ex:[]},
       {en:"That's too bad.", ko:"저런, 아쉽다.", ex:[]},
@@ -2477,12 +2457,10 @@ var CHUNK_DATA = {
       {en:"Fair enough.", ko:"그럴 만하네 / 인정.", ex:[]},
       {en:"It's up to you.", ko:"네 마음대로 해.", ex:[]},
       {en:"Same here.", ko:"나도 그래.", ex:[]},
-      {en:"Me too.", ko:"나도.", ex:[]},
       {en:"Not really.", ko:"별로 / 딱히.", ex:[]},
       {en:"Kind of.", ko:"뭐 좀 그런 편이야.", ex:[]},
       {en:"I'm not sure about that.", ko:"그건 좀 모르겠는데.", ex:[]},
       {en:"Let me see.", ko:"어디 보자 / 글쎄.", ex:[]},
-      {en:"Hold on.", ko:"잠깐만.", ex:[]},
       {en:"Just a second.", ko:"잠깐만요.", ex:[]},
       {en:"Go ahead.", ko:"그렇게 해 / 먼저 해.", ex:[]},
       {en:"That works for me.", ko:"난 괜찮아 / 그걸로 돼.", ex:[]},
@@ -2490,7 +2468,6 @@ var CHUNK_DATA = {
       {en:"What a relief.", ko:"다행이다.", ex:[]},
       {en:"Take your time.", ko:"천천히 해.", ex:[]},
       {en:"I appreciate it.", ko:"고마워 (감사).", ex:[]},
-      {en:"My bad.", ko:"내 잘못이야 / 미안.", ex:[]}
     ]
   },
 
@@ -2591,7 +2568,6 @@ var CHUNK_ADDITIONS = {
     {en:"That's a relief.", ko:"다행이다.", ex:[]},
     {en:"Up to you.", ko:"네가 정해.", ex:[]},
     {en:"I'm on it.", ko:"바로 할게.", ex:[]},
-    {en:"No problem.", ko:"문제 없어.", ex:[]},
     {en:"Makes sense.", ko:"그렇네 / 이해돼.", ex:[]}
   ],
   5: [ // Connectors — 연결·전환·흐름 (조건·시간·관계절 등 구조적 부품)
@@ -2933,7 +2909,6 @@ window.HL_MAP = {
   "관계절로 명사 늘이기 (the ~ who/that ~)": { en:["\\bwho\\b","\\bthat\\b","\\bwhich\\b"], ko:["ㄴ ","하는","했던","해 준","사는"] },
   "완곡 + 이유 (I was wondering ~ since ~)": { en:["I was wondering","\\bsince\\b"], ko:["혹시","ㄹ 수 있을까","서요"] },
   "추측 + 부연 (must have ~, which ~)": { en:["must have","which"], ko:["나 봐","는데","구나"] },
-  "비례 (the more ~, the more ~)": { en:["The more","the more","the .*er","the less"], ko:["수록","ㄹ수록"] },
   "분사구문 + 결과 (Having ~, 주어 ~)": { en:["Having"], ko:["서 ","와서","봐서"] },
 
   // ---------- 상황별(7): 그 상황의 핵심 표현 머리말 강조 ----------
@@ -2953,16 +2928,16 @@ window.HL_MAP = {
   "완곡·반어 뉘앙스 (통암기)": { en:["not quite what I had in mind","I'm afraid","With all due respect","I see your point","could be better","Just what I needed","that's just perfect","Tell me about it","like that's ever","take your time"], ko:["다르","어려울","외람","알겠는데","별로","필요했","완벽","내 말","일어나기도","천천히"] }
 };
 
-// 레벨↔청크 상호 보완 (2차: 간접화법·선호·능력·will)
-var CHUNK_GAP_ADD2 = {"1":[{"en":"I can","ko":"나 ~할 수 있어","ex":[]},{"en":"I can't","ko":"나 ~ 못 해 / ~ 할 수 없어","ex":[]},{"en":"I'll","ko":"나 ~할게 / ~할래 (지금 정함)","ex":[]},{"en":"I won't","ko":"나 ~ 안 할 거야 / 절대 안 ~해","ex":[]}],"2":[{"en":"I like","ko":"나 ~ 좋아해 / ~하는 거 좋아","ex":[]},{"en":"I love","ko":"나 ~ 정말 좋아해","ex":[]},{"en":"I prefer","ko":"나 ~를 더 좋아해 (선호)","ex":[]},{"en":"I'm into","ko":"나 요즘 ~에 푹 빠졌어","ex":[]},{"en":"I'm not a fan of","ko":"나 ~ 별로 안 좋아해","ex":[]},{"en":"He said","ko":"걔가 ~라고 했어 (전달)","ex":[]},{"en":"She told me","ko":"걔가 나한테 ~라고 했어","ex":[]},{"en":"I heard that","ko":"~라고 들었어 / ~래","ex":[]},{"en":"They say","ko":"~라고들 해 / ~라더라","ex":[]}]};
+// 레벨↔청크 상호 보완 (2차: 간접화법·선호·will)
+var CHUNK_GAP_ADD2 = {"1":[{"en":"I'll","ko":"나 ~할게 / ~할래 (지금 정함)","ex":[]},{"en":"I won't","ko":"나 ~ 안 할 거야 / 절대 안 ~해","ex":[]}],"2":[{"en":"I prefer","ko":"나 ~를 더 좋아해 (선호)","ex":[]},{"en":"I'm into","ko":"나 요즘 ~에 푹 빠졌어","ex":[]},{"en":"I'm not a fan of","ko":"나 ~ 별로 안 좋아해","ex":[]},{"en":"He said","ko":"걔가 ~라고 했어 (전달)","ex":[]},{"en":"She told me","ko":"걔가 나한테 ~라고 했어","ex":[]},{"en":"I heard that","ko":"~라고 들었어 / ~래","ex":[]},{"en":"They say","ko":"~라고들 해 / ~라더라","ex":[]}]};
 for(var _g2 in CHUNK_GAP_ADD2){ if(CHUNK_DATA[_g2]) CHUNK_DATA[_g2].chunks = CHUNK_DATA[_g2].chunks.concat(CHUNK_GAP_ADD2[_g2]); }
 window.CHUNK_DATA = CHUNK_DATA;
 if(LEVEL_DATA[1]) LEVEL_DATA[1].exprs.push({"pattern":"능력·가능: I can + 동사원형 / I can't + 동사원형","ko":"나는 ~할 수 있어 / ~ 못 해","desc":"내가 할 수 있는지 없는지 말하는 틀. 평서문에서 'I can ~'(할 수 있다), 'I can't ~'(못 한다). 뒤엔 동사원형. (Can you~?의 질문형이 아니라 진술형이다.)","bank":[{"en":"I can speak three languages.","lit":"나는 세 개의 언어를 말할 수 있어.","free":"나 3개 국어 할 줄 알아."},{"en":"I can't swim very well.","lit":"나는 수영을 아주 잘하지는 못해.","free":"나 수영 그렇게 잘 못 해."},{"en":"I can drive, so I'll pick you up.","lit":"나는 운전할 수 있어서, 너를 데리러 갈게.","free":"나 운전할 줄 아니까 내가 데리러 갈게."},{"en":"I can't remember his name at all.","lit":"나는 그의 이름이 전혀 기억나지 않아.","free":"걔 이름이 도무지 기억이 안 나."},{"en":"I can fix this myself if you give me a few minutes.","lit":"나에게 몇 분만 주면 나는 이걸 직접 고칠 수 있어.","free":"몇 분만 주면 이거 내가 직접 고칠 수 있어."},{"en":"I can't eat spicy food, so I'll order something mild.","lit":"나는 매운 음식을 못 먹어서, 순한 걸로 주문할게.","free":"나 매운 거 못 먹어서 순한 걸로 시킬게."},{"en":"I can cook a few Korean dishes pretty well.","lit":"나는 몇 가지 한국 요리를 꽤 잘 만들 수 있어.","free":"나 한식 몇 개는 꽤 잘 만들어."},{"en":"I can't make it to the meeting tomorrow.","lit":"나는 내일 그 회의에 갈 수 없어.","free":"나 내일 회의 못 가."},{"en":"I can read the menu, but I can't understand the slang.","lit":"나는 메뉴는 읽을 수 있지만, 그 속어는 이해하지 못해.","free":"메뉴는 읽는데 그 슬랭은 못 알아듣겠어."},{"en":"I can't believe how fast this year has gone by.","lit":"나는 올해가 얼마나 빨리 지나갔는지 믿을 수가 없어.","free":"올해 진짜 너무 빨리 지나간 거 같아, 믿기지가 않아."}]});
-if(LEVEL_DATA[2]) LEVEL_DATA[2].exprs.push({"pattern":"좋아함·선호: I like ~ / I prefer A to B / I'm really into ~","ko":"~ 좋아해 / ~를 더 좋아해 (취향)","desc":"취향을 말하는 틀. 'I like + 명사/동사ing'(좋아해), 'I prefer A to B'(B보다 A가 더 좋아), 'I'm really into ~'(요즘 ~에 빠졌어).","bank":[{"en":"I like going for a walk after dinner.","lit":"나는 저녁 식사 후에 산책하러 가는 것을 좋아해.","free":"나 저녁 먹고 산책하는 거 좋아해."},{"en":"I prefer tea to coffee in the morning.","lit":"나는 아침에 커피보다 차를 더 좋아해.","free":"난 아침엔 커피보다 차가 더 좋더라."},{"en":"I'm really into hiking these days.","lit":"나는 요즘 등산에 정말 빠져 있어.","free":"나 요즘 등산에 완전 빠졌어."},{"en":"I like quiet cafes where I can read.","lit":"나는 책을 읽을 수 있는 조용한 카페를 좋아해.","free":"나 책 읽을 수 있는 조용한 카페 좋아해."},{"en":"I prefer staying in to going out on weekends.","lit":"나는 주말에 나가는 것보다 집에 있는 것을 더 좋아해.","free":"난 주말엔 나가는 것보다 집에 있는 게 더 좋아."},{"en":"I'm really into baking bread lately.","lit":"나는 요즘 빵 굽는 것에 정말 빠져 있어.","free":"나 요즘 빵 굽는 거에 푹 빠졌어."},{"en":"I like listening to old jazz records.","lit":"나는 오래된 재즈 음반을 듣는 것을 좋아해.","free":"나 옛날 재즈 음반 듣는 거 좋아해."},{"en":"I prefer the window seat to the aisle seat.","lit":"나는 통로 쪽 자리보다 창가 자리를 더 좋아해.","free":"난 복도 쪽보다 창가 자리가 더 좋아."},{"en":"I'm really into learning about space right now.","lit":"나는 지금 우주에 대해 배우는 것에 정말 빠져 있어.","free":"나 요즘 우주 공부하는 거에 완전 꽂혔어."},{"en":"I like cooking, but I prefer eating out to washing dishes.","lit":"나는 요리하는 것을 좋아하지만, 설거지하는 것보다 외식하는 것을 더 좋아해.","free":"요리는 좋아하는데, 설거지하느니 그냥 사 먹는 게 나아."}]}, {"pattern":"즉흥 결정·약속의 will: I'll ~ / I won't ~","ko":"(지금 정함) ~할게 / 안 ~할게","desc":"말하는 순간 정하는 결정이나 약속. 'I'll + 동사원형'(그럼 ~할게), 'I won't + 동사원형'(~ 안 할게/절대 안 해). 미리 짠 계획의 be going to와 달리 즉흥적이다.","bank":[{"en":"I'll get the door for you.","lit":"내가 너를 위해 문을 잡아 줄게.","free":"내가 문 잡아 줄게."},{"en":"I won't tell anyone, I promise.","lit":"나는 아무에게도 말하지 않을게, 약속해.","free":"아무한테도 말 안 할게, 약속해."},{"en":"It's raining, so I'll take a taxi.","lit":"비가 오니까, 나는 택시를 탈게.","free":"비 오네, 그냥 택시 탈게."},{"en":"I won't be late again, I swear.","lit":"나는 다시는 늦지 않을게, 맹세해.","free":"다신 안 늦을게, 진짜로."},{"en":"You look tired, I'll make us some coffee.","lit":"너 피곤해 보여, 내가 우리 커피 좀 탈게.","free":"너 피곤해 보인다, 내가 커피 타 줄게."},{"en":"I won't bother you while you're working.","lit":"나는 네가 일하는 동안 너를 방해하지 않을게.","free":"너 일하는 동안 안 건드릴게."},{"en":"Don't worry, I'll handle it.","lit":"걱정 마, 내가 그걸 처리할게.","free":"걱정 마, 내가 알아서 할게."},{"en":"I won't buy anything I don't really need this month.","lit":"나는 이번 달에 정말 필요하지 않은 건 아무것도 사지 않을게.","free":"이번 달엔 진짜 필요한 거 아니면 안 살래."},{"en":"Okay, I'll call you as soon as I land.","lit":"알겠어, 나는 착륙하자마자 너에게 전화할게.","free":"알았어, 도착하자마자 바로 전화할게."},{"en":"I won't forget your birthday this time.","lit":"나는 이번에는 네 생일을 잊지 않을게.","free":"이번엔 네 생일 안 까먹을게."}]});
+if(LEVEL_DATA[2]) LEVEL_DATA[2].exprs.push({"pattern":"선호: I prefer A to B / I'm really into ~","ko":"~를 더 좋아해 (선호·취향)","desc":"취향을 말하는 틀. 'I prefer A to B'(B보다 A가 더 좋아), 'I'm really into ~'(요즘 ~에 빠졌어).","bank":[{"en":"I prefer tea to coffee in the morning.","lit":"나는 아침에 커피보다 차를 더 좋아해.","free":"난 아침엔 커피보다 차가 더 좋더라."},{"en":"I'm really into hiking these days.","lit":"나는 요즘 등산에 정말 빠져 있어.","free":"나 요즘 등산에 완전 빠졌어."},{"en":"I prefer staying in to going out on weekends.","lit":"나는 주말에 나가는 것보다 집에 있는 것을 더 좋아해.","free":"난 주말엔 나가는 것보다 집에 있는 게 더 좋아."},{"en":"I'm really into baking bread lately.","lit":"나는 요즘 빵 굽는 것에 정말 빠져 있어.","free":"나 요즘 빵 굽는 거에 푹 빠졌어."},{"en":"I prefer the window seat to the aisle seat.","lit":"나는 통로 쪽 자리보다 창가 자리를 더 좋아해.","free":"난 복도 쪽보다 창가 자리가 더 좋아."},{"en":"I'm really into learning about space right now.","lit":"나는 지금 우주에 대해 배우는 것에 정말 빠져 있어.","free":"나 요즘 우주 공부하는 거에 완전 꽂혔어."}]}, {"pattern":"즉흥 결정·약속의 will: I'll ~ / I won't ~","ko":"(지금 정함) ~할게 / 안 ~할게","desc":"말하는 순간 정하는 결정이나 약속. 'I'll + 동사원형'(그럼 ~할게), 'I won't + 동사원형'(~ 안 할게/절대 안 해). 미리 짠 계획의 be going to와 달리 즉흥적이다.","bank":[{"en":"I'll get the door for you.","lit":"내가 너를 위해 문을 잡아 줄게.","free":"내가 문 잡아 줄게."},{"en":"I won't tell anyone, I promise.","lit":"나는 아무에게도 말하지 않을게, 약속해.","free":"아무한테도 말 안 할게, 약속해."},{"en":"It's raining, so I'll take a taxi.","lit":"비가 오니까, 나는 택시를 탈게.","free":"비 오네, 그냥 택시 탈게."},{"en":"I won't be late again, I swear.","lit":"나는 다시는 늦지 않을게, 맹세해.","free":"다신 안 늦을게, 진짜로."},{"en":"You look tired, I'll make us some coffee.","lit":"너 피곤해 보여, 내가 우리 커피 좀 탈게.","free":"너 피곤해 보인다, 내가 커피 타 줄게."},{"en":"I won't bother you while you're working.","lit":"나는 네가 일하는 동안 너를 방해하지 않을게.","free":"너 일하는 동안 안 건드릴게."},{"en":"Don't worry, I'll handle it.","lit":"걱정 마, 내가 그걸 처리할게.","free":"걱정 마, 내가 알아서 할게."},{"en":"I won't buy anything I don't really need this month.","lit":"나는 이번 달에 정말 필요하지 않은 건 아무것도 사지 않을게.","free":"이번 달엔 진짜 필요한 거 아니면 안 살래."},{"en":"Okay, I'll call you as soon as I land.","lit":"알겠어, 나는 착륙하자마자 너에게 전화할게.","free":"알았어, 도착하자마자 바로 전화할게."},{"en":"I won't forget your birthday this time.","lit":"나는 이번에는 네 생일을 잊지 않을게.","free":"이번엔 네 생일 안 까먹을게."}]});
 if(LEVEL_DATA[4]) LEVEL_DATA[4].exprs.push({"pattern":"전달·간접화법: He said (that) ~ / She told me ~ / I heard that ~","ko":"걔가 ~라고 했어 / ~라고 들었어","desc":"남의 말이나 들은 정보를 전하는 틀. 'He said (that) 주어+동사', 'She told me (that) ~', 'I heard that ~'. 전달할 때 보통 시제를 한 칸 과거로 옮긴다(말 → 했다).","bank":[{"en":"He said he was running a little late.","lit":"그는 자기가 조금 늦고 있다고 말했어.","free":"걔가 좀 늦는다고 했어."},{"en":"She told me she had already finished the report.","lit":"그녀는 자기가 이미 보고서를 끝냈다고 나에게 말했어.","free":"걔가 보고서는 벌써 다 끝냈다고 하더라."},{"en":"I heard that the new restaurant downtown is amazing.","lit":"나는 시내에 새로 생긴 식당이 끝내준다고 들었어.","free":"시내에 새로 생긴 식당 진짜 좋다더라."},{"en":"He said he didn't know anything about the change.","lit":"그는 그 변경에 대해 아무것도 모른다고 말했어.","free":"걔는 그 변경에 대해선 아무것도 모른다고 했어."},{"en":"She told me that she was thinking about moving abroad.","lit":"그녀는 해외로 이주하는 것을 생각 중이라고 나에게 말했어.","free":"걔가 해외로 이사 갈까 생각 중이라고 하더라."},{"en":"I heard that they canceled the concert because of the storm.","lit":"나는 폭풍 때문에 그들이 콘서트를 취소했다고 들었어.","free":"폭풍 때문에 콘서트 취소됐다고 들었어."},{"en":"He said he would call me back after lunch.","lit":"그는 점심 후에 나에게 다시 전화하겠다고 말했어.","free":"걔가 점심 먹고 다시 전화한다고 했어."},{"en":"She told me she had never been to Japan before.","lit":"그녀는 전에 일본에 가 본 적이 없다고 나에게 말했어.","free":"걔가 일본은 한 번도 안 가 봤다고 하더라."},{"en":"I heard that the company is planning to hire more people.","lit":"나는 그 회사가 더 많은 사람을 채용할 계획이라고 들었어.","free":"그 회사가 사람 더 뽑을 계획이라고 들었어."},{"en":"He said that the meeting had been moved to Friday.","lit":"그는 회의가 금요일로 옮겨졌다고 말했어.","free":"걔가 회의 금요일로 옮겨졌다고 하더라."}]});
 window.LEVEL_DATA = LEVEL_DATA;
 window.HL_MAP = window.HL_MAP || {};
-Object.assign(window.HL_MAP, {"능력·가능: I can + 동사원형 / I can't + 동사원형":{"en":["I can't","I can"],"ko":["할 수 있","못 해","못"]},"좋아함·선호: I like ~ / I prefer A to B / I'm really into ~":{"en":["I like","I prefer","into"],"ko":["좋아","더 좋","빠졌"]},"즉흥 결정·약속의 will: I'll ~ / I won't ~":{"en":["I won't","I'll"],"ko":["할게","안 "]},"전달·간접화법: He said (that) ~ / She told me ~ / I heard that ~":{"en":["said","told me","heard that"],"ko":["라고 했","라고 들","했어"]}});
+Object.assign(window.HL_MAP, {"능력·가능: I can + 동사원형 / I can't + 동사원형":{"en":["I can't","I can"],"ko":["할 수 있","못 해","못"]},"선호: I prefer A to B / I'm really into ~":{"en":["I prefer","really into","into"],"ko":["더 좋","빠졌","선호"]},"즉흥 결정·약속의 will: I'll ~ / I won't ~":{"en":["I won't","I'll"],"ko":["할게","안 "]},"전달·간접화법: He said (that) ~ / She told me ~ / I heard that ~":{"en":["said","told me","heard that"],"ko":["라고 했","라고 들","했어"]}});
 
 
 // ============================================================
