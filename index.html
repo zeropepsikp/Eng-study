@@ -3221,43 +3221,50 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       return ko.find(function(v){return v.default;}) || ko[0] || null;
     }
   }
-  // ===== 클라우드 TTS (선택) — 더 자연스러운 영어 발음 =====
-  // apiKey는 배포 시 GitHub Actions가 아래 자리표시자에 주입한다.
-  // 키가 비어있거나 더미('__'로 시작)면, 또는 호출이 실패하면 → 폰 기본 음성으로 재생.
-  // 키 노출 대비: Google API 키는 'HTTP 리퍼러 제한(Pages 도메인)' + 'Cloud Text-to-Speech API만 허용'으로 잠가서 쓸 것.
-  var TTS_CONFIG = {
-    provider: 'google',                 // 'google' | 'none'
-    apiKey: '__TTS_API_KEY__',          // ← Actions가 주입. 더미면 기본 음성 사용.
-    voice: 'en-US-Neural2-D',           // 예: en-US-Neural2-C/F(여성), -D(남성), 또는 en-US-Chirp3-HD-Charon 등
-    langCode: 'en-US',
-    rate: 0.96
-  };
-  function ttsKeyReady(){
-    var k = TTS_CONFIG.apiKey;
-    return TTS_CONFIG.provider !== 'none' && !!k && k.indexOf('__') !== 0 && k.length > 12;
-  }
-  var ttsCache = {};      // text -> data URL (재요청 방지)
+  // ===== 클라우드 TTS — 더 자연스러운 영어 발음 (Google Cloud TTS) =====
+  // 브라우저는 우리 사이트의 /api/tts(Cloudflare Pages Function)만 호출하고,
+  // 실제 Google API 키는 Cloudflare 환경변수(서버)에만 있어 노출되지 않는다.
+  // 함수가 없거나(예: GitHub Pages 미러) 호출이 실패하면 → 폰 기본 음성으로 폴백.
+  var TTS_CONFIG = { endpoint:'/api/tts', enabled:true, rate:0.96, fails:0 };
+  // 옵션 메뉴에서 고를 수 있는 영어 음성 목록 (서버 화이트리스트와 일치)
+  var TTS_VOICES = [
+    {id:'en-US-Neural2-F', label:'여성 A · 차분'},
+    {id:'en-US-Neural2-C', label:'여성 B · 밝음'},
+    {id:'en-US-Neural2-G', label:'여성 C · 부드러움'},
+    {id:'en-US-Neural2-D', label:'남성 A · 표준'},
+    {id:'en-US-Neural2-A', label:'남성 B · 또렷'},
+    {id:'en-US-Chirp3-HD-Aoede', label:'여성 HD · 자연(고품질)'},
+    {id:'en-US-Chirp3-HD-Charon', label:'남성 HD · 자연(고품질)'}
+  ];
+  var TTS_DEFAULT_VOICE = 'en-US-Neural2-F';
+  function ttsVoice(){ try{ return localStorage.getItem('ttsVoice') || TTS_DEFAULT_VOICE; }catch(e){ return TTS_DEFAULT_VOICE; } }
+  function setTtsVoice(v){ try{ localStorage.setItem('ttsVoice', v); }catch(e){} }
+  function ttsAvailable(){ return TTS_CONFIG.enabled; }
+
+  var ttsCache = {};      // "voice\ntext" -> objectURL (재요청 방지)
   var ttsAudio = null;    // 현재 재생 중인 Audio
-  function cloudSpeak(text, onErr){
+  function cloudSpeak(text, voice, onErr){
+    voice = voice || ttsVoice();
     function play(u){
       try{ if(ttsAudio){ ttsAudio.pause(); } }catch(e){}
       ttsAudio = new Audio(u);
       ttsAudio.play().catch(function(){ onErr(); });
     }
-    if(ttsCache[text]){ play(ttsCache[text]); return; }
+    var ck = voice + '\n' + text;
+    if(ttsCache[ck]){ play(ttsCache[ck]); return; }
     try{
-      var url = 'https://texttospeech.googleapis.com/v1/text:synthesize?key=' + encodeURIComponent(TTS_CONFIG.apiKey);
-      var body = { input:{text:text},
-                   voice:{languageCode:TTS_CONFIG.langCode, name:TTS_CONFIG.voice},
-                   audioConfig:{audioEncoding:'MP3', speakingRate:TTS_CONFIG.rate} };
-      fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)})
-        .then(function(r){ if(!r.ok) throw new Error('tts '+r.status); return r.json(); })
-        .then(function(j){ if(!j || !j.audioContent) throw new Error('no audio');
-          var u = 'data:audio/mp3;base64,' + j.audioContent;
-          ttsCache[text] = u; play(u);
-        })
-        .catch(function(){ onErr(); });
+      fetch(TTS_CONFIG.endpoint, {method:'POST', headers:{'Content-Type':'application/json'},
+                                  body:JSON.stringify({text:text, voice:voice})})
+        .then(function(r){ if(!r.ok) throw new Error('tts '+r.status); return r.blob(); })
+        .then(function(b){ var u=URL.createObjectURL(b); ttsCache[ck]=u; play(u); })
+        .catch(function(){ TTS_CONFIG.fails++; if(TTS_CONFIG.fails>=2) TTS_CONFIG.enabled=false; onErr(); });
     }catch(e){ onErr(); }
+  }
+  // 옵션 메뉴 미리듣기: 특정 음성으로 샘플 문장 재생(실패 시 기본 음성)
+  function previewVoice(voice){
+    var sample = "Hi! This is how I sound. Let's practice English together.";
+    if(ttsAvailable()) cloudSpeak(sample, voice, function(){ webSpeak(sample,'en'); });
+    else webSpeak(sample,'en');
   }
   // 폰 기본 음성(Web Speech) — 항상 사용 가능한 폴백
   function webSpeak(text, lang){
@@ -3274,9 +3281,9 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   }
   function speak(text, lang){
     // 영어는 클라우드 음성 우선, 실패하면 기본 음성. 한국어는 기본 음성.
-    if(lang !== 'ko' && ttsKeyReady()){
+    if(lang !== 'ko' && ttsAvailable()){
       try{ if('speechSynthesis' in window) window.speechSynthesis.cancel(); }catch(e){}
-      cloudSpeak(text, function(){ webSpeak(text, lang); });
+      cloudSpeak(text, null, function(){ webSpeak(text, lang); });
       return;
     }
     webSpeak(text, lang);
@@ -4480,9 +4487,51 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     row.appendChild(txt); row.appendChild(sw);
     wrap.appendChild(row);
 
+    // ===== 영어 발음 음성 선택 =====
+    renderVoiceSection(wrap);
+
     // ===== 계정(구글 로그인 / 게스트) 섹션 =====
     // window.AUTH 가 있으면(=Firebase 활성화) 실제 로그인 UI를, 없으면 안내만 표시.
     renderAccountSection(wrap);
+  }
+
+  function renderVoiceSection(wrap){
+    var sec=document.createElement('div'); sec.className='opt-row'; sec.style.flexDirection='column'; sec.style.alignItems='stretch';
+    var head=document.createElement('div'); head.className='opt-text';
+    var t=document.createElement('div'); t.className='opt-title'; t.textContent='🔊 영어 발음 음성';
+    var d=document.createElement('div'); d.className='opt-desc';
+    d.textContent='문장 듣기에 쓸 영어 음성을 고르세요. ▶로 미리 들어볼 수 있어요. (고품질 음성은 배포된 사이트에서 적용되고, 안 되면 폰 기본 음성으로 재생돼요.)';
+    head.appendChild(t); head.appendChild(d); sec.appendChild(head);
+
+    var cur=ttsVoice();
+    var list=document.createElement('div'); list.style.marginTop='10px'; list.style.display='flex'; list.style.flexDirection='column'; list.style.gap='6px';
+    TTS_VOICES.forEach(function(v){
+      var item=document.createElement('div');
+      item.style.display='flex'; item.style.alignItems='center'; item.style.gap='8px';
+      item.style.padding='9px 11px'; item.style.borderRadius='var(--radius)';
+      item.style.border='1px solid '+(v.id===cur?'var(--info)':'var(--border)');
+      item.style.background=(v.id===cur?'var(--info-bg)':'transparent');
+      item.style.cursor='pointer';
+
+      var dot=document.createElement('span');
+      dot.style.width='16px'; dot.style.height='16px'; dot.style.borderRadius='50%'; dot.style.flex='0 0 auto';
+      dot.style.border='2px solid '+(v.id===cur?'var(--info)':'var(--border)');
+      dot.style.background=(v.id===cur?'var(--info)':'transparent');
+
+      var lab=document.createElement('div'); lab.style.flex='1'; lab.style.fontSize='14px';
+      lab.textContent=v.label;
+      if(v.id===cur){ var b=document.createElement('span'); b.textContent=' · 사용 중'; b.style.color='var(--info)'; b.style.fontSize='12px'; lab.appendChild(b); }
+
+      var play=document.createElement('button'); play.className='spk small'; play.setAttribute('aria-label','미리듣기');
+      play.innerHTML='▶'; play.style.flex='0 0 auto';
+      play.addEventListener('click',function(ev){ ev.stopPropagation(); previewVoice(v.id); });
+
+      item.addEventListener('click',function(){ setTtsVoice(v.id); ttsAudio=null; renderOptions(); });
+      item.appendChild(dot); item.appendChild(lab); item.appendChild(play);
+      list.appendChild(item);
+    });
+    sec.appendChild(list);
+    wrap.appendChild(sec);
   }
 
   function renderAccountSection(wrap){
