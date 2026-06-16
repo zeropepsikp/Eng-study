@@ -3221,7 +3221,46 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       return ko.find(function(v){return v.default;}) || ko[0] || null;
     }
   }
-  function speak(text, lang){
+  // ===== 클라우드 TTS (선택) — 더 자연스러운 영어 발음 =====
+  // apiKey는 배포 시 GitHub Actions가 아래 자리표시자에 주입한다.
+  // 키가 비어있거나 더미('__'로 시작)면, 또는 호출이 실패하면 → 폰 기본 음성으로 재생.
+  // 키 노출 대비: Google API 키는 'HTTP 리퍼러 제한(Pages 도메인)' + 'Cloud Text-to-Speech API만 허용'으로 잠가서 쓸 것.
+  var TTS_CONFIG = {
+    provider: 'google',                 // 'google' | 'none'
+    apiKey: '__TTS_API_KEY__',          // ← Actions가 주입. 더미면 기본 음성 사용.
+    voice: 'en-US-Neural2-D',           // 예: en-US-Neural2-C/F(여성), -D(남성), 또는 en-US-Chirp3-HD-Charon 등
+    langCode: 'en-US',
+    rate: 0.96
+  };
+  function ttsKeyReady(){
+    var k = TTS_CONFIG.apiKey;
+    return TTS_CONFIG.provider !== 'none' && !!k && k.indexOf('__') !== 0 && k.length > 12;
+  }
+  var ttsCache = {};      // text -> data URL (재요청 방지)
+  var ttsAudio = null;    // 현재 재생 중인 Audio
+  function cloudSpeak(text, onErr){
+    function play(u){
+      try{ if(ttsAudio){ ttsAudio.pause(); } }catch(e){}
+      ttsAudio = new Audio(u);
+      ttsAudio.play().catch(function(){ onErr(); });
+    }
+    if(ttsCache[text]){ play(ttsCache[text]); return; }
+    try{
+      var url = 'https://texttospeech.googleapis.com/v1/text:synthesize?key=' + encodeURIComponent(TTS_CONFIG.apiKey);
+      var body = { input:{text:text},
+                   voice:{languageCode:TTS_CONFIG.langCode, name:TTS_CONFIG.voice},
+                   audioConfig:{audioEncoding:'MP3', speakingRate:TTS_CONFIG.rate} };
+      fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)})
+        .then(function(r){ if(!r.ok) throw new Error('tts '+r.status); return r.json(); })
+        .then(function(j){ if(!j || !j.audioContent) throw new Error('no audio');
+          var u = 'data:audio/mp3;base64,' + j.audioContent;
+          ttsCache[text] = u; play(u);
+        })
+        .catch(function(){ onErr(); });
+    }catch(e){ onErr(); }
+  }
+  // 폰 기본 음성(Web Speech) — 항상 사용 가능한 폴백
+  function webSpeak(text, lang){
     if(!('speechSynthesis' in window)) return;
     try{
       window.speechSynthesis.cancel();
@@ -3232,6 +3271,15 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       var v = pickVoice(lang); if(v) u.voice = v;
       window.speechSynthesis.speak(u);
     }catch(e){}
+  }
+  function speak(text, lang){
+    // 영어는 클라우드 음성 우선, 실패하면 기본 음성. 한국어는 기본 음성.
+    if(lang !== 'ko' && ttsKeyReady()){
+      try{ if('speechSynthesis' in window) window.speechSynthesis.cancel(); }catch(e){}
+      cloudSpeak(text, function(){ webSpeak(text, lang); });
+      return;
+    }
+    webSpeak(text, lang);
   }
   var SPK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a9 9 0 0 1 0 14"/></svg>';
   function spkBtn(text, cls){
