@@ -3242,12 +3242,13 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       return ko.find(function(v){return v.default;}) || ko[0] || null;
     }
   }
-  // ===== 클라우드 TTS — 더 자연스러운 영어 발음 (Google Cloud TTS) =====
+  // ===== 클라우드 TTS — 더 자연스러운 영어 발음 (OpenAI TTS) =====
   // 브라우저는 우리 사이트의 /api/tts(Cloudflare Pages Function)만 호출하고,
-  // 실제 Google API 키는 Cloudflare 환경변수(서버)에만 있어 노출되지 않는다.
-  // 함수가 없거나(예: GitHub Pages 미러) 호출이 실패하면 → 폰 기본 음성으로 폴백.
-  var TTS_CONFIG = { endpoint:'/api/tts', enabled:true, rate:0.96, fails:0 };
-  // 옵션 메뉴에서 고를 수 있는 영어 음성 목록 (OpenAI TTS · 서버 화이트리스트와 일치)
+  // 실제 OpenAI API 키는 Cloudflare 환경변수(서버)에만 있어 노출되지 않는다.
+  // 키가 비활성/없거나 호출 실패 시 → '무료 기본 음성'(폰 내장)으로 폴백.
+  var TTS_FREE = '__free__';                 // '무료 기본 음성'(Web Speech) 선택값
+  var TTS_CONFIG = { endpoint:'/api/tts', cloudOk:null, probing:false, rate:0.96 };  // cloudOk: null=미확인 / true / false
+  // 고품질 음성 목록 (OpenAI TTS · 서버 화이트리스트와 일치). 키가 실제로 작동할 때만 선택 가능.
   var TTS_VOICES = [
     {id:'alloy',   label:'Alloy · 중성 균형'},
     {id:'nova',    label:'Nova · 여성 경쾌'},
@@ -3258,20 +3259,37 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     {id:'ash',     label:'Ash · 남성 차분'},
     {id:'fable',   label:'Fable · 영국 억양'}
   ];
-  var TTS_DEFAULT_VOICE = 'alloy';
+  var TTS_DEFAULT_VOICE = TTS_FREE;          // 기본 선택 = 무료 기본 음성
+  var TTS_PROBE_VOICE = 'alloy';             // 키 활성 여부 확인용 음성
   function ttsVoice(){
     try{ var v = localStorage.getItem('ttsVoice');
-      if(v && TTS_VOICES.some(function(x){ return x.id===v; })) return v;   // 유효한(현 목록) 음성만
+      if(v === TTS_FREE) return TTS_FREE;
+      if(v && TTS_VOICES.some(function(x){ return x.id===v; })) return v;   // 유효한 클라우드 음성만
     }catch(e){}
-    return TTS_DEFAULT_VOICE;                                               // 옛 구글 보이스 등은 기본으로
+    return TTS_DEFAULT_VOICE;
   }
   function setTtsVoice(v){ try{ localStorage.setItem('ttsVoice', v); }catch(e){} }
-  function ttsAvailable(){ return TTS_CONFIG.enabled; }
+  function ttsAvailable(){ return TTS_CONFIG.cloudOk !== false; }   // 재생용: 모르면 시도(폴백 있음)
+  function ttsCloudReady(){ return TTS_CONFIG.cloudOk === true; }   // UI용: 확실히 될 때만 선택 허용
+  // 키가 실제로 작동하는지 한 번 확인(짧은 합성 시도). 결과는 세션 동안 캐시.
+  function probeTts(done){
+    if(TTS_CONFIG.cloudOk !== null){ if(done) done(); return; }
+    if(TTS_CONFIG.probing){ return; }
+    TTS_CONFIG.probing = true;
+    try{
+      fetch(TTS_CONFIG.endpoint, {method:'POST', headers:{'Content-Type':'application/json'},
+                                  body:JSON.stringify({text:'hi', voice:TTS_PROBE_VOICE})})
+        .then(function(r){ TTS_CONFIG.cloudOk = !!r.ok; })
+        .catch(function(){ TTS_CONFIG.cloudOk = false; })
+        .then(function(){ TTS_CONFIG.probing = false; if(done) done(); });
+    }catch(e){ TTS_CONFIG.cloudOk = false; TTS_CONFIG.probing = false; if(done) done(); }
+  }
 
   var ttsCache = {};      // "voice\ntext" -> objectURL (재요청 방지)
   var ttsAudio = null;    // 현재 재생 중인 Audio
   function cloudSpeak(text, voice, onErr){
     voice = voice || ttsVoice();
+    if(voice === TTS_FREE){ onErr(); return; }            // 무료 음성이면 클라우드 안 씀
     function play(u){
       try{ if(ttsAudio){ ttsAudio.pause(); } }catch(e){}
       ttsAudio = new Audio(u);
@@ -3283,15 +3301,15 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       fetch(TTS_CONFIG.endpoint, {method:'POST', headers:{'Content-Type':'application/json'},
                                   body:JSON.stringify({text:text, voice:voice})})
         .then(function(r){ if(!r.ok) throw new Error('tts '+r.status); return r.blob(); })
-        .then(function(b){ var u=URL.createObjectURL(b); ttsCache[ck]=u; play(u); })
-        .catch(function(){ TTS_CONFIG.fails++; if(TTS_CONFIG.fails>=2) TTS_CONFIG.enabled=false; onErr(); });
+        .then(function(b){ TTS_CONFIG.cloudOk=true; var u=URL.createObjectURL(b); ttsCache[ck]=u; play(u); })
+        .catch(function(){ TTS_CONFIG.cloudOk=false; onErr(); });
     }catch(e){ onErr(); }
   }
-  // 옵션 메뉴 미리듣기: 특정 음성으로 샘플 문장 재생(실패 시 기본 음성)
+  // 옵션 메뉴 미리듣기: 특정 음성으로 샘플 문장 재생
   function previewVoice(voice){
     var sample = "Hi! This is how I sound. Let's practice English together.";
-    if(ttsAvailable()) cloudSpeak(sample, voice, function(){ webSpeak(sample,'en'); });
-    else webSpeak(sample,'en');
+    if(voice === TTS_FREE){ webSpeak(sample,'en'); return; }
+    cloudSpeak(sample, voice, function(){ webSpeak(sample,'en'); });
   }
   // 폰 기본 음성(Web Speech) — 항상 사용 가능한 폴백
   function webSpeak(text, lang){
@@ -3307,10 +3325,11 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     }catch(e){}
   }
   function speak(text, lang){
-    // 영어는 클라우드 음성 우선, 실패하면 기본 음성. 한국어는 기본 음성.
-    if(lang !== 'ko' && ttsAvailable()){
+    // '무료 기본 음성' 선택 또는 한국어 또는 클라우드 불가 → 폰 기본 음성. 그 외 → 클라우드(실패 시 폴백).
+    var v = ttsVoice();
+    if(lang !== 'ko' && v !== TTS_FREE && ttsAvailable()){
       try{ if('speechSynthesis' in window) window.speechSynthesis.cancel(); }catch(e){}
-      cloudSpeak(text, null, function(){ webSpeak(text, lang); });
+      cloudSpeak(text, v, function(){ webSpeak(text, lang); });
       return;
     }
     webSpeak(text, lang);
@@ -4523,40 +4542,64 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   }
 
   function renderVoiceSection(wrap){
+    // 키 활성 여부 확인(미확인이면 한 번 검사 후 이 화면 다시 그림)
+    if(TTS_CONFIG.cloudOk === null){
+      probeTts(function(){ if(activePanel==='options' && typeof renderOptions==='function') renderOptions(); });
+    }
+    var cloudReady = ttsCloudReady();
+    var probing = (TTS_CONFIG.cloudOk === null);
+    var cur = ttsVoice();
+    // 클라우드가 안 되면 '무료 기본 음성'이 실제로 쓰이는 음성
+    var activeId = (cloudReady || cur===TTS_FREE) ? cur : TTS_FREE;
+
     var sec=document.createElement('div'); sec.className='opt-row'; sec.style.flexDirection='column'; sec.style.alignItems='stretch';
     var head=document.createElement('div'); head.className='opt-text';
     var t=document.createElement('div'); t.className='opt-title'; t.textContent='🔊 영어 발음 음성';
     var d=document.createElement('div'); d.className='opt-desc';
-    d.textContent='문장 듣기에 쓸 영어 음성을 고르세요. ▶로 미리 들어볼 수 있어요. (고품질 음성은 배포된 사이트에서 적용되고, 안 되면 폰 기본 음성으로 재생돼요.)';
+    d.textContent='문장 듣기에 쓸 영어 음성을 고르세요. 고품질 음성은 유료 키가 활성화돼 있을 때만 선택할 수 있어요.';
     head.appendChild(t); head.appendChild(d); sec.appendChild(head);
 
-    var cur=ttsVoice();
     var list=document.createElement('div'); list.style.marginTop='10px'; list.style.display='flex'; list.style.flexDirection='column'; list.style.gap='6px';
-    TTS_VOICES.forEach(function(v){
+
+    function makeItem(id, label, enabled){
+      var on = (id===activeId);
       var item=document.createElement('div');
       item.style.display='flex'; item.style.alignItems='center'; item.style.gap='8px';
       item.style.padding='9px 11px'; item.style.borderRadius='var(--radius)';
-      item.style.border='1px solid '+(v.id===cur?'var(--info)':'var(--border)');
-      item.style.background=(v.id===cur?'var(--info-bg)':'transparent');
-      item.style.cursor='pointer';
+      item.style.border='1px solid '+(on?'var(--info)':'var(--border)');
+      item.style.background=(on?'var(--info-bg)':'transparent');
+      item.style.cursor = enabled ? 'pointer' : 'default';
+      item.style.opacity = enabled ? '1' : '0.45';
 
       var dot=document.createElement('span');
       dot.style.width='16px'; dot.style.height='16px'; dot.style.borderRadius='50%'; dot.style.flex='0 0 auto';
-      dot.style.border='2px solid '+(v.id===cur?'var(--info)':'var(--border)');
-      dot.style.background=(v.id===cur?'var(--info)':'transparent');
+      dot.style.border='2px solid '+(on?'var(--info)':'var(--border)');
+      dot.style.background=(on?'var(--info)':'transparent');
 
-      var lab=document.createElement('div'); lab.style.flex='1'; lab.style.fontSize='14px';
-      lab.textContent=v.label;
-      if(v.id===cur){ var b=document.createElement('span'); b.textContent=' · 사용 중'; b.style.color='var(--info)'; b.style.fontSize='12px'; lab.appendChild(b); }
+      var lab=document.createElement('div'); lab.style.flex='1'; lab.style.fontSize='14px'; lab.textContent=label;
+      if(on){ var b=document.createElement('span'); b.textContent=' · 사용 중'; b.style.color='var(--info)'; b.style.fontSize='12px'; lab.appendChild(b); }
 
       var play=document.createElement('button'); play.className='spk small'; play.setAttribute('aria-label','미리듣기');
       play.innerHTML='▶'; play.style.flex='0 0 auto';
-      play.addEventListener('click',function(ev){ ev.stopPropagation(); previewVoice(v.id); });
+      play.disabled = !enabled;
+      if(enabled){ play.addEventListener('click',function(ev){ ev.stopPropagation(); previewVoice(id); }); }
 
-      item.addEventListener('click',function(){ setTtsVoice(v.id); ttsAudio=null; renderOptions(); });
+      if(enabled){ item.addEventListener('click',function(){ setTtsVoice(id); ttsAudio=null; renderOptions(); }); }
       item.appendChild(dot); item.appendChild(lab); item.appendChild(play);
-      list.appendChild(item);
-    });
+      return item;
+    }
+
+    // 1) 무료 기본 음성 (항상 선택 가능)
+    list.appendChild(makeItem(TTS_FREE, '무료 기본 음성 (폰 내장)', true));
+
+    // 2) 고품질 음성 구분선 + 상태
+    var sub=document.createElement('div'); sub.style.margin='10px 2px 2px'; sub.style.fontSize='12px'; sub.style.fontWeight='600'; sub.style.color='var(--text3)';
+    sub.textContent = '고품질 음성 (OpenAI) — ' + (probing ? '확인 중…' : (cloudReady ? '사용 가능' : '유료 키 비활성 (선택 불가)'));
+    list.appendChild(sub);
+
+    // 3) 클라우드 음성들 (키 활성 시에만 선택 가능)
+    TTS_VOICES.forEach(function(v){ list.appendChild(makeItem(v.id, v.label, cloudReady)); });
+
     sec.appendChild(list);
     wrap.appendChild(sec);
   }
