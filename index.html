@@ -2980,7 +2980,14 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   var onFileStatus = null;     // UI 상태 콜백
   function setFileStatusCb(cb){ onFileStatus = cb; }
   function notify(msg, ok){ if(onFileStatus) onFileStatus(msg, ok); }
-  function serialize(){ return JSON.stringify(store, null, 0); }
+  // 전체 백업 대상(레벨 통계 + 청크 진행 + 오늘 학습 + 옵션). 도메인 이전 시 이걸로 통째 옮긴다.
+  var BACKUP_KEYS = ['eng_flashcards_stats_v1','eng_flashcards_reallife_on','eng_flashcards_today_v1','eng_chunks_progress_v1'];
+  function serialize(){
+    var ls = {};
+    BACKUP_KEYS.forEach(function(k){ try{ var v=localStorage.getItem(k); if(v!=null) ls[k]=v; }catch(e){} });
+    // stats/daily는 구버전 호환을 위해 그대로 두고, _ls에 전체 키를 함께 담는다.
+    return JSON.stringify({ stats:store.stats, daily:store.daily, version:store.version, _ls:ls }, null, 0);
+  }
   function exportDownload(){
     try{
       var blob = new Blob([serialize()], {type:'application/json'});
@@ -2996,6 +3003,20 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   function importFromText(txt){
     try{
       var p = JSON.parse(txt);
+      // 신버전: 전체 백업(_ls)이 있으면 모든 진행 키를 복원하고 새로고침해 반영
+      if(p && p._ls && typeof p._ls === 'object'){
+        var n = 0;
+        BACKUP_KEYS.forEach(function(k){
+          if(typeof p._ls[k] === 'string'){ try{ localStorage.setItem(k, p._ls[k]); n++; }catch(e){} }
+        });
+        try{ var sp = JSON.parse(p._ls[KEY] || 'null'); if(sp && sp.stats){ store = sp; if(!store.daily) store.daily={}; } }catch(e){}
+        if(n > 0){
+          notify('불러오기 완료 — 잠시 후 새로고침합니다', true);
+          setTimeout(function(){ try{ location.reload(); }catch(e){} }, 800);
+          return true;
+        }
+      }
+      // 구버전 호환: 레벨 통계만 있는 파일
       if(p && p.stats){
         store = { stats:p.stats||{}, daily:p.daily||{}, version:p.version||2 };
         try{ localStorage.setItem(KEY, JSON.stringify(store)); }catch(e){}
