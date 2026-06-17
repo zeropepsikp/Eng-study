@@ -3247,18 +3247,24 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   // 실제 Google API 키는 Cloudflare 환경변수(서버)에만 있어 노출되지 않는다.
   // 함수가 없거나(예: GitHub Pages 미러) 호출이 실패하면 → 폰 기본 음성으로 폴백.
   var TTS_CONFIG = { endpoint:'/api/tts', enabled:true, rate:0.96, fails:0 };
-  // 옵션 메뉴에서 고를 수 있는 영어 음성 목록 (서버 화이트리스트와 일치)
+  // 옵션 메뉴에서 고를 수 있는 영어 음성 목록 (OpenAI TTS · 서버 화이트리스트와 일치)
   var TTS_VOICES = [
-    {id:'en-US-Neural2-F', label:'여성 A · 차분'},
-    {id:'en-US-Neural2-C', label:'여성 B · 밝음'},
-    {id:'en-US-Neural2-G', label:'여성 C · 부드러움'},
-    {id:'en-US-Neural2-D', label:'남성 A · 표준'},
-    {id:'en-US-Neural2-A', label:'남성 B · 또렷'},
-    {id:'en-US-Chirp3-HD-Aoede', label:'여성 HD · 자연(고품질)'},
-    {id:'en-US-Chirp3-HD-Charon', label:'남성 HD · 자연(고품질)'}
+    {id:'alloy',   label:'Alloy · 중성 균형'},
+    {id:'nova',    label:'Nova · 여성 경쾌'},
+    {id:'shimmer', label:'Shimmer · 여성 부드러움'},
+    {id:'coral',   label:'Coral · 여성 밝음'},
+    {id:'echo',    label:'Echo · 남성 또렷'},
+    {id:'onyx',    label:'Onyx · 남성 깊음'},
+    {id:'ash',     label:'Ash · 남성 차분'},
+    {id:'fable',   label:'Fable · 영국 억양'}
   ];
-  var TTS_DEFAULT_VOICE = 'en-US-Neural2-F';
-  function ttsVoice(){ try{ return localStorage.getItem('ttsVoice') || TTS_DEFAULT_VOICE; }catch(e){ return TTS_DEFAULT_VOICE; } }
+  var TTS_DEFAULT_VOICE = 'alloy';
+  function ttsVoice(){
+    try{ var v = localStorage.getItem('ttsVoice');
+      if(v && TTS_VOICES.some(function(x){ return x.id===v; })) return v;   // 유효한(현 목록) 음성만
+    }catch(e){}
+    return TTS_DEFAULT_VOICE;                                               // 옛 구글 보이스 등은 기본으로
+  }
   function setTtsVoice(v){ try{ localStorage.setItem('ttsVoice', v); }catch(e){} }
   function ttsAvailable(){ return TTS_CONFIG.enabled; }
 
