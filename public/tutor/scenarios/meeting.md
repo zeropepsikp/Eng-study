@@ -1,6 +1,6 @@
 ---
 title: 업무 회의 진행
-opening: Alright, thanks for joining. Shall we get started? Quick question — did you get a chance to look at the deck?
+opening: Thanks for joining — shall we get started?
 difficulty: 4
 ---
 Setting: A small work meeting (in person or video). Professional but friendly.

@@ -285,14 +285,20 @@
   .today-mode-seg .tm-btn.on{background:var(--info);color:#fff;}
 
   /* ===== AI Tutor ===== */
-  .tutor-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+  .tutor-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;}
   .tutor-actions{display:flex;gap:6px;}
   .tutor-btn{border:1px solid var(--border);background:var(--surface);color:var(--text2);
     border-radius:10px;padding:6px 10px;font-size:13px;font-weight:700;cursor:pointer;line-height:1;}
   .tutor-btn.on{background:var(--info);color:#fff;border-color:var(--info);}
+  .tutor-status{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3);margin-top:3px;}
+  .tutor-status .ts-dot{width:8px;height:8px;border-radius:50%;background:var(--text3);flex:0 0 auto;}
+  .tutor-status.ok .ts-dot{background:#22c55e;}
+  .tutor-status.bad .ts-dot{background:var(--coral,#ef4444);}
+  .tutor-status.warn .ts-dot{background:#f59e0b;}
   .tutor-stage{position:relative;border-radius:18px;overflow:hidden;background:var(--surface2);
-    border:1px solid var(--border);aspect-ratio:1/1;max-height:300px;display:flex;align-items:center;justify-content:center;margin-bottom:6px;}
-  .tutor-stage img{width:100%;height:100%;object-fit:cover;display:block;}
+    border:1px solid var(--border);aspect-ratio:1/1;width:100%;max-width:300px;margin:0 auto 6px;
+    display:flex;align-items:center;justify-content:center;}
+  .tutor-stage img,.tutor-stage video{width:100%;height:100%;object-fit:cover;display:block;}
   .tutor-stage .avatar-fallback{font-size:84px;}
   .tutor-q{position:absolute;top:10px;right:10px;width:34px;height:34px;border-radius:50%;
     border:none;background:rgba(0,0,0,0.45);color:#fff;font-size:17px;font-weight:800;cursor:pointer;}
@@ -306,7 +312,12 @@
   .tb-replay{flex:0 0 auto;border:1px solid var(--border);background:var(--surface2);color:var(--text2);
     border-radius:50%;width:32px;height:32px;font-size:15px;cursor:pointer;line-height:1;}
   .tb-name{font-size:11px;font-weight:700;color:var(--info);margin-bottom:2px;}
-  #tutor-log{margin-bottom:6px;}
+  /* 대화 화면: 튜터(상단)·입력(하단) 고정, 가운데 대화창만 스크롤 */
+  .tutor-convo{display:flex;flex-direction:column;height:calc(100dvh - 132px);min-height:380px;}
+  .tutor-fixed-top{flex:0 0 auto;}
+  .tutor-log{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
+    padding:4px 2px;margin-bottom:6px;border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
+  .tutor-bottom{flex:0 0 auto;}
   .tutor-correct{background:var(--amber-bg);border:1px solid var(--amber);border-radius:12px;padding:10px 12px;margin-bottom:8px;font-size:13px;}
   .tutor-correct .tc-fix{font-weight:700;color:var(--text);}
   .tutor-correct .tc-why{color:var(--text3);margin-top:3px;}
@@ -321,9 +332,13 @@
   .tutor-submit:disabled{opacity:0.5;}
   .tutor-setup{text-align:center;padding:10px 0;}
   .tutor-setup .ts-grid{display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap;}
-  .tutor-setup .ts-pick{width:30%;min-width:90px;border-radius:14px;overflow:hidden;border:2px solid var(--border);cursor:pointer;background:var(--surface2);aspect-ratio:1/1;}
+  .tutor-setup .ts-pick{width:30%;min-width:96px;border-radius:14px;overflow:hidden;border:2px solid var(--border);cursor:pointer;background:var(--surface2);}
   .tutor-setup .ts-pick.sel{border-color:var(--info);}
-  .tutor-setup .ts-pick img{width:100%;height:100%;object-fit:cover;}
+  .tutor-setup .ts-pick img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block;}
+  .tutor-setup .ts-pick .ts-ph{aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;font-size:24px;}
+  .tutor-setup .ts-pick .ts-label{font-size:11px;font-weight:600;color:var(--text2);padding:5px 2px;text-align:center;}
+  .tutor-spinner{width:34px;height:34px;border-radius:50%;border:3px solid var(--border);border-top-color:var(--info);margin:14px auto 0;animation:tspin 0.8s linear infinite;}
+  @keyframes tspin{to{transform:rotate(360deg);}}
   .tutor-thinking{font-size:13px;color:var(--text3);margin-bottom:8px;}
   .tutor-hist-turn{border-bottom:1px solid var(--border);padding:9px 0;}
   .tutor-hist-turn .h-role{font-size:11px;font-weight:700;color:var(--text3);}
@@ -789,7 +804,10 @@
   <!-- TUTOR PANEL (실시간 AI 회화) -->
   <div class="panel" id="panel-tutor">
     <div class="tutor-top">
-      <div class="section-title" style="margin:0;">AI Tutor</div>
+      <div>
+        <div class="section-title" style="margin:0;">AI Tutor</div>
+        <div class="tutor-status" id="tutor-status"><span class="ts-dot"></span><span id="tutor-status-text">확인 중…</span></div>
+      </div>
       <div class="tutor-actions">
         <button class="tutor-btn" id="tutor-cc" title="튜터 영어 자막">CC</button>
         <button class="tutor-btn" id="tutor-reset" title="상황 초기화">↻</button>
@@ -808,11 +826,11 @@
 <nav class="bottomnav" id="bottomnav">
   <button class="bn-item" data-sec="today">
     <span class="bn-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="3" width="16" height="18" rx="4" fill="currentColor" opacity="0.18"/><path d="M9 8.5h6M9 12h6M9 15.5h3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
-    <span class="bn-lab">Today’s Study</span>
+    <span class="bn-lab">Today’s</span>
   </button>
   <button class="bn-item" data-sec="study">
     <span class="bn-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="13" width="5" height="7" rx="2" fill="currentColor" opacity="0.35"/><rect x="9.5" y="8" width="5" height="12" rx="2" fill="currentColor" opacity="0.6"/><rect x="16" y="3" width="5" height="17" rx="2" fill="currentColor"/></svg></span>
-    <span class="bn-lab">Level Study</span>
+    <span class="bn-lab">Level’s</span>
   </button>
   <button class="bn-item" data-sec="chunks">
     <span class="bn-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="4" width="8" height="6" rx="2" fill="currentColor" opacity="0.7"/><rect x="13" y="4" width="8" height="6" rx="2" fill="currentColor" opacity="0.3"/><rect x="3" y="14" width="8" height="6" rx="2" fill="currentColor" opacity="0.3"/><rect x="13" y="14" width="8" height="6" rx="2" fill="currentColor" opacity="0.7"/></svg></span>
@@ -4069,14 +4087,16 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   //  AI Tutor (실시간 회화) — Stage 1
   // ============================================================
   var TUTOR = (function(){
-    var LS_IMG='eng_tutor_img', LS_VOICE='eng_tutor_voice', LS_SESS='eng_tutor_sess', LS_HIST='eng_tutor_hist';
-    var VOICES=[['Leda','부드럽고 따뜻'],['Aoede','경쾌하고 밝음'],['Kore','또렷하고 차분'],
-      ['Autonoe','상냥함'],['Callirrhoe','편안함'],['Despina','활기참'],['Vindemiatrix','차분·성숙'],['Sulafat','맑음']];
+    var LS_IMG='eng_tutor_img', LS_VOICE='eng_tutor_voice', LS_SESS='eng_tutor_sess', LS_HIST='eng_tutor_hist', LS_VIDEO='eng_tutor_video';
+    var VOICES=[['Leda','밝고 어린'],['Aoede','산뜻한'],['Kore','또렷한'],['Zephyr','맑고 밝은'],
+      ['Callirrhoe','편안한'],['Autonoe','화사한'],['Despina','부드러운'],['Erinome','깔끔한'],
+      ['Laomedeia','경쾌한'],['Achernar','포근한'],['Sulafat','따뜻한'],['Vindemiatrix','차분한']];
     var personaText=null, learnerText=null, scenList=null, scenCache={};
-    var sess=null, ccOn=false, busy=false, audio=null, logEl=null, wired=false;
+    var sess=null, ccOn=false, busy=false, audio=null, logEl=null, wired=false, videoAborted=false, healthChecked=false;
 
     function ls(k,v){ try{ if(v===undefined) return localStorage.getItem(k); localStorage.setItem(k,v); }catch(e){ return null; } }
     function getImg(){ return ls(LS_IMG)||''; }
+    function getVideo(){ return ls(LS_VIDEO)||''; }
     function getVoice(){ return ls(LS_VOICE)||'Leda'; }
     function setVoice(v){ ls(LS_VOICE,v); }
     function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -4132,7 +4152,13 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       parts.push(personaText||DEFAULT_PERSONA);
       if(learnerText) parts.push('# Learner profile\n'+learnerText);
       parts.push('# Current scenario: '+(sess.title||'')+'\n'+(sc.body||''));
-      parts.push('Reminder: reply ONLY with the JSON object. reply_en must be English only, max ~3 sentences.');
+      // 대화 초반엔 짧게, 점차 길게
+      var nUser=0; sess.turns.forEach(function(t){ if(t.role==='user') nUser++; });
+      var lenHint = nUser<2 ? 'This is the very start — keep reply_en to ONE short sentence.'
+                  : nUser<5 ? 'Keep reply_en to 1-2 short sentences.'
+                  : 'Keep reply_en to about 2-3 sentences.';
+      parts.push('Reminder: reply ONLY with the JSON object. reply_en is English only. '+lenHint+
+        ' If the user wrote in Korean, put the natural English in correction.fixed and teach it in correction.why_ko.');
       return parts.join('\n\n---\n\n');
     }
 
@@ -4147,13 +4173,45 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     function speak(text){
       if(!text) return;
       try{ if(audio){ audio.pause(); audio=null; } }catch(e){}
+      playStageVideo();
       fetch('/api/tutor/tts',{method:'POST',headers:{'Content-Type':'application/json'},
         body:JSON.stringify({text:text, voice:getVoice()})})
-        .then(function(r){ if(!r.ok) throw 0; return r.blob(); })
-        .then(function(b){ audio=new Audio(URL.createObjectURL(b)); audio.play().catch(function(){}); })
-        .catch(function(){
+        .then(function(r){ return r.ok ? r.blob() : r.text().then(function(tx){ var j=null; try{j=JSON.parse(tx);}catch(e){} throw new Error((j&&(j.detail||j.error))||('HTTP '+r.status)); }); })
+        .then(function(b){ setStatus('ok','Gemini 음성 ('+getVoice()+')'); audio=new Audio(URL.createObjectURL(b)); audio.play().catch(function(){}); })
+        .catch(function(err){
+          setStatus('warn','제미니 음성 실패 → 브라우저 음성 ('+((err&&err.message)||'')+')');
           try{ var u=new SpeechSynthesisUtterance(text); u.lang='en-US'; speechSynthesis.cancel(); speechSynthesis.speak(u); }catch(_){}
         });
+    }
+    function playStageVideo(){
+      var v=$('tutor-video'); if(!v) return;
+      try{ v.currentTime=0; var p=v.play(); if(p&&p.catch) p.catch(function(){}); }catch(e){}
+    }
+    // 옵션 미리듣기: 성공/실패를 콜백으로 알려줌
+    function previewVoice(voice, cb){
+      try{ if(audio){ audio.pause(); audio=null; } }catch(e){}
+      fetch('/api/tutor/tts',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({text:"Hi, I'm Mia. Let's practice English together!", voice:voice})})
+        .then(function(r){ return r.ok ? r.blob() : r.text().then(function(tx){ var j=null; try{j=JSON.parse(tx);}catch(e){} throw new Error((j&&(j.detail&&('('+ (j.status||'')+') '+j.detail) ))|| (j&&j.error) ||('HTTP '+r.status)); }); })
+        .then(function(b){ audio=new Audio(URL.createObjectURL(b)); audio.play().catch(function(){}); if(cb) cb(true,''); })
+        .catch(function(err){
+          try{ var u=new SpeechSynthesisUtterance("Hi, I'm Mia."); u.lang='en-US'; speechSynthesis.cancel(); speechSynthesis.speak(u); }catch(_){}
+          if(cb) cb(false, (err&&err.message)||'오류');
+        });
+    }
+    // ---- 상태칩 (제미니 키 활성화 표시) ----
+    function setStatus(kind, text){
+      var el=$('tutor-status'), tx=$('tutor-status-text'); if(!el||!tx) return;
+      el.className='tutor-status'+(kind?(' '+kind):''); tx.textContent=text;
+    }
+    function checkHealth(){
+      setStatus('', '제미니 키 확인 중…');
+      fetch('/api/tutor/health').then(function(r){ return r.json(); }).then(function(j){
+        if(!j || !j.key){ setStatus('bad','제미니 키 없음 — Cloudflare 변수 확인'); return; }
+        if(j.chat && j.tts){ setStatus('ok','제미니 키 활성화 (대화·음성 OK)'); }
+        else if(j.chat){ setStatus('warn','제미니 대화 OK · 음성 모델 미지원'); }
+        else { setStatus('warn','제미니 키 있음 · 응답 확인 안 됨'); }
+      }).catch(function(){ setStatus('warn','상태 확인 실패'); });
     }
 
     // ---- 렌더링 ----
@@ -4176,12 +4234,14 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       $('ts-gen').addEventListener('click', genPortraits);
     }
 
-    var BASE='photorealistic portrait photo of a beautiful woman in her early 20s, blonde hair, Western European features, head and shoulders, looking at the camera, natural skin texture, soft bokeh background, shot on 50mm, high detail';
-    var PROMPTS=[
-      BASE+', warm friendly smile, cozy cream sweater, soft natural daylight',
-      BASE+', elegant and confident, smart blazer, clean studio lighting',
-      BASE+', cheerful casual vibe, ponytail, denim jacket, bright outdoor light'
+    // 사진 품질을 끌어올리는 공통 접미사 (실사 톤 + 토킹헤드용 정면 구도)
+    var QUALITY=', RAW photo, ultra realistic, professional portrait photography, 85mm lens, f/1.8, soft natural lighting, highly detailed skin texture, catchlights in the eyes, sharp focus, looking straight at the camera, head and shoulders centered, plain softly blurred background, photorealistic, 8k, no text, no watermark';
+    var PORTRAITS=[
+      { label:'세련된 금발', prompt:'A beautiful sophisticated woman in her early 20s, long wavy blonde hair, Western European features, elegant and chic, subtle warm smile, wearing a tasteful cream knit top, refined makeup'+QUALITY },
+      { label:'귀여운 흑발', prompt:'A cute charming teenage girl around 17 years old, straight shiny black hair with bangs, big bright eyes, fresh youthful innocent look, gentle sweet smile, wearing a cozy pastel hoodie, soft daylight'+QUALITY },
+      { label:'동양 아이돌', prompt:'A gorgeous East Asian K-pop idol style woman in her early 20s, sleek black hair, flawless dewy skin, stylish idol makeup, photogenic and pretty, soft confident smile, fashionable outfit, studio lighting'+QUALITY }
     ];
+    var PROMPTS=PORTRAITS.map(function(p){ return p.prompt; });
     function genImage(prompt, retry){
       return fetch('/api/tutor/image',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:prompt})})
         .then(function(r){
@@ -4197,17 +4257,66 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       var gen=$('ts-gen'), grid=$('ts-grid'), msg=$('ts-msg');
       gen.disabled=true; gen.textContent='생성 중… (수십 초 걸려요)'; grid.innerHTML=''; msg.textContent=''; msg.style.color='';
       var done=0, ok=0, lastErr='';
-      PROMPTS.forEach(function(p){
+      PORTRAITS.forEach(function(P){
         var cell=document.createElement('div'); cell.className='ts-pick';
-        cell.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:24px;">⏳</div>';
+        cell.innerHTML='<div class="ts-ph">⏳</div><div class="ts-label">'+esc(P.label)+'</div>';
         grid.appendChild(cell);
-        genImage(p,false).then(function(dataurl){
-          ok++; cell.innerHTML='<img alt="tutor" src="'+dataurl+'">';
-          cell.addEventListener('click', function(){ ls(LS_IMG,dataurl); startNew(); });
-        }).catch(function(err){ lastErr=(err&&err.message)||'실패'; cell.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:13px;color:var(--text3);">실패</div>'; })
-        .then(function(){ done++; if(done===PROMPTS.length){ gen.disabled=false; gen.textContent='✨ 다시 생성';
-          if(ok){ msg.style.color=''; msg.textContent='마음에 드는 튜터를 탭하세요.'; }
+        genImage(P.prompt,false).then(function(dataurl){
+          ok++; cell.innerHTML='<img alt="tutor" src="'+dataurl+'"><div class="ts-label">'+esc(P.label)+'</div>';
+          cell.addEventListener('click', function(){ chooseTutor(dataurl); });
+        }).catch(function(err){ lastErr=(err&&err.message)||'실패'; cell.innerHTML='<div class="ts-ph" style="font-size:13px;color:var(--text3);">실패</div><div class="ts-label">'+esc(P.label)+'</div>'; })
+        .then(function(){ done++; if(done===PORTRAITS.length){ gen.disabled=false; gen.textContent='✨ 다시 생성';
+          if(ok){ msg.style.color=''; msg.textContent='마음에 드는 튜터를 탭하면 영상 제작이 시작돼요.'; }
           else { msg.style.color='var(--coral)'; msg.textContent='생성 실패: '+lastErr; } } });
+      });
+    }
+
+    // 이미지 선택 → (Kling) 말하는 영상 1회 제작 → 완료되면 대화 시작
+    function chooseTutor(dataurl){
+      ls(LS_IMG, dataurl);
+      ls(LS_VIDEO, ''); // 새 튜터면 기존 영상 폐기
+      renderVideoMaking();
+      makeVideo(dataurl).then(function(videoUrl){
+        if(videoUrl) ls(LS_VIDEO, videoUrl);
+        startNew();
+      }).catch(function(){
+        // 영상 실패 → 정적 이미지로 그냥 시작
+        startNew();
+      });
+    }
+    function renderVideoMaking(){
+      setActionsEnabled(false);
+      body().innerHTML='<div class="tutor-setup">'+
+        '<img alt="tutor" src="'+esc(getImg())+'" style="width:160px;height:160px;object-fit:cover;border-radius:18px;display:block;margin:6px auto;">'+
+        '<div class="tutor-spinner"></div>'+
+        '<div class="blurb" id="vid-msg" style="margin-top:8px;">튜터가 말하는 영상을 만들고 있어요…<br>1~3분 정도 걸릴 수 있어요. 완료되면 대화가 시작돼요.</div>'+
+        '<button id="vid-skip" class="tutor-mic" style="margin-top:10px;padding:9px 14px;">영상 없이 바로 시작</button>'+
+      '</div>';
+      var sk=$('vid-skip'); if(sk) sk.addEventListener('click', function(){ videoAborted=true; ls(LS_VIDEO,''); startNew(); });
+    }
+    // Kling 영상 제작: 생성 태스크 → 폴링. 실패/미설정이면 빈 값 반환(정적 이미지 사용).
+    function makeVideo(dataurl){
+      videoAborted=false;
+      return fetch('/api/tutor/video',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({ action:'create', image:dataurl })})
+        .then(function(r){ return r.json().catch(function(){ return {}; }).then(function(j){ if(!r.ok||!j||!j.task_id){ throw new Error((j&&(j.detail||j.error))||('HTTP '+r.status)); } return j.task_id; }); })
+        .then(function(taskId){ return pollVideo(taskId, 0); });
+    }
+    function pollVideo(taskId, n){
+      if(videoAborted) return Promise.resolve('');
+      if(n>40) return Promise.resolve(''); // 약 3분 후 포기 → 정적 이미지
+      return new Promise(function(res){ setTimeout(res, n===0?5000:5000); }).then(function(){
+        if(videoAborted) return '';
+        return fetch('/api/tutor/video',{method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({ action:'status', task_id:taskId })})
+          .then(function(r){ return r.json().catch(function(){ return {}; }); })
+          .then(function(j){
+            if(j && j.status==='succeed' && j.url) return j.url;
+            if(j && j.status==='failed') return '';
+            var vm=$('vid-msg'); if(vm) vm.innerHTML='튜터가 말하는 영상을 만들고 있어요… ('+((n+1)*5)+'초)<br>완료되면 대화가 시작돼요.';
+            return pollVideo(taskId, n+1);
+          })
+          .catch(function(){ return pollVideo(taskId, n+1); });
       });
     }
 
@@ -4222,21 +4331,29 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     }
 
     function stageHtml(){
-      var img=getImg();
-      if(img && img!=='skip') return '<div class="tutor-stage"><img alt="tutor" src="'+esc(img)+'"><button class="tutor-q" id="tutor-peek" title="직전 대사 보기">?</button></div>';
-      return '<div class="tutor-stage"><span class="avatar-fallback">👩‍🏫</span><button class="tutor-q" id="tutor-peek" title="직전 대사 보기">?</button></div>';
+      var img=getImg(), vid=getVideo();
+      var peek='<button class="tutor-q" id="tutor-peek" title="직전 대사 보기">?</button>';
+      if(vid){ return '<div class="tutor-stage"><video id="tutor-video" src="'+esc(vid)+'" muted playsinline preload="auto" poster="'+esc(img&&img!=='skip'?img:'')+'"></video>'+peek+'</div>'; }
+      if(img && img!=='skip') return '<div class="tutor-stage"><img alt="tutor" src="'+esc(img)+'">'+peek+'</div>';
+      return '<div class="tutor-stage"><span class="avatar-fallback">👩‍🏫</span>'+peek+'</div>';
     }
     function renderConversation(){
       setActionsEnabled(true);
-      var h=stageHtml()+
-        '<div class="tutor-scene" id="tutor-scene">'+esc(sess.title)+'</div>'+
-        '<div id="tutor-log"></div>'+
-        '<div class="tutor-input-row">'+
-          '<button class="tutor-mic" id="tutor-mic">🎤</button>'+
-          '<textarea id="tutor-in" rows="1" placeholder="영어로 답해보세요…"></textarea>'+
-          '<button class="tutor-submit" id="tutor-send">전송</button>'+
+      var h='<div class="tutor-convo">'+
+        '<div class="tutor-fixed-top">'+
+          stageHtml()+
+          '<div class="tutor-scene" id="tutor-scene">'+esc(sess.title)+'</div>'+
         '</div>'+
-        '<div class="mic-hint" id="tutor-michint" style="text-align:center;"></div>';
+        '<div id="tutor-log" class="tutor-log"></div>'+
+        '<div class="tutor-bottom">'+
+          '<div class="tutor-input-row">'+
+            '<button class="tutor-mic" id="tutor-mic">🎤</button>'+
+            '<textarea id="tutor-in" rows="1" placeholder="영어로 답해보세요…"></textarea>'+
+            '<button class="tutor-submit" id="tutor-send">전송</button>'+
+          '</div>'+
+          '<div class="mic-hint" id="tutor-michint" style="text-align:center;"></div>'+
+        '</div>'+
+      '</div>';
       body().innerHTML=h;
       logEl=$('tutor-log'); if(ccOn) logEl.classList.add('cc');
       sess.turns.forEach(function(t){ if(t.role==='tutor') drawTutor(t.en,t.ko); else { if(t.correction) drawCorrection(t.correction.fixed,t.correction.why_ko); drawUser(t.en); } });
@@ -4248,7 +4365,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       setupSpeakMic($('tutor-mic'), inp, $('tutor-michint'));
     }
 
-    function scrollLog(){ try{ window.scrollTo(0, document.body.scrollHeight); }catch(e){} }
+    function scrollLog(){ try{ if(logEl) logEl.scrollTop=logEl.scrollHeight; }catch(e){} }
     function drawTutor(en, ko){
       var d=document.createElement('div'); d.className='tutor-bubble';
       d.innerHTML='<div class="tb-row"><button class="tb-replay" title="다시 듣기">🔊</button>'+
@@ -4310,18 +4427,19 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       if(btn){ var o=btn.textContent; btn.textContent='저장됨'; setTimeout(function(){ btn.textContent=o; },1200); }
     }
     function getHistory(){ try{ return JSON.parse(ls(LS_HIST)||'[]'); }catch(e){ return []; } }
-    function resetImage(){ try{ localStorage.removeItem(LS_IMG); }catch(e){} sess=null; try{ localStorage.removeItem(LS_SESS); }catch(e){} }
+    function resetImage(){ try{ localStorage.removeItem(LS_IMG); localStorage.removeItem(LS_VIDEO); localStorage.removeItem(LS_SESS); }catch(e){} sess=null; }
 
     // ---- 진입점 ----
     function open(){
       wireActions();
+      if(!healthChecked){ healthChecked=true; checkHealth(); }
       ensureDocs().then(function(){
         if(!getImg()){ renderSetup(); return; }
         if(sess || loadSess()){ renderConversation(); } else { startNew(); }
       });
     }
 
-    return { open:open, VOICES:VOICES, getVoice:getVoice, setVoice:setVoice, getHistory:getHistory, resetImage:resetImage, speak:speak };
+    return { open:open, VOICES:VOICES, getVoice:getVoice, setVoice:setVoice, getHistory:getHistory, resetImage:resetImage, speak:speak, previewVoice:previewVoice };
   })();
   function openTutor(){ TUTOR.open(); }
 
@@ -5201,6 +5319,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     d.textContent='Tutor 회화에서 들리는 목소리예요. 누르면 미리 들어볼 수 있어요.';
     row.appendChild(t); row.appendChild(d);
     var grid=document.createElement('div'); grid.style.display='flex'; grid.style.flexWrap='wrap'; grid.style.gap='8px'; grid.style.marginTop='10px';
+    var fb=document.createElement('div'); fb.className='opt-desc'; fb.style.marginTop='8px';
     var cur=TUTOR.getVoice();
     TUTOR.VOICES.forEach(function(v){
       var b=document.createElement('button'); b.className='tutor-btn'+(v[0]===cur?' on':'');
@@ -5210,11 +5329,15 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
         TUTOR.setVoice(v[0]);
         Array.prototype.forEach.call(grid.children, function(c){ c.classList.remove('on'); });
         b.classList.add('on');
-        TUTOR.speak("Hi, I'm Mia. Let's practice English together!");
+        fb.style.color=''; fb.textContent='▷ '+v[0]+' 미리듣기 중…';
+        TUTOR.previewVoice(v[0], function(ok, msg){
+          if(ok){ fb.style.color=''; fb.textContent='✓ '+v[0]+' (제미니 음성 정상)'; }
+          else { fb.style.color='var(--coral)'; fb.textContent='✕ '+v[0]+' 실패: '+msg+' — 브라우저 음성으로 대체됐어요'; }
+        });
       });
       grid.appendChild(b);
     });
-    row.appendChild(grid);
+    row.appendChild(grid); row.appendChild(fb);
 
     // 튜터 다시 만들기
     var reb=document.createElement('button'); reb.className='tutor-mic'; reb.style.marginTop='12px'; reb.style.padding='9px 14px';
