@@ -3769,7 +3769,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     var slot=$('speak-toggle-slot'); if(!slot) return;
     slot.innerHTML='';
     var seg=document.createElement('div'); seg.className='today-mode-seg';
-    [['chunk','청크'],['level','레벨별']].forEach(function(m){
+    [['chunk','Chunks'],['level','Levels']].forEach(function(m){
       var b=document.createElement('button');
       b.className='tm-btn'+(todayMode===m[0]?' on':'');
       b.textContent=m[1];
@@ -5430,11 +5430,15 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     }
     row.appendChild(vrow);
 
-    // 튜터 다시 만들기
-    var reb=document.createElement('button'); reb.className='tutor-mic'; reb.style.marginTop='14px'; reb.style.padding='9px 14px';
-    reb.textContent='튜터 이미지 다시 만들기';
-    reb.addEventListener('click', function(){ if(confirm('튜터 이미지를 지우고 다시 고를까요?')){ TUTOR.resetImage(); alert('Tutor 탭에서 새로 만들 수 있어요.'); } });
-    row.appendChild(reb);
+    // 튜터 다시 만들기 (초기화) — 특정 계정에게만 노출
+    var _u = (window.AUTH && window.AUTH.currentUser) ? window.AUTH.currentUser() : null;
+    var _email = (_u && _u.email) ? String(_u.email).toLowerCase() : '';
+    if(_email === 'mintae.kim0827@gmail.com'){
+      var reb=document.createElement('button'); reb.className='tutor-mic'; reb.style.marginTop='14px'; reb.style.padding='9px 14px';
+      reb.textContent='튜터 이미지 다시 만들기';
+      reb.addEventListener('click', function(){ if(confirm('튜터 이미지를 지우고 다시 고를까요?')){ TUTOR.resetImage(); alert('Tutor 탭에서 새로 만들 수 있어요.'); } });
+      row.appendChild(reb);
+    }
 
     // 대화 내역
     var hbtn=document.createElement('button'); hbtn.className='tutor-mic'; hbtn.style.marginTop='8px'; hbtn.style.marginLeft='8px'; hbtn.style.padding='9px 14px';
