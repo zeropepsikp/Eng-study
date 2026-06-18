@@ -4181,17 +4181,30 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
         var vs=window.speechSynthesis.getVoices()||[];
         var en=vs.filter(function(v){ return /^en/i.test(v.lang); });
         var pool=en.length?en:vs;
-        var pref=/(female|samantha|victoria|karen|moira|tessa|fiona|serena|zira|aria|jenny|google us english|google uk english female|nicky|allison|ava|susan|catherine)/i;
+        // 1순위: 안드로이드 크롬 여성 기본 "Google US English"
+        for(var a=0;a<pool.length;a++){ if(/^google us english$/i.test(pool[a].name)) return pool[a]; }
+        // 2순위: 여성으로 알려진 이름들
+        var pref=/(female|samantha|victoria|karen|moira|tessa|fiona|serena|zira|aria|jenny|nicky|allison|ava|susan|catherine|google uk english female|^en-us-x-.*female|#female)/i;
         for(var i=0;i<pool.length;i++){ if(pref.test(pool[i].name)) return pool[i]; }
-        // 남성으로 알려진 이름은 피하고 첫 영어 보이스
-        var male=/(male|david|mark|alex|daniel|fred|google uk english male|rishi|aaron)/i;
+        // 3순위: 남성으로 알려진 이름은 피하고 첫 영어 보이스
+        var male=/(male|david|mark|alex|daniel|fred|arthur|oliver|rishi|aaron|google uk english male|#male)/i;
         for(var k=0;k<pool.length;k++){ if(!male.test(pool[k].name)) return pool[k]; }
         return pool[0]||null;
       }catch(e){ return null; }
     }
     function browserSpeak(text){
-      try{ var u=new SpeechSynthesisUtterance(text); u.lang='en-US'; var fv=pickFemaleVoice(); if(fv) u.voice=fv;
-        speechSynthesis.cancel(); speechSynthesis.speak(u); }catch(e){}
+      var spoken=false;
+      function go(){ if(spoken) return; spoken=true;
+        try{ var u=new SpeechSynthesisUtterance(text); u.lang='en-US'; var fv=pickFemaleVoice(); if(fv) u.voice=fv;
+          window.speechSynthesis.cancel(); window.speechSynthesis.speak(u); }catch(e){} }
+      try{
+        var vs=window.speechSynthesis.getVoices()||[];
+        if(vs.length){ go(); }
+        else{ // 안드로이드: 보이스 비동기 로딩 대기
+          try{ window.speechSynthesis.onvoiceschanged=function(){ go(); }; }catch(e){}
+          setTimeout(go, 600);
+        }
+      }catch(e){ go(); }
     }
     function isQuota(err){ return /429|한도|quota|exceed|RESOURCE_EXHAUSTED/i.test((err&&err.message)||''); }
     // 제미니 음성 → 실패(무료 한도 초과 등) 시 폰 기본 음성, 작은 안내만 표시
