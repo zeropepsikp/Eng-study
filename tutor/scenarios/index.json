@@ -1,0 +1,12 @@
+{
+  "scenarios": [
+    { "id": "cafe",       "enabled": true, "weight": 1 },
+    { "id": "restaurant", "enabled": true, "weight": 1 },
+    { "id": "daily",      "enabled": true, "weight": 1 },
+    { "id": "office",     "enabled": true, "weight": 1 },
+    { "id": "meeting",    "enabled": true, "weight": 1 },
+    { "id": "airplane",   "enabled": true, "weight": 1 },
+    { "id": "gym",        "enabled": true, "weight": 1 },
+    { "id": "bar",        "enabled": true, "weight": 1 }
+  ]
+}
