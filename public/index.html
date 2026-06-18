@@ -5402,38 +5402,43 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     });
     row.appendChild(grid); row.appendChild(fb);
 
-    // 현재 이미지로 영상 만들기 (Kling) — 이미지 재생성 없이 영상만 시도
-    var vrow=document.createElement('div'); vrow.style.marginTop='14px';
-    var vt=document.createElement('div'); vt.className='opt-title'; vt.textContent='튜터 영상 만들기 (Kling)';
-    var vd=document.createElement('div'); vd.className='opt-desc';
-    vd.textContent='지금 튜터 이미지로 "말하는 영상"을 만들어 덮어씌워요. 되면 영상으로, 실패하면 이미지 그대로 유지돼요. (초기화 전까지 1회)';
-    vrow.appendChild(vt); vrow.appendChild(vd);
-    var vbtn=document.createElement('button'); vbtn.className='tutor-submit'; vbtn.style.marginTop='8px'; vbtn.style.padding='9px 14px';
-    vbtn.textContent = TUTOR.hasVideo() ? '🎬 영상 다시 만들기' : '🎬 현재 이미지로 영상 만들기';
-    var vmsg=document.createElement('div'); vmsg.className='opt-desc'; vmsg.style.marginTop='8px';
-    if(!TUTOR.hasImage()) vmsg.textContent='먼저 Tutor 탭에서 이미지를 만들어 주세요.';
-    else if(TUTOR.hasVideo()) vmsg.textContent='현재 영상이 적용돼 있어요.';
-    vbtn.addEventListener('click', function(){
-      vbtn.disabled=true; vmsg.style.color='';
-      TUTOR.generateVideoNow(function(state, msg){
-        vmsg.textContent=msg;
-        if(state==='done'){ vmsg.style.color=''; vbtn.disabled=false; vbtn.textContent='🎬 영상 다시 만들기'; }
-        else if(state==='error'){ vmsg.style.color='var(--coral)'; vbtn.disabled=false; }
-      });
-    });
-    vrow.appendChild(vbtn); vrow.appendChild(vmsg);
-    if(TUTOR.hasVideo()){
-      var vdel=document.createElement('button'); vdel.className='tutor-mic'; vdel.style.marginTop='8px'; vdel.style.marginLeft='8px'; vdel.style.padding='9px 14px';
-      vdel.textContent='영상 끄고 이미지로';
-      vdel.addEventListener('click', function(){ TUTOR.removeVideo(); vmsg.style.color=''; vmsg.textContent='영상을 제거했어요. 이제 이미지로 표시돼요.'; vbtn.textContent='🎬 현재 이미지로 영상 만들기'; vdel.remove(); });
-      vrow.appendChild(vdel);
-    }
-    row.appendChild(vrow);
-
-    // 튜터 다시 만들기 (초기화) — 특정 계정에게만 노출
+    // 튜터 영상/초기화 — 특정 계정에게만 노출
     var _u = (window.AUTH && window.AUTH.currentUser) ? window.AUTH.currentUser() : null;
     var _email = (_u && _u.email) ? String(_u.email).toLowerCase() : '';
-    if(_email === 'mintae.kim0827@gmail.com'){
+    var _isOwner = (_email === 'mintae.kim0827@gmail.com');
+
+    // 현재 이미지로 영상 만들기 (Kling) — 이미지 재생성 없이 영상만 시도
+    if(_isOwner){
+      var vrow=document.createElement('div'); vrow.style.marginTop='14px';
+      var vt=document.createElement('div'); vt.className='opt-title'; vt.textContent='튜터 영상 만들기 (Kling)';
+      var vd=document.createElement('div'); vd.className='opt-desc';
+      vd.textContent='지금 튜터 이미지로 "말하는 영상"을 만들어 덮어씌워요. 되면 영상으로, 실패하면 이미지 그대로 유지돼요. (초기화 전까지 1회)';
+      vrow.appendChild(vt); vrow.appendChild(vd);
+      var vbtn=document.createElement('button'); vbtn.className='tutor-submit'; vbtn.style.marginTop='8px'; vbtn.style.padding='9px 14px';
+      vbtn.textContent = TUTOR.hasVideo() ? '🎬 영상 다시 만들기' : '🎬 현재 이미지로 영상 만들기';
+      var vmsg=document.createElement('div'); vmsg.className='opt-desc'; vmsg.style.marginTop='8px';
+      if(!TUTOR.hasImage()) vmsg.textContent='먼저 Tutor 탭에서 이미지를 만들어 주세요.';
+      else if(TUTOR.hasVideo()) vmsg.textContent='현재 영상이 적용돼 있어요.';
+      vbtn.addEventListener('click', function(){
+        vbtn.disabled=true; vmsg.style.color='';
+        TUTOR.generateVideoNow(function(state, msg){
+          vmsg.textContent=msg;
+          if(state==='done'){ vmsg.style.color=''; vbtn.disabled=false; vbtn.textContent='🎬 영상 다시 만들기'; }
+          else if(state==='error'){ vmsg.style.color='var(--coral)'; vbtn.disabled=false; }
+        });
+      });
+      vrow.appendChild(vbtn); vrow.appendChild(vmsg);
+      if(TUTOR.hasVideo()){
+        var vdel=document.createElement('button'); vdel.className='tutor-mic'; vdel.style.marginTop='8px'; vdel.style.marginLeft='8px'; vdel.style.padding='9px 14px';
+        vdel.textContent='영상 끄고 이미지로';
+        vdel.addEventListener('click', function(){ TUTOR.removeVideo(); vmsg.style.color=''; vmsg.textContent='영상을 제거했어요. 이제 이미지로 표시돼요.'; vbtn.textContent='🎬 현재 이미지로 영상 만들기'; vdel.remove(); });
+        vrow.appendChild(vdel);
+      }
+      row.appendChild(vrow);
+    }
+
+    // 튜터 다시 만들기 (초기화) — 특정 계정에게만 노출
+    if(_isOwner){
       var reb=document.createElement('button'); reb.className='tutor-mic'; reb.style.marginTop='14px'; reb.style.padding='9px 14px';
       reb.textContent='튜터 이미지 다시 만들기';
       reb.addEventListener('click', function(){ if(confirm('튜터 이미지를 지우고 다시 고를까요?')){ TUTOR.resetImage(); alert('Tutor 탭에서 새로 만들 수 있어요.'); } });
