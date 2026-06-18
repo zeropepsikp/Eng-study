@@ -4176,30 +4176,20 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
           var st=(j&&j.status)||r.status; throw new Error((st===429?'한도초과(429)':((j&&(j.detail||j.error))||('HTTP '+r.status)))); }); });
     }
     function playBlob(b){ try{ audio=new Audio(URL.createObjectURL(b)); audio.play().catch(function(){}); }catch(e){} }
-    function femaleVoice(){
-      try{
-        var vs=window.speechSynthesis.getVoices()||[];
-        var en=vs.filter(function(v){ return /^en/i.test(v.lang); });
-        var pref=/(female|samantha|victoria|karen|moira|tessa|fiona|serena|zira|aria|jenny|google us english|google uk english female|yuna|nicky)/i;
-        for(var i=0;i<en.length;i++){ if(pref.test(en[i].name)) return en[i]; }
-        return en[0]||vs[0]||null;
-      }catch(e){ return null; }
-    }
     function browserSpeak(text){
-      try{ var u=new SpeechSynthesisUtterance(text); u.lang='en-US'; var fv=femaleVoice(); if(fv) u.voice=fv;
-        speechSynthesis.cancel(); speechSynthesis.speak(u); }catch(e){}
+      try{ var u=new SpeechSynthesisUtterance(text); u.lang='en-US'; speechSynthesis.cancel(); speechSynthesis.speak(u); }catch(e){}
     }
-    // 제미니 → (한도초과 등 실패 시) OpenAI 여성 음성 → 브라우저 여성 음성
+    function isQuota(err){ return /429|한도|quota|exceed|RESOURCE_EXHAUSTED/i.test((err&&err.message)||''); }
+    // 제미니 음성 → 실패(무료 한도 초과 등) 시 폰 기본 음성, 작은 안내만 표시
     function speak(text){
       if(!text) return;
       try{ if(audio){ audio.pause(); audio=null; } }catch(e){}
       playStageVideo();
       fetchTTS('/api/tutor/tts',{text:text, voice:getVoice()})
-        .then(function(b){ setStatus('ok','Gemini 음성 ('+getVoice()+')'); playBlob(b); })
+        .then(function(b){ setStatus('ok','제미니 음성 ('+getVoice()+')'); playBlob(b); })
         .catch(function(err){
-          fetchTTS('/api/tts',{text:text, voice:'shimmer'})
-            .then(function(b){ setStatus('warn','제미니 '+((err&&err.message)||'실패')+' → 대체 여성 음성'); playBlob(b); })
-            .catch(function(){ setStatus('warn','제미니 '+((err&&err.message)||'실패')+' → 브라우저 여성 음성'); browserSpeak(text); });
+          setStatus('warn', isQuota(err) ? '무료 음성 한도 초과 — 기본 음성으로 재생 중' : '음성 일시 오류 — 기본 음성으로 재생 중');
+          browserSpeak(text);
         });
     }
     function playStageVideo(){
@@ -4212,7 +4202,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       var sample="Hi, I'm Mia. Let's practice English together!";
       fetchTTS('/api/tutor/tts',{text:sample, voice:voice})
         .then(function(b){ playBlob(b); if(cb) cb(true,''); })
-        .catch(function(err){ browserSpeak("Hi, I'm Mia."); if(cb) cb(false,(err&&err.message)||'오류'); });
+        .catch(function(err){ browserSpeak("Hi, I'm Mia."); if(cb) cb(false, isQuota(err)?'무료 음성 한도 초과 — 기본 음성':'일시 오류 — 기본 음성'); });
     }
     // ---- 상태칩 (제미니 키 활성화 표시) ----
     function setStatus(kind, text){
@@ -5360,7 +5350,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
         fb.style.color=''; fb.textContent='▷ '+v[0]+' 미리듣기 중…';
         TUTOR.previewVoice(v[0], function(ok, msg){
           if(ok){ fb.style.color=''; fb.textContent='✓ '+v[0]+' (제미니 음성 정상)'; }
-          else { fb.style.color='var(--coral)'; fb.textContent='✕ '+v[0]+' 실패: '+msg+' — 브라우저 음성으로 대체됐어요'; }
+          else { fb.style.color='var(--text3)'; fb.textContent='ⓘ '+v[0]+' · '+msg; }
         });
       });
       grid.appendChild(b);
