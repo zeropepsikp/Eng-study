@@ -4269,9 +4269,9 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     // 공통 접미사: K-pop 걸그룹 아이돌 비주얼 + 동안·매끈 피부(주름 최소) + 실사 토킹헤드 구도
     var QUALITY=', K-pop girl group idol, beautiful idol visuals, youthful baby face, smooth flawless glass skin, poreless skin, absolutely no wrinkles, dewy idol makeup, gorgeous and photogenic, RAW photo, ultra realistic, professional portrait photography, 85mm lens, f/1.8, soft beauty lighting, catchlights in the eyes, sharp focus, looking straight at the camera, head and shoulders centered, plain softly blurred background, photorealistic, 8k, no text, no watermark';
     var PORTRAITS=[
-      { label:'세련된 금발', prompt:'A stunning K-pop idol style young woman with long wavy blonde hair, cute and chic idol visuals, soft sweet smile, wearing a tasteful cream knit top'+QUALITY },
-      { label:'귀여운 흑발', prompt:'An adorable K-pop idol style girl with straight shiny black hair and soft bangs, big bright sparkling eyes, fresh youthful baby-faced cute visuals, sweet gentle smile, pastel hoodie'+QUALITY },
-      { label:'동양 아이돌', prompt:'A gorgeous East Asian K-pop girl group idol, the pretty visual member, sleek black hair, flawless glass skin, stylish idol makeup, soft confident smile, fashionable outfit'+QUALITY }
+      { prompt:'A stunning Western Caucasian young woman, K-pop idol style visuals, soft wavy light brown hair, beautiful pretty idol look, soft sweet smile, fashionable stylish outfit'+QUALITY },
+      { prompt:'A gorgeous mixed Eurasian young woman, half Western and half East Asian features, K-pop idol style visuals, exotic elegant beauty, soft confident smile, stylish outfit'+QUALITY },
+      { prompt:'A beautiful Korean young woman, K-pop girl group idol the visual member, sleek black hair, flawless glass skin, lovely idol makeup, soft sweet smile, fashionable outfit'+QUALITY }
     ];
     var PROMPTS=PORTRAITS.map(function(p){ return p.prompt; });
     function genImage(prompt, retry){
@@ -4291,12 +4291,12 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       var done=0, ok=0, lastErr='';
       PORTRAITS.forEach(function(P){
         var cell=document.createElement('div'); cell.className='ts-pick';
-        cell.innerHTML='<div class="ts-ph">⏳</div><div class="ts-label">'+esc(P.label)+'</div>';
+        cell.innerHTML='<div class="ts-ph">⏳</div>';
         grid.appendChild(cell);
         genImage(P.prompt,false).then(function(dataurl){
-          ok++; cell.innerHTML='<img alt="tutor" src="'+dataurl+'"><div class="ts-label">'+esc(P.label)+'</div>';
+          ok++; cell.innerHTML='<img alt="tutor" src="'+dataurl+'">';
           cell.addEventListener('click', function(){ chooseTutor(dataurl); });
-        }).catch(function(err){ lastErr=(err&&err.message)||'실패'; cell.innerHTML='<div class="ts-ph" style="font-size:13px;color:var(--text3);">실패</div><div class="ts-label">'+esc(P.label)+'</div>'; })
+        }).catch(function(err){ lastErr=(err&&err.message)||'실패'; cell.innerHTML='<div class="ts-ph" style="font-size:13px;color:var(--text3);">실패</div>'; })
         .then(function(){ done++; if(done===PORTRAITS.length){ gen.disabled=false; gen.textContent='✨ 다시 생성';
           if(ok){ msg.style.color=''; msg.textContent='마음에 드는 튜터를 탭하면 영상 제작이 시작돼요.'; }
           else { msg.style.color='var(--coral)'; msg.textContent='생성 실패: '+lastErr; } } });
