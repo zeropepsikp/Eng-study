@@ -9,6 +9,8 @@
 
 const BASES = ["https://api-singapore.klingai.com", "https://api.klingai.com"];
 const PATH = "/v1/videos/image2video";
+const MODEL = "kling-v2-6";   // 공식 2.6 모델
+const MODE = "std";           // std(저렴) / pro(고품질) — 필요시 변경
 const TALK_PROMPT = "The person looks directly at the camera and talks naturally, gentle realistic lip movement, subtle friendly facial expressions, slight natural head movement and a small hand gesture, warm and lively, stable framing";
 
 function json(obj, status) {
@@ -54,7 +56,7 @@ export async function onRequestPost(context) {
       const comma = image.indexOf(",");
       if (image.indexOf("data:") === 0 && comma !== -1) image = image.slice(comma + 1);
       if (!image) return json({ error: "missing image" }, 400);
-      const body = JSON.stringify({ model_name: "kling-v1", mode: "std", duration: "5", image, prompt: TALK_PROMPT, cfg_scale: 0.5 });
+      const body = JSON.stringify({ model_name: MODEL, image, prompt: TALK_PROMPT, negative_prompt: "", duration: "5", mode: MODE, sound: "off" });
 
       const errs = [];
       for (let i = 0; i < BASES.length; i++) {
