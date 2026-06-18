@@ -4170,17 +4170,36 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     }
 
     // ---- 음성 ----
+    function fetchTTS(url, payload){
+      return fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+        .then(function(r){ return r.ok ? r.blob() : r.text().then(function(tx){ var j=null; try{j=JSON.parse(tx);}catch(e){}
+          var st=(j&&j.status)||r.status; throw new Error((st===429?'한도초과(429)':((j&&(j.detail||j.error))||('HTTP '+r.status)))); }); });
+    }
+    function playBlob(b){ try{ audio=new Audio(URL.createObjectURL(b)); audio.play().catch(function(){}); }catch(e){} }
+    function femaleVoice(){
+      try{
+        var vs=window.speechSynthesis.getVoices()||[];
+        var en=vs.filter(function(v){ return /^en/i.test(v.lang); });
+        var pref=/(female|samantha|victoria|karen|moira|tessa|fiona|serena|zira|aria|jenny|google us english|google uk english female|yuna|nicky)/i;
+        for(var i=0;i<en.length;i++){ if(pref.test(en[i].name)) return en[i]; }
+        return en[0]||vs[0]||null;
+      }catch(e){ return null; }
+    }
+    function browserSpeak(text){
+      try{ var u=new SpeechSynthesisUtterance(text); u.lang='en-US'; var fv=femaleVoice(); if(fv) u.voice=fv;
+        speechSynthesis.cancel(); speechSynthesis.speak(u); }catch(e){}
+    }
+    // 제미니 → (한도초과 등 실패 시) OpenAI 여성 음성 → 브라우저 여성 음성
     function speak(text){
       if(!text) return;
       try{ if(audio){ audio.pause(); audio=null; } }catch(e){}
       playStageVideo();
-      fetch('/api/tutor/tts',{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({text:text, voice:getVoice()})})
-        .then(function(r){ return r.ok ? r.blob() : r.text().then(function(tx){ var j=null; try{j=JSON.parse(tx);}catch(e){} throw new Error((j&&(j.detail||j.error))||('HTTP '+r.status)); }); })
-        .then(function(b){ setStatus('ok','Gemini 음성 ('+getVoice()+')'); audio=new Audio(URL.createObjectURL(b)); audio.play().catch(function(){}); })
+      fetchTTS('/api/tutor/tts',{text:text, voice:getVoice()})
+        .then(function(b){ setStatus('ok','Gemini 음성 ('+getVoice()+')'); playBlob(b); })
         .catch(function(err){
-          setStatus('warn','제미니 음성 실패 → 브라우저 음성 ('+((err&&err.message)||'')+')');
-          try{ var u=new SpeechSynthesisUtterance(text); u.lang='en-US'; speechSynthesis.cancel(); speechSynthesis.speak(u); }catch(_){}
+          fetchTTS('/api/tts',{text:text, voice:'shimmer'})
+            .then(function(b){ setStatus('warn','제미니 '+((err&&err.message)||'실패')+' → 대체 여성 음성'); playBlob(b); })
+            .catch(function(){ setStatus('warn','제미니 '+((err&&err.message)||'실패')+' → 브라우저 여성 음성'); browserSpeak(text); });
         });
     }
     function playStageVideo(){
@@ -4190,14 +4209,10 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     // 옵션 미리듣기: 성공/실패를 콜백으로 알려줌
     function previewVoice(voice, cb){
       try{ if(audio){ audio.pause(); audio=null; } }catch(e){}
-      fetch('/api/tutor/tts',{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({text:"Hi, I'm Mia. Let's practice English together!", voice:voice})})
-        .then(function(r){ return r.ok ? r.blob() : r.text().then(function(tx){ var j=null; try{j=JSON.parse(tx);}catch(e){} throw new Error((j&&(j.detail&&('('+ (j.status||'')+') '+j.detail) ))|| (j&&j.error) ||('HTTP '+r.status)); }); })
-        .then(function(b){ audio=new Audio(URL.createObjectURL(b)); audio.play().catch(function(){}); if(cb) cb(true,''); })
-        .catch(function(err){
-          try{ var u=new SpeechSynthesisUtterance("Hi, I'm Mia."); u.lang='en-US'; speechSynthesis.cancel(); speechSynthesis.speak(u); }catch(_){}
-          if(cb) cb(false, (err&&err.message)||'오류');
-        });
+      var sample="Hi, I'm Mia. Let's practice English together!";
+      fetchTTS('/api/tutor/tts',{text:sample, voice:voice})
+        .then(function(b){ playBlob(b); if(cb) cb(true,''); })
+        .catch(function(err){ browserSpeak("Hi, I'm Mia."); if(cb) cb(false,(err&&err.message)||'오류'); });
     }
     // ---- 상태칩 (제미니 키 활성화 표시) ----
     function setStatus(kind, text){
@@ -4234,12 +4249,12 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       $('ts-gen').addEventListener('click', genPortraits);
     }
 
-    // 사진 품질을 끌어올리는 공통 접미사 (실사 톤 + 토킹헤드용 정면 구도)
-    var QUALITY=', RAW photo, ultra realistic, professional portrait photography, 85mm lens, f/1.8, soft natural lighting, highly detailed skin texture, catchlights in the eyes, sharp focus, looking straight at the camera, head and shoulders centered, plain softly blurred background, photorealistic, 8k, no text, no watermark';
+    // 공통 접미사: K-pop 걸그룹 아이돌 비주얼 + 동안·매끈 피부(주름 최소) + 실사 토킹헤드 구도
+    var QUALITY=', K-pop girl group idol, beautiful idol visuals, youthful baby face, smooth flawless glass skin, poreless skin, absolutely no wrinkles, dewy idol makeup, gorgeous and photogenic, RAW photo, ultra realistic, professional portrait photography, 85mm lens, f/1.8, soft beauty lighting, catchlights in the eyes, sharp focus, looking straight at the camera, head and shoulders centered, plain softly blurred background, photorealistic, 8k, no text, no watermark';
     var PORTRAITS=[
-      { label:'세련된 금발', prompt:'A beautiful sophisticated woman in her early 20s, long wavy blonde hair, Western European features, elegant and chic, subtle warm smile, wearing a tasteful cream knit top, refined makeup'+QUALITY },
-      { label:'귀여운 흑발', prompt:'A cute charming teenage girl around 17 years old, straight shiny black hair with bangs, big bright eyes, fresh youthful innocent look, gentle sweet smile, wearing a cozy pastel hoodie, soft daylight'+QUALITY },
-      { label:'동양 아이돌', prompt:'A gorgeous East Asian K-pop idol style woman in her early 20s, sleek black hair, flawless dewy skin, stylish idol makeup, photogenic and pretty, soft confident smile, fashionable outfit, studio lighting'+QUALITY }
+      { label:'세련된 금발', prompt:'A stunning K-pop idol style young woman with long wavy blonde hair, cute and chic idol visuals, soft sweet smile, wearing a tasteful cream knit top'+QUALITY },
+      { label:'귀여운 흑발', prompt:'An adorable K-pop idol style girl with straight shiny black hair and soft bangs, big bright sparkling eyes, fresh youthful baby-faced cute visuals, sweet gentle smile, pastel hoodie'+QUALITY },
+      { label:'동양 아이돌', prompt:'A gorgeous East Asian K-pop girl group idol, the pretty visual member, sleek black hair, flawless glass skin, stylish idol makeup, soft confident smile, fashionable outfit'+QUALITY }
     ];
     var PROMPTS=PORTRAITS.map(function(p){ return p.prompt; });
     function genImage(prompt, retry){
@@ -4277,11 +4292,10 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       ls(LS_VIDEO, ''); // 새 튜터면 기존 영상 폐기
       renderVideoMaking();
       makeVideo(dataurl).then(function(videoUrl){
-        if(videoUrl) ls(LS_VIDEO, videoUrl);
-        startNew();
-      }).catch(function(){
-        // 영상 실패 → 정적 이미지로 그냥 시작
-        startNew();
+        ls(LS_VIDEO, videoUrl); startNew();
+      }).catch(function(err){
+        if(videoAborted) return;
+        showVideoError((err&&err.message)||'영상 제작 실패');
       });
     }
     function renderVideoMaking(){
@@ -4289,34 +4303,48 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       body().innerHTML='<div class="tutor-setup">'+
         '<img alt="tutor" src="'+esc(getImg())+'" style="width:160px;height:160px;object-fit:cover;border-radius:18px;display:block;margin:6px auto;">'+
         '<div class="tutor-spinner"></div>'+
-        '<div class="blurb" id="vid-msg" style="margin-top:8px;">튜터가 말하는 영상을 만들고 있어요…<br>1~3분 정도 걸릴 수 있어요. 완료되면 대화가 시작돼요.</div>'+
-        '<button id="vid-skip" class="tutor-mic" style="margin-top:10px;padding:9px 14px;">영상 없이 바로 시작</button>'+
+        '<div class="blurb" id="vid-msg" style="margin-top:8px;">🎬 튜터가 말하는 영상을 만들고 있어요…<br>1~3분 정도 걸릴 수 있어요. 완료되면 대화가 시작돼요.</div>'+
+        '<button id="vid-skip" class="tutor-mic" style="margin-top:10px;padding:9px 14px;">영상 없이 이미지로 시작</button>'+
       '</div>';
       var sk=$('vid-skip'); if(sk) sk.addEventListener('click', function(){ videoAborted=true; ls(LS_VIDEO,''); startNew(); });
     }
-    // Kling 영상 제작: 생성 태스크 → 폴링. 실패/미설정이면 빈 값 반환(정적 이미지 사용).
+    function showVideoError(msg){
+      setActionsEnabled(false);
+      body().innerHTML='<div class="tutor-setup">'+
+        '<img alt="tutor" src="'+esc(getImg())+'" style="width:160px;height:160px;object-fit:cover;border-radius:18px;display:block;margin:6px auto;">'+
+        '<div class="blurb" style="color:var(--coral);margin-top:8px;">🎬 영상 제작 실패: '+esc(msg)+'</div>'+
+        '<div class="blurb">이미지로 바로 시작하거나, 다시 시도할 수 있어요.<br>(Kling 키가 없으면 영상 없이 진행돼요)</div>'+
+        '<div style="display:flex;gap:8px;justify-content:center;margin-top:10px;">'+
+          '<button id="ve-img" class="tutor-submit" style="padding:9px 14px;">이미지로 시작</button>'+
+          '<button id="ve-retry" class="tutor-mic" style="padding:9px 14px;">다시 시도</button>'+
+        '</div>'+
+      '</div>';
+      var bi=$('ve-img'); if(bi) bi.addEventListener('click', function(){ ls(LS_VIDEO,''); startNew(); });
+      var br=$('ve-retry'); if(br) br.addEventListener('click', function(){ chooseTutor(getImg()); });
+    }
+    // Kling 영상 제작: 생성 태스크 → 폴링. 실패하면 reject(사유).
     function makeVideo(dataurl){
       videoAborted=false;
       return fetch('/api/tutor/video',{method:'POST',headers:{'Content-Type':'application/json'},
         body:JSON.stringify({ action:'create', image:dataurl })})
-        .then(function(r){ return r.json().catch(function(){ return {}; }).then(function(j){ if(!r.ok||!j||!j.task_id){ throw new Error((j&&(j.detail||j.error))||('HTTP '+r.status)); } return j.task_id; }); })
+        .then(function(r){ return r.text().then(function(tx){ var j=null; try{j=JSON.parse(tx);}catch(e){}
+          if(!r.ok||!j||!j.task_id){ throw new Error((j&&(j.detail||j.error))||('HTTP '+r.status)); } return j.task_id; }); })
         .then(function(taskId){ return pollVideo(taskId, 0); });
     }
     function pollVideo(taskId, n){
-      if(videoAborted) return Promise.resolve('');
-      if(n>40) return Promise.resolve(''); // 약 3분 후 포기 → 정적 이미지
-      return new Promise(function(res){ setTimeout(res, n===0?5000:5000); }).then(function(){
-        if(videoAborted) return '';
+      if(videoAborted) return Promise.reject(new Error('취소됨'));
+      if(n>40) return Promise.reject(new Error('시간 초과 (3분)'));
+      return new Promise(function(res){ setTimeout(res, 5000); }).then(function(){
+        if(videoAborted) throw new Error('취소됨');
         return fetch('/api/tutor/video',{method:'POST',headers:{'Content-Type':'application/json'},
           body:JSON.stringify({ action:'status', task_id:taskId })})
           .then(function(r){ return r.json().catch(function(){ return {}; }); })
           .then(function(j){
-            if(j && j.status==='succeed' && j.url) return j.url;
-            if(j && j.status==='failed') return '';
-            var vm=$('vid-msg'); if(vm) vm.innerHTML='튜터가 말하는 영상을 만들고 있어요… ('+((n+1)*5)+'초)<br>완료되면 대화가 시작돼요.';
+            if(j && j.status==='succeed'){ if(j.url) return j.url; throw new Error('영상 URL 없음'); }
+            if(j && j.status==='failed') throw new Error('Kling 실패'+(j.detail?(': '+j.detail):''));
+            var vm=$('vid-msg'); if(vm) vm.innerHTML='🎬 튜터가 말하는 영상을 만들고 있어요… ('+((n+1)*5)+'초)<br>완료되면 대화가 시작돼요.';
             return pollVideo(taskId, n+1);
-          })
-          .catch(function(){ return pollVideo(taskId, n+1); });
+          });
       });
     }
 
