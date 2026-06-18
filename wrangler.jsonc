@@ -1,0 +1,11 @@
+{
+  // ⚠️ name 은 Cloudflare 대시보드의 Worker 서비스 이름과 정확히 일치해야 한다.
+  //    (다르면 새 Worker 가 만들어진다. 대시보드의 프로젝트명으로 바꿔도 됨.)
+  "name": "zeroengstudy",
+  "main": "src/index.js",
+  "compatibility_date": "2024-11-01",
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS"
+  }
+}
