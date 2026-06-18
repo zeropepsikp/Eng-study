@@ -7,6 +7,7 @@ import { onRequestPost as tutorChat } from "./api/tutor/chat.js";
 import { onRequestPost as tutorTts } from "./api/tutor/tts.js";
 import { onRequestPost as tutorImage } from "./api/tutor/image.js";
 import { onRequestPost as tutorVideo } from "./api/tutor/video.js";
+import { onRequestPost as tutorDrill } from "./api/tutor/drill.js";
 import { onRequest as tutorHealth } from "./api/tutor/health.js";
 import { onRequestPost as openaiTts } from "./api/tts.js";
 
@@ -16,6 +17,7 @@ const POST_ROUTES = {
   "/api/tutor/tts": tutorTts,
   "/api/tutor/image": tutorImage,
   "/api/tutor/video": tutorVideo,
+  "/api/tutor/drill": tutorDrill,
   "/api/tts": openaiTts,
 };
 // GET/POST 모두 허용
