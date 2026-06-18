@@ -303,6 +303,8 @@
   .drill-nav button{flex:1 1 0;}
   .drill-loading{font-size:13px;color:var(--text3);text-align:center;margin-top:6px;}
   .drill-errnote{font-size:11.5px;color:var(--text3);margin:-4px 0 10px;}
+  .drill-more{border:1px solid var(--border);background:var(--surface2);color:var(--text2);border-radius:8px;
+    font-size:11px;font-weight:600;padding:3px 7px;cursor:pointer;margin-left:6px;vertical-align:middle;}
 
   /* ===== AI Tutor ===== */
   .tutor-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;}
@@ -778,6 +780,7 @@
 
   <!-- CHUNKS PANEL -->
   <div class="panel" id="panel-chunks">
+    <div class="section-title">Chunks Study</div>
     <div class="chunk-head" id="chunk-head">
       <div class="chunk-prog-wrap">
         <div class="chunk-prog-bar"><div class="chunk-fill" id="chunk-fill"></div></div>
@@ -790,6 +793,7 @@
 
   <!-- DRILL PANEL (청크 기반 대화 연습) -->
   <div class="panel" id="panel-drill">
+    <div class="section-title">Drill Study</div>
     <div id="drill-body"></div>
   </div>
 
@@ -4561,7 +4565,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   //  Drill — 청크 기반 3턴 대화 연습 (Gemini 생성, 표현당 최대 3패턴 캐시)
   // ============================================================
   var DRILL_CACHE_KEY='eng_drill_cache_v1';
-  var curDrillCat=1, drillDeck=[], drillPos=0, drillState=null;
+  var curDrillCat=1, drillDeck=[], drillPos=0, drillStates=[];
 
   function drillCacheGet(){ try{ return JSON.parse(localStorage.getItem(DRILL_CACHE_KEY))||{}; }catch(e){ return {}; } }
   function drillCacheSet(c){ try{ localStorage.setItem(DRILL_CACHE_KEY, JSON.stringify(c)); }catch(e){} }
@@ -4586,112 +4590,127 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     curDrillCat=cat;
     var chunks=(CHUNK_DATA[cat]&&CHUNK_DATA[cat].chunks)||[];
     drillDeck=shuffleArr(chunks.map(function(_,i){ return i; }));
+    drillStates=[];
     drillPos=0;
-    loadDrillItem(false);
+    ensureDrillItem(false);
   }
   function curDrillChunk(){ var chunks=(CHUNK_DATA[curDrillCat]&&CHUNK_DATA[curDrillCat].chunks)||[]; return chunks[drillDeck[drillPos]]; }
 
-  function loadDrillItem(forceNew){
+  // 현재 위치의 대화를 준비(캐시 재사용 또는 생성). forceNew면 새 패턴 생성.
+  function ensureDrillItem(forceNew){
     var ch=curDrillChunk(); if(!ch){ renderDrill(); return; }
-    var idx=drillDeck[drillPos], key=drillKey(curDrillCat, idx);
+    if(!forceNew && drillStates[drillPos] && drillStates[drillPos].dlg){ renderDrill(); return; }
+    var pos=drillPos, idx=drillDeck[pos], key=drillKey(curDrillCat, idx);
     var list=drillCacheGet()[key]||[];
     if(!forceNew && list.length){
-      drillState={ dlg:list[Math.floor(Math.random()*list.length)], revealed:false, graded:null, loading:false };
+      drillStates[pos]={ dlg:list[Math.floor(Math.random()*list.length)], revealed:false, graded:null, userInput:'' };
       renderDrill(); return;
     }
-    drillState={ dlg:null, revealed:false, graded:null, loading:true }; renderDrill();
+    drillStates[pos]={ dlg:null, revealed:false, graded:null, userInput:'', loading:true }; renderDrill();
     var variant=list.length+1;
     fetch('/api/tutor/drill',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({ chunk_en:ch.en, chunk_ko:ch.ko, examples:(ch.ex||[]).map(function(e){ return e.en; }), variant:variant })})
       .then(function(r){ if(!r.ok) return r.text().then(function(t){ var j=null; try{j=JSON.parse(t);}catch(e){} throw new Error((j&&(j.status===429?'무료 한도 초과(429)':(j.detail||j.error)))||('HTTP '+r.status)); }); return r.json(); })
       .then(function(dlg){
         var c2=drillCacheGet(), l2=c2[key]||[]; if(l2.length<3){ l2.push(dlg); c2[key]=l2; drillCacheSet(c2); }
-        drillState={ dlg:dlg, revealed:false, graded:null, loading:false }; renderDrill();
+        drillStates[pos]={ dlg:dlg, revealed:false, graded:null, userInput:'' };
+        if(drillPos===pos) renderDrill();
       })
       .catch(function(err){
         var ex=(ch.ex&&ch.ex[0])||{en:ch.en, ko:ch.ko};
-        drillState={ dlg:{ a1_en:"Hey, can I ask you something?", a1_ko:"저기, 뭐 좀 물어봐도 돼?",
+        drillStates[pos]={ dlg:{ a1_en:"Hey, can I ask you something?", a1_ko:"저기, 뭐 좀 물어봐도 돼?",
           you_en:ex.en, you_ko:ex.ko, a2_en:"Got it — thanks!", a2_ko:"알겠어, 고마워!" },
-          revealed:false, graded:null, loading:false, err:(err&&err.message)||'' };
-        renderDrill();
+          revealed:false, graded:null, userInput:'', err:(err&&err.message)||'' };
+        if(drillPos===pos) renderDrill();
       });
   }
+  function drillPrev(){ if(drillPos>0){ drillPos--; ensureDrillItem(false); } }
+  function drillNext(){ if(drillPos<drillDeck.length-1){ drillPos++; } else { drillPos=0; } ensureDrillItem(false); }
 
-  function drillLineHtml(who, en, ko){
-    return '<div class="drill-line'+(who==='You'?' you':'')+'"><div class="dl-who">'+who+'</div>'+
-      '<div class="dl-body"><div class="dl-en">'+escHtml(en)+' <button class="dl-spk" data-en="'+escHtml(en).replace(/"/g,'&quot;')+'">🔊</button></div><div class="dl-ko">'+escHtml(ko)+'</div></div></div>';
+  function drillLineEl(who, en, ko){
+    var el=document.createElement('div'); el.className='drill-line'+(who==='You'?' you':'');
+    var w=document.createElement('div'); w.className='dl-who'; w.textContent=who;
+    var b=document.createElement('div'); b.className='dl-body';
+    var enr=document.createElement('div'); enr.className='dl-en'; enr.textContent=en+' ';
+    var spk=document.createElement('button'); spk.className='dl-spk'; spk.textContent='🔊';
+    spk.addEventListener('click',function(){ speak(en,'en'); });
+    enr.appendChild(spk);
+    var kor=document.createElement('div'); kor.className='dl-ko'; kor.textContent=ko;
+    b.appendChild(enr); b.appendChild(kor); el.appendChild(w); el.appendChild(b);
+    return el;
   }
-  function drillNavHtml(){
-    return '<div class="drill-nav"><button id="drill-prev" class="today-again ghost">‹ Prev</button><button id="drill-next" class="today-again ghost">Next ›</button></div>';
-  }
-  function wireDrillCommon(){
-    var p=$('drill-prev'), n=$('drill-next');
-    if(p) p.addEventListener('click', drillPrev);
-    if(n) n.addEventListener('click', drillNext);
-    Array.prototype.forEach.call(document.querySelectorAll('#drill-body .dl-spk'), function(b){
-      b.addEventListener('click', function(){ speak(b.getAttribute('data-en'),'en'); });
-    });
-  }
-  function drillPrev(){ if(drillPos>0){ drillPos--; loadDrillItem(false); } }
-  function drillNext(){ if(drillPos<drillDeck.length-1){ drillPos++; } else { drillPos=0; shuffleArr(drillDeck); } loadDrillItem(false); }
 
   function renderDrill(){
     var wrap=$('drill-body'); if(!wrap) return;
     var ch=curDrillChunk();
     if(!ch){ wrap.innerHTML='<div class="empty">이 카테고리에 표현이 없어요.</div>'; return; }
-    var html='<div class="drill-head">'+
-      '<div class="drill-cat">'+escHtml(CHUNK_DATA[curDrillCat].name)+' · '+(drillPos+1)+' / '+drillDeck.length+'</div>'+
-      '<div class="drill-target">🎯 <b>'+escHtml(ch.en)+'</b> <span class="drill-target-ko">'+escHtml(ch.ko)+'</span></div>'+
-    '</div>';
-    if(drillState && drillState.loading){
-      wrap.innerHTML=html+'<div class="drill-card"><div class="tutor-spinner"></div><div class="drill-loading">대화를 만드는 중…</div></div>'+drillNavHtml();
-      wireDrillCommon(); return;
-    }
-    var d=drillState&&drillState.dlg;
-    if(!d){ wrap.innerHTML=html+'<div class="empty">대화를 불러오지 못했어요.</div>'+drillNavHtml(); wireDrillCommon(); return; }
+    var st=drillStates[drillPos]||{};
+    wrap.innerHTML='';
 
-    html+='<div class="drill-card">';
-    html+=drillLineHtml('A', d.a1_en, d.a1_ko);
-    if(drillState.revealed){
-      html+=drillLineHtml('You', d.you_en, d.you_ko);
-      html+=drillLineHtml('A', d.a2_en, d.a2_ko);
-    }else{
-      html+='<div class="drill-line you"><div class="dl-who">You</div><div class="dl-body">'+
-        '<div class="dl-instruct">👉 '+escHtml(d.you_ko)+'</div>'+
-        '<div class="dl-hint"><b>"'+escHtml(ch.en)+'"</b> 표현으로 영어로 말/입력해 보세요.</div></div></div>';
-    }
-    html+='</div>';
-    if(drillState.err){ html+='<div class="drill-errnote">⚠ 생성 실패('+escHtml(drillState.err)+') — 예문 기반 간이 대화예요.</div>'; }
+    // 헤더 (목표 표현 + 다른 대화)
+    var head=document.createElement('div'); head.className='drill-head';
+    head.innerHTML='<div class="drill-cat">'+escHtml(CHUNK_DATA[curDrillCat].name)+' · '+(drillPos+1)+' / '+drillDeck.length+'</div>'+
+      '<div class="drill-target">🎯 <b>'+escHtml(ch.en)+'</b> <span class="drill-target-ko">'+escHtml(ch.ko)+'</span> <button class="drill-more" id="drill-another">🔁 다른 대화</button></div>';
+    wrap.appendChild(head);
+    var another=$('drill-another'); if(another) another.addEventListener('click', function(){ ensureDrillItem(true); });
 
-    if(!drillState.revealed){
-      html+='<div class="tutor-input-row"><button class="tutor-mic" id="drill-mic">🎤</button>'+
-        '<textarea id="drill-in" rows="1" placeholder="영어로 입력하거나 말해보세요…"></textarea>'+
-        '<button class="tutor-submit" id="drill-submit">정답 보기</button></div>'+
-        '<div class="mic-hint" id="drill-michint" style="text-align:center;"></div>';
-    }else{
-      html+='<div class="grade-row" id="drill-grade"></div>'+
-        '<button class="today-again ghost" id="drill-another" style="margin-top:10px;">🔁 이 표현 다른 대화</button>';
+    if(st.loading){
+      var ld=document.createElement('div'); ld.className='drill-card';
+      ld.innerHTML='<div class="tutor-spinner"></div><div class="drill-loading">대화를 만드는 중…</div>';
+      wrap.appendChild(ld); return;
     }
-    html+=drillNavHtml();
-    wrap.innerHTML=html;
+    var d=st.dlg;
+    if(!d){ var em=document.createElement('div'); em.className='empty'; em.textContent='대화를 불러오지 못했어요.'; wrap.appendChild(em); return; }
 
-    if(!drillState.revealed){
-      var inp=$('drill-in');
-      setupSpeakMic($('drill-mic'), inp, $('drill-michint'));
-      var reveal=function(){ drillState.userInput=inp.value; drillState.revealed=true; renderDrill(); speak(d.you_en,'en'); };
-      $('drill-submit').addEventListener('click', reveal);
-      inp.addEventListener('keydown', function(e){ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); reveal(); } });
+    // 대화 카드
+    var card=document.createElement('div'); card.className='drill-card';
+    card.appendChild(drillLineEl('A', d.a1_en, d.a1_ko));
+    if(st.revealed){
+      card.appendChild(drillLineEl('You', d.you_en, d.you_ko));
+      card.appendChild(drillLineEl('A', d.a2_en, d.a2_ko));
     }else{
-      var gr=$('drill-grade');
+      var you=document.createElement('div'); you.className='drill-line you';
+      you.innerHTML='<div class="dl-who">You</div><div class="dl-body"><div class="dl-instruct">👉 '+escHtml(d.you_ko)+'</div>'+
+        '<div class="dl-hint"><b>"'+escHtml(ch.en)+'"</b> 표현으로 말/입력해 보세요.</div></div>';
+      card.appendChild(you);
+    }
+    wrap.appendChild(card);
+    if(st.err){ var en2=document.createElement('div'); en2.className='drill-errnote'; en2.textContent='⚠ 생성 실패('+st.err+') — 예문 기반 간이 대화예요.'; wrap.appendChild(en2); }
+
+    // 입력/채점 — 청크 메뉴와 동일 (speakMode면 말하기/적기 줄)
+    var gr=document.createElement('div'); gr.className='grade-row'; gr.style.marginTop='14px';
+    if(speakMode){
+      renderSpeakRow(gr, d.you_en, function(grade, val){
+        if(st.revealed) return;
+        st.revealed=true; st.graded=grade; st.userInput=val||'';
+        try{ STATS.recordDaily(grade,'chunk'); }catch(e){}
+        renderDrill(); speak(d.you_en,'en');
+      }, st.revealed, st.graded, st.userInput);
+    }else{
       [['ok','✓ Got it','grade-ok'],['meh','△ So-so','grade-meh'],['no','✕ No idea','grade-no']].forEach(function(g){
-        var b=document.createElement('button'); b.className='grade-btn '+g[2]+(drillState.graded===g[0]?' picked':'');
+        var b=document.createElement('button'); b.className='grade-btn '+g[2]+(st.graded===g[0]?' picked':'');
+        if(st.revealed && st.graded!==g[0]) b.classList.add('dim');
         b.textContent=g[1];
-        b.addEventListener('click', function(){ if(drillState.graded) return; drillState.graded=g[0]; try{ STATS.recordDaily(g[0],'chunk'); }catch(e){} drillNext(); });
+        b.addEventListener('click', function(){ if(st.revealed) return; st.revealed=true; st.graded=g[0]; try{ STATS.recordDaily(g[0],'chunk'); }catch(e){} renderDrill(); speak(d.you_en,'en'); });
         gr.appendChild(b);
       });
-      $('drill-another').addEventListener('click', function(){ loadDrillItem(true); });
     }
-    wireDrillCommon();
+    wrap.appendChild(gr);
+
+    // 이전 / 다음(섭밋) — 청크와 동일
+    var nav=document.createElement('div'); nav.className='nav';
+    var pv=document.createElement('button'); pv.textContent='← Prev'; pv.disabled=(drillPos<=0);
+    pv.addEventListener('click', drillPrev);
+    var nx=document.createElement('button'); nx.className='listen';
+    var pending=(speakMode && !st.revealed);
+    if(pending){ nx.textContent='Submit'; nx.disabled=false; }
+    else { nx.textContent='Next →'; nx.disabled=!st.revealed; }
+    nx.addEventListener('click',function(){
+      if(speakMode && !st.revealed){ if(speakSubmitFn) speakSubmitFn(); return; }
+      if(!st.revealed) return;
+      drillNext();
+    });
+    nav.appendChild(pv); nav.appendChild(nx); wrap.appendChild(nav);
   }
 
   function updateProgress(){
