@@ -4176,8 +4176,22 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
           var st=(j&&j.status)||r.status; throw new Error((st===429?'한도초과(429)':((j&&(j.detail||j.error))||('HTTP '+r.status)))); }); });
     }
     function playBlob(b){ try{ audio=new Audio(URL.createObjectURL(b)); audio.play().catch(function(){}); }catch(e){} }
+    function pickFemaleVoice(){
+      try{
+        var vs=window.speechSynthesis.getVoices()||[];
+        var en=vs.filter(function(v){ return /^en/i.test(v.lang); });
+        var pool=en.length?en:vs;
+        var pref=/(female|samantha|victoria|karen|moira|tessa|fiona|serena|zira|aria|jenny|google us english|google uk english female|nicky|allison|ava|susan|catherine)/i;
+        for(var i=0;i<pool.length;i++){ if(pref.test(pool[i].name)) return pool[i]; }
+        // 남성으로 알려진 이름은 피하고 첫 영어 보이스
+        var male=/(male|david|mark|alex|daniel|fred|google uk english male|rishi|aaron)/i;
+        for(var k=0;k<pool.length;k++){ if(!male.test(pool[k].name)) return pool[k]; }
+        return pool[0]||null;
+      }catch(e){ return null; }
+    }
     function browserSpeak(text){
-      try{ var u=new SpeechSynthesisUtterance(text); u.lang='en-US'; speechSynthesis.cancel(); speechSynthesis.speak(u); }catch(e){}
+      try{ var u=new SpeechSynthesisUtterance(text); u.lang='en-US'; var fv=pickFemaleVoice(); if(fv) u.voice=fv;
+        speechSynthesis.cancel(); speechSynthesis.speak(u); }catch(e){}
     }
     function isQuota(err){ return /429|한도|quota|exceed|RESOURCE_EXHAUSTED/i.test((err&&err.message)||''); }
     // 제미니 음성 → 실패(무료 한도 초과 등) 시 폰 기본 음성, 작은 안내만 표시
