@@ -3,7 +3,7 @@
 // 키는 환경변수 GEMINI_KEY. 실패 시 비-200 → 클라가 브라우저 음성으로 폴백.
 
 const MODEL = "gemini-2.5-flash-preview-tts";
-const ALLOWED = new Set(["Leda", "Aoede", "Kore", "Autonoe", "Callirrhoe", "Despina", "Vindemiatrix", "Sulafat"]);
+const ALLOWED = new Set(["Leda", "Aoede", "Kore", "Zephyr", "Callirrhoe", "Autonoe", "Despina", "Erinome", "Laomedeia", "Achernar", "Sulafat", "Vindemiatrix"]);
 const DEFAULT_VOICE = "Leda";
 const MAX_LEN = 700;
 
@@ -44,6 +44,15 @@ export async function onRequestPost(context) {
     if (text.length > MAX_LEN) text = text.slice(0, MAX_LEN);
     if (!ALLOWED.has(voice)) voice = DEFAULT_VOICE;
 
+    // 엣지 캐시 (model+voice+text) — 무료 한도(429) 부담을 줄이려고 같은 문장은 재사용
+    let cache = null, cacheKey = null;
+    try {
+      cache = caches.default;
+      cacheKey = new Request("https://tutor-tts.local/" + encodeURIComponent(MODEL) + "/" + encodeURIComponent(voice) + "/" + encodeURIComponent(text), { method: "GET" });
+      const hit = await cache.match(cacheKey);
+      if (hit) return hit;
+    } catch (e) { cache = null; }
+
     const body = {
       contents: [{ parts: [{ text }] }],
       generationConfig: {
@@ -53,12 +62,16 @@ export async function onRequestPost(context) {
     };
     const url = "https://generativelanguage.googleapis.com/v1beta/models/" + MODEL + ":generateContent?key=" + encodeURIComponent(key);
     const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-    if (!r.ok) return new Response("gemini tts " + r.status, { status: 502 });
+    if (!r.ok) {
+      let detail = "";
+      try { detail = (await r.text()).slice(0, 300); } catch (e) {}
+      return jsonErr("gemini tts failed", r.status, detail);
+    }
     const j = await r.json();
     const part = j && j.candidates && j.candidates[0] && j.candidates[0].content &&
       j.candidates[0].content.parts && j.candidates[0].content.parts[0];
     const inline = part && part.inlineData;
-    if (!inline || !inline.data) return new Response("no audio", { status: 502 });
+    if (!inline || !inline.data) return jsonErr("no audio in response", 502, "");
 
     let rate = 24000;
     const m = /rate=(\d+)/.exec(inline.mimeType || "");
@@ -66,10 +79,16 @@ export async function onRequestPost(context) {
 
     const pcm = b64ToBytes(inline.data);
     const wav = pcmToWav(pcm, rate);
-    return new Response(wav, { headers: { "Content-Type": "audio/wav", "Cache-Control": "no-store" } });
+    const resp = new Response(wav, { headers: { "Content-Type": "audio/wav", "Cache-Control": "public, max-age=86400" } });
+    if (cache && cacheKey && context.waitUntil) { try { context.waitUntil(cache.put(cacheKey, resp.clone())); } catch (e) {} }
+    return resp;
   } catch (e) {
-    return new Response("error", { status: 500 });
+    return jsonErr("server error", 500, String(e && e.message || e));
   }
+}
+
+function jsonErr(error, status, detail) {
+  return new Response(JSON.stringify({ error, status, detail }), { status: status === 429 ? 429 : 502, headers: { "Content-Type": "application/json" } });
 }
 
 export async function onRequest(context) {
