@@ -4185,15 +4185,18 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     function genImage(prompt, retry){
       return fetch('/api/tutor/image',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:prompt})})
         .then(function(r){
-          if(r.status===503 && !retry){ return new Promise(function(res){ setTimeout(res,6000); }).then(function(){ return genImage(prompt,true); }); }
-          if(!r.ok) throw 0; return r.json();
-        })
-        .then(function(j){ if(!j||!j.image) throw 0; return j.image; });
+          return r.text().then(function(tx){
+            var j=null; try{ j=JSON.parse(tx); }catch(e){}
+            if(r.status===503 && !retry){ return new Promise(function(res){ setTimeout(res,7000); }).then(function(){ return genImage(prompt,true); }); }
+            if(!r.ok || !j || !j.image){ throw new Error((j&&(j.detail||j.error))||('HTTP '+r.status)); }
+            return j.image;
+          });
+        });
     }
     function genPortraits(){
       var gen=$('ts-gen'), grid=$('ts-grid'), msg=$('ts-msg');
-      gen.disabled=true; gen.textContent='생성 중… (수십 초 걸려요)'; grid.innerHTML=''; msg.textContent='';
-      var done=0, ok=0;
+      gen.disabled=true; gen.textContent='생성 중… (수십 초 걸려요)'; grid.innerHTML=''; msg.textContent=''; msg.style.color='';
+      var done=0, ok=0, lastErr='';
       PROMPTS.forEach(function(p){
         var cell=document.createElement('div'); cell.className='ts-pick';
         cell.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:24px;">⏳</div>';
@@ -4201,9 +4204,10 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
         genImage(p,false).then(function(dataurl){
           ok++; cell.innerHTML='<img alt="tutor" src="'+dataurl+'">';
           cell.addEventListener('click', function(){ ls(LS_IMG,dataurl); startNew(); });
-        }).catch(function(){ cell.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:13px;color:var(--text3);">실패</div>'; })
+        }).catch(function(err){ lastErr=(err&&err.message)||'실패'; cell.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:13px;color:var(--text3);">실패</div>'; })
         .then(function(){ done++; if(done===PROMPTS.length){ gen.disabled=false; gen.textContent='✨ 다시 생성';
-          msg.textContent = ok? '마음에 드는 튜터를 탭하세요.' : '이미지 생성에 실패했어요. 다시 시도하거나 아래로 시작하세요.'; } });
+          if(ok){ msg.style.color=''; msg.textContent='마음에 드는 튜터를 탭하세요.'; }
+          else { msg.style.color='var(--coral)'; msg.textContent='생성 실패: '+lastErr; } } });
       });
     }
 
