@@ -3239,21 +3239,27 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     return n;
   }
 
-  // 한 예시(카드)에 대한 평가 기록. grade: 'ok' | 'meh' | 'no'
-  function record(lv, ei, bi, grade){
+  // 일별 로그 누적 (전체 + 출처별: c=청크, l=레벨). source: 'chunk' | 'level'(기본)
+  function bumpDaily(grade, source){
+    var dk = todayKey();
+    var d = store.daily[dk] = store.daily[dk] || {ok:0, meh:0, no:0};
+    if(grade==='ok') d.ok++; else if(grade==='meh') d.meh++; else if(grade==='no') d.no++;
+    var sk = (source==='chunk') ? 'c' : 'l';
+    var sb = d[sk] = d[sk] || {ok:0, meh:0, no:0};
+    if(grade==='ok') sb.ok++; else if(grade==='meh') sb.meh++; else if(grade==='no') sb.no++;
+  }
+  // 한 예시(카드)에 대한 평가 기록. grade: 'ok' | 'meh' | 'no'. source: 'level'(기본) | 'chunk'
+  function record(lv, ei, bi, grade, source){
     var c = cell(lv, ei, bi);
     if(grade==='ok') c.ok++;
     else if(grade==='meh') c.meh++;
     else if(grade==='no') c.no++;
     updateSrs(c, grade);   // 간격 반복 스케줄 갱신
-    // 일별 로그
-    var dk = todayKey();
-    store.daily[dk] = store.daily[dk] || {ok:0, meh:0, no:0};
-    if(grade==='ok') store.daily[dk].ok++;
-    else if(grade==='meh') store.daily[dk].meh++;
-    else if(grade==='no') store.daily[dk].no++;
+    bumpDaily(grade, source);
     save();
   }
+  // 셀(SRS) 없이 일별 통계만 기록 (청크 모드용)
+  function recordDaily(grade, source){ bumpDaily(grade, source); save(); }
 
   // 한 예시의 "약함 점수" (높을수록 더 자주 등장시킨다)
   // 모름은 강하게, 애매는 중간, 맞춤은 낮춘다. 한 번도 안 본 것도 가볍게 우선.
@@ -3346,13 +3352,24 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     Object.keys(dd).forEach(function(k){ var c=dd[k]; ok+=c.ok; meh+=c.meh; no+=c.no; days++; });
     return { ok:ok, meh:meh, no:no, total:ok+meh+no, days:days };
   }
+  // 출처별(src: 'c'=청크 | 'l'=레벨) 일별 합계
+  function dailyTotalsBy(src){
+    var ok=0, meh=0, no=0, days=0;
+    var dd = store.daily || {};
+    Object.keys(dd).forEach(function(k){ var b=dd[k] && dd[k][src]; if(!b) return; var n=(b.ok||0)+(b.meh||0)+(b.no||0); ok+=b.ok||0; meh+=b.meh||0; no+=b.no||0; if(n) days++; });
+    return { ok:ok, meh:meh, no:no, total:ok+meh+no, days:days };
+  }
+  function todayCountBy(src){
+    var d = todayKey(); var c = store.daily && store.daily[d] && store.daily[d][src];
+    if(!c) return 0; return (c.ok||0)+(c.meh||0)+(c.no||0);
+  }
 
   window.STATS = {
-    record:record, weight:weight, weightedPick:weightedPick,
+    record:record, recordDaily:recordDaily, weight:weight, weightedPick:weightedPick,
     accuracy:accuracy, attempts:attempts,
     exprAccuracy:exprAccuracy, levelAccuracy:levelAccuracy,
     resetAll:resetAll, resetLevel:resetLevel, resetDaily:resetDaily,
-    dailyAll:dailyAll, dailyFor:dailyFor, todayCount:todayCount, dailyTotals:dailyTotals, todayKey:todayKey,
+    dailyAll:dailyAll, dailyFor:dailyFor, todayCount:todayCount, dailyTotals:dailyTotals, dailyTotalsBy:dailyTotalsBy, todayCountBy:todayCountBy, todayKey:todayKey,
     isDue:isDue, dueCount:dueCount,
     // 수동 내보내기/불러오기
     exportDownload:exportDownload, importFile:importFile, setFileStatusCb:setFileStatusCb,
@@ -4989,6 +5006,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   }
   function applyTodayChunkGrade(item, ch, grade){
     item.graded=grade;
+    if(!item._counted){ item._counted=true; STATS.recordDaily(grade, 'chunk'); }  // 오늘의 학습 통계(청크)
     var cur=chunkStreak(item.cat, item.idx);
     if(grade==='ok'){ setChunkStreak(item.cat, item.idx, cur+1); }
     else { setChunkStreak(item.cat, item.idx, 0); }
@@ -5307,7 +5325,8 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   // 통계 (하위 메뉴: 전체 정답률 / 오늘의 학습 통계)
   // ============================================================
   var statsFilter = 0;          // 0 = 전체, 또는 임계값(비율) 이하만
-  var statsSub = 'overall';     // 'overall' | 'daily' | 'chunks'
+  var statsSub = 'daily';       // 'daily' | 'overall' | 'chunks'
+  var dailySrc = 'l';           // 오늘의 학습 통계 내부: 'l'=레벨 | 'c'=청크
   var statsChunkCat = '1';      // 통계 > Chunks 에서 펼쳐진 카테고리
   var lvCollapsed = {};         // 레벨별 접힘 상태
   function pct(x){ return Math.round(x*100); }
@@ -5321,7 +5340,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     wrap.innerHTML='';
     // 하위 메뉴
     var subRow=document.createElement('div'); subRow.className='stats-sub';
-    [['overall','Accuracy'],['daily','Today Stats'],['chunks','Chunks']].forEach(function(s){
+    [['daily','Today'],['overall','Levels'],['chunks','Chunks']].forEach(function(s){
       var b=document.createElement('button'); b.className='ssub'+(statsSub===s[0]?' on':''); b.textContent=s[1];
       b.addEventListener('click',function(){ statsSub=s[0]; renderStats(); });
       subRow.appendChild(b);
@@ -7329,10 +7348,20 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   }
 
   function renderDaily(wrap){
-    var tot = STATS.dailyTotals();
+    // 내부 서브탭: 레벨 / 청크
+    var seg=document.createElement('div'); seg.className='today-mode-seg'; seg.style.margin='2px 0 12px';
+    [['l','Levels'],['c','Chunks']].forEach(function(m){
+      var b=document.createElement('button'); b.className='tm-btn'+(dailySrc===m[0]?' on':''); b.textContent=m[1];
+      b.addEventListener('click',function(){ if(dailySrc===m[0])return; dailySrc=m[0]; renderStats(); });
+      seg.appendChild(b);
+    });
+    wrap.appendChild(seg);
+
+    var srcName = (dailySrc==='c') ? '청크' : '레벨';
+    var tot = STATS.dailyTotalsBy(dailySrc);
     if(!tot.total){
       var emp=document.createElement('div'); emp.className='empty';
-      emp.innerHTML='No records yet.<br>Solve cards and grade them to build daily stats.';
+      emp.innerHTML='아직 '+srcName+' 기록이 없어요.<br>오늘의 학습('+srcName+' 모드)에서 카드를 풀면 쌓입니다.';
       wrap.appendChild(emp); return;
     }
     // 요약 대시보드 카드
@@ -7342,7 +7371,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       c.innerHTML='<div class="dash-val">'+value+'</div><div class="dash-lab">'+label+'</div>'+(sub?'<div class="dash-sub">'+sub+'</div>':'');
       return c;
     }
-    var todayN = STATS.todayCount();
+    var todayN = STATS.todayCountBy(dailySrc);
     var overallAcc = tot.total ? (tot.ok + tot.meh*0.5)/tot.total : 0;
     dash.appendChild(card('Today', todayN, null, 'd-today'));
     dash.appendChild(card('Total', tot.total, tot.days+' days', 'd-total'));
@@ -7358,18 +7387,19 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     legend.innerHTML='<span class="lg lok">✓ Got it '+tot.ok+'</span><span class="lg lmeh">△ So-so '+tot.meh+'</span><span class="lg lno">✕ No idea '+tot.no+'</span>';
     wrap.appendChild(legend);
 
-    // 일자별 리스트 (최근순)
+    // 일자별 리스트 (최근순) — 선택한 출처만
     var daily = STATS.dailyAll();
     var keys = Object.keys(daily).sort().reverse();
     var listTitle=document.createElement('div'); listTitle.className='daily-title'; listTitle.textContent='By date';
     wrap.appendChild(listTitle);
     var todayK = STATS.todayKey();
     keys.forEach(function(k){
-      var c=daily[k]; var n=c.ok+c.meh+c.no; if(!n) return;
-      var acc=(c.ok + c.meh*0.5)/n;
+      var c=daily[k] && daily[k][dailySrc]; if(!c) return;
+      var n=(c.ok||0)+(c.meh||0)+(c.no||0); if(!n) return;
+      var acc=((c.ok||0) + (c.meh||0)*0.5)/n;
       var row=document.createElement('div'); row.className='daily-row';
       var dlabel = (k===todayK? 'Today · ':'') + k;
-      var okp=c.ok/n*100, mp=c.meh/n*100, np=c.no/n*100;
+      var okp=(c.ok||0)/n*100, mp=(c.meh||0)/n*100, np=(c.no||0)/n*100;
       row.innerHTML='<div class="daily-date">'+dlabel+'</div>'+
         '<div class="daily-mini"><div class="rseg rok" style="width:'+okp+'%"></div><div class="rseg rmeh" style="width:'+mp+'%"></div><div class="rseg rno" style="width:'+np+'%"></div></div>'+
         '<div class="daily-num">'+n+' · '+pct(acc)+'%</div>';
@@ -7377,7 +7407,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     });
 
     var note=document.createElement('div'); note.className='acc-note';
-    note.innerHTML='Score: <b>Got it=1, So-so=0.5, No idea=0</b>, averaged.';
+    note.innerHTML='Score: <b>Got it=1, So-so=0.5, No idea=0</b>, averaged. · '+srcName+' 모드 기준';
     wrap.appendChild(note);
   }
 
