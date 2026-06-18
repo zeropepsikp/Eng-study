@@ -278,6 +278,12 @@
   .speak-toggle.on .st-knob{background:var(--info);}
   .speak-toggle.on .st-knob::after{left:15px;}
 
+  /* 오늘의 학습: 레벨/청크 모드 토글 (헤더 우측) */
+  .today-mode-seg{margin-left:auto;display:inline-flex;background:var(--seg);border:1px solid var(--border);border-radius:999px;padding:2px;gap:2px;}
+  .today-mode-seg .tm-btn{border:none;background:transparent;color:var(--text3);font-size:12px;font-weight:600;
+    padding:5px 11px;border-radius:999px;cursor:pointer;line-height:1;}
+  .today-mode-seg .tm-btn.on{background:var(--info);color:#fff;}
+
   /* 말하기/적기 입력 줄 */
   .speak-wrap{margin-top:5px;width:100%;flex:1 1 100%;}
   .speak-input{width:100%;box-sizing:border-box;padding:14px 16px;border-radius:12px;
@@ -3665,24 +3671,35 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     });
   }
 
-  // 말하기 토글 (오늘의 학습 헤더 우측)
+  // 말하기 토글은 설정-옵션 최하단으로 이동. 헤더 슬롯의 잔여 토글은 비운다.
   function buildSpeakToggle(){
-    [speakSlot, $('speak-toggle-slot2'), $('speak-toggle-slot3')].forEach(function(slot){
-      if(!slot) return;
-      slot.innerHTML='';
-      var sp=document.createElement('button');
-      sp.className='speak-toggle'+(speakMode?' on':'');
-      sp.innerHTML='<span class="st-knob"></span><span class="st-label">Speak</span>';
-      sp.title='켜면 정답을 입력하거나 말해서 맞히는 모드로 바뀌어요';
-      sp.addEventListener('click',function(){
-        speakMode=!speakMode;
-        buildSpeakToggle();
-        if(activePanel==='today') renderToday();
-        else if(activePanel==='study') render();
-        else if(activePanel==='chunks') renderChunk();
+    [$('speak-toggle-slot2'), $('speak-toggle-slot3')].forEach(function(slot){ if(slot) slot.innerHTML=''; });
+    buildTodayModeToggle();
+  }
+
+  // 오늘의 학습 모드: 'chunk'(기본) | 'level'
+  var TODAY_MODE_KEY = 'eng_today_mode';
+  var todayMode = (function(){ try{ return localStorage.getItem(TODAY_MODE_KEY)==='level' ? 'level' : 'chunk'; }catch(e){ return 'chunk'; } })();
+  function setTodayMode(m){ todayMode = (m==='level')?'level':'chunk'; try{ localStorage.setItem(TODAY_MODE_KEY, todayMode); }catch(e){} }
+  // 오늘의 학습 헤더 우측: 레벨/청크 전환 토글
+  function buildTodayModeToggle(){
+    var slot=$('speak-toggle-slot'); if(!slot) return;
+    slot.innerHTML='';
+    var seg=document.createElement('div'); seg.className='today-mode-seg';
+    [['chunk','청크'],['level','레벨별']].forEach(function(m){
+      var b=document.createElement('button');
+      b.className='tm-btn'+(todayMode===m[0]?' on':'');
+      b.textContent=m[1];
+      b.addEventListener('click',function(){
+        if(todayMode===m[0]) return;
+        setTodayMode(m[0]);
+        if(todayMode==='chunk'){ if(!todayChunkDeck.length) openTodayChunk(false); }
+        else { if(!todayBuilt || !todayDeck.length){ if(!loadTodaySession()) startTodayFresh(); } }
+        renderToday();
       });
-      slot.appendChild(sp);
+      seg.appendChild(b);
     });
+    slot.appendChild(seg);
   }
 
   function switchPanel(){
@@ -4347,13 +4364,22 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   }
   // 탭으로 진입: 진행 중이면 그대로 이어서, 아니면 새로
   function openToday(){
+    buildTodayModeToggle();
+    if(todayMode==='chunk'){
+      if(!todayChunkDeck.length) openTodayChunk(false);
+      renderToday();
+      return;
+    }
     buildPresetRow();
     if(!todayBuilt || !todayDeck.length){
       if(!loadTodaySession()){ startTodayFresh(); return; }
     }
     renderToday();
   }
-  (function(){ var rb=document.getElementById('today-reset'); if(rb) rb.addEventListener('click',function(){ startTodayFresh(); }); })();
+  (function(){ var rb=document.getElementById('today-reset'); if(rb) rb.addEventListener('click',function(){
+    if(todayMode==='chunk'){ openTodayChunk(true); renderToday(); }
+    else startTodayFresh();
+  }); })();
   // 추가로 n문제 더 (목표만 늘리고, 진행하며 실시간으로 한 개씩 뽑음)
   // 옵션 변경(예: Real-Life on/off)을 진행 중 덱에 바로 반영:
   // 아직 도달 안 한(미출제) 카드를 잘라내, 다음 카드부터 새 규칙으로 뽑게 한다.
@@ -4374,6 +4400,227 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     renderToday();
   }
 
+  // ============================================================
+  //  오늘의 학습 — 청크 모드 (카테고리 무관 랜덤 N개, 4회 정답=졸업)
+  // ============================================================
+  var TODAY_CHUNK_COUNT_KEY = 'eng_today_chunk_count';
+  function todayChunkCount(){
+    var v; try{ v=parseInt(localStorage.getItem(TODAY_CHUNK_COUNT_KEY),10); }catch(e){}
+    if(!v || isNaN(v)) v=30;
+    v=Math.round(v/10)*10; if(v<10) v=10; if(v>100) v=100;
+    return v;
+  }
+  function setTodayChunkCount(n){
+    n=Math.round(n/10)*10; if(n<10) n=10; if(n>100) n=100;
+    try{ localStorage.setItem(TODAY_CHUNK_COUNT_KEY, String(n)); }catch(e){}
+  }
+
+  var TODAY_CHUNK_KEY = 'eng_today_chunk_v1';
+  var todayChunkSet = [];     // [{cat, idx}] — 오늘의 세트
+  var todayChunkQueue = [];   // [{cat, idx, dueAt}]
+  var todayChunkPos = 0;
+  var todayChunkDeck = [];    // [{cat, idx, flipped, graded, result, input, exPick}]
+  var todayChunkDeckPos = 0;
+
+  function allChunkRefs(){
+    var refs=[];
+    for(var c in CHUNK_DATA){ var arr=CHUNK_DATA[c].chunks; for(var i=0;i<arr.length;i++) refs.push({cat:c, idx:i}); }
+    return refs;
+  }
+  function shuffleArr(a){ for(var k=a.length-1;k>0;k--){ var j=Math.floor(Math.random()*(k+1)); var t=a[k]; a[k]=a[j]; a[j]=t; } return a; }
+  // 오늘의 세트 구성: 카테고리 무관 랜덤 N개(아직 졸업 안 한 것 우선). 하루 단위로 고정.
+  function buildTodayChunkSet(force){
+    var n=todayChunkCount();
+    var day = STATS.todayKey ? STATS.todayKey() : '';
+    if(!force){
+      try{
+        var saved=JSON.parse(localStorage.getItem(TODAY_CHUNK_KEY)||'null');
+        if(saved && saved.day===day && saved.count===n && saved.set && saved.set.length){ todayChunkSet=saved.set; return; }
+      }catch(e){}
+    }
+    var refs=allChunkRefs();
+    var unmastered=refs.filter(function(r){ return chunkStreak(r.cat,r.idx)<CHUNK_STREAK_GOAL; });
+    var pool = (unmastered.length>=n) ? unmastered : refs.slice();   // 미졸업이 부족하면 전체에서(복습)
+    shuffleArr(pool);
+    todayChunkSet = pool.slice(0, Math.min(n, pool.length));
+    try{ localStorage.setItem(TODAY_CHUNK_KEY, JSON.stringify({day:day, count:n, set:todayChunkSet})); }catch(e){}
+  }
+  function buildTodayChunkQueue(){
+    todayChunkQueue=[]; todayChunkPos=0;
+    var pending=todayChunkSet.filter(function(r){ return chunkStreak(r.cat,r.idx)<CHUNK_STREAK_GOAL; });
+    shuffleArr(pending);
+    pending.forEach(function(r,nn){ todayChunkQueue.push({cat:r.cat, idx:r.idx, dueAt:nn}); });
+  }
+  function pullNextTodayChunk(){
+    var live=todayChunkQueue.filter(function(q){ return chunkStreak(q.cat,q.idx)<CHUNK_STREAK_GOAL; });
+    if(!live.length) return null;
+    live.sort(function(a,b){ return a.dueAt-b.dueAt; });
+    var pick=null;
+    for(var i=0;i<live.length;i++){ if(live[i].dueAt<=todayChunkPos){ pick=live[i]; break; } }
+    if(!pick) pick=live[0];
+    todayChunkQueue=todayChunkQueue.filter(function(q){ return q!==pick; });
+    return {cat:pick.cat, idx:pick.idx, flipped:false, graded:null, result:null, input:''};
+  }
+  function scheduleTodayChunkAgain(cat, idx, correct){
+    todayChunkQueue.push({cat:cat, idx:idx, dueAt: todayChunkPos + (correct?5:3)});
+  }
+  function openTodayChunk(force){
+    buildTodayChunkSet(force);
+    buildTodayChunkQueue();
+    todayChunkDeck=[]; todayChunkDeckPos=0;
+    var first=pullNextTodayChunk();
+    if(first) todayChunkDeck.push(first);
+  }
+  function todayChunkSetStats(){
+    var learned=0, prog=0, total=todayChunkSet.length;
+    todayChunkSet.forEach(function(r){
+      var s=Math.min(chunkStreak(r.cat,r.idx), CHUNK_STREAK_GOAL);
+      prog += s/CHUNK_STREAK_GOAL;
+      if(s>=CHUNK_STREAK_GOAL) learned++;
+    });
+    return {learned:learned, total:total, progress:prog};
+  }
+  function applyTodayChunkGrade(item, ch, grade){
+    item.graded=grade;
+    var cur=chunkStreak(item.cat, item.idx);
+    if(grade==='ok'){ setChunkStreak(item.cat, item.idx, cur+1); }
+    else { setChunkStreak(item.cat, item.idx, 0); }
+    if(chunkStreak(item.cat, item.idx) < CHUNK_STREAK_GOAL){ scheduleTodayChunkAgain(item.cat, item.idx, grade==='ok'); }
+  }
+
+  function renderTodayChunk(){
+    var wrap=$('today-card-wrap'); if(!wrap) return;
+    var presetRow=$('preset-row'); if(presetRow) presetRow.style.display='none';
+    var hi=$('today-help'); if(hi) hi.style.display='none';
+    if(!todayChunkDeck.length) openTodayChunk(false);
+    var st=todayChunkSetStats();
+    $('today-prog').textContent = '청크 · '+st.learned+' / '+st.total+' mastered';
+    var cntInfo=$('today-count'); if(cntInfo) cntInfo.textContent='';
+    $('today-fill').style.width = (st.total? (st.progress/st.total*100):0)+'%';
+
+    var item=todayChunkDeck[todayChunkDeckPos]||null;
+    if(!item){
+      wrap.innerHTML='';
+      var done=document.createElement('div'); done.className='today-done';
+      done.innerHTML='<div class="big">오늘 세트 완료! 🎉</div><div class="sub">'+st.total+'개 표현을 모두 자동화했어요.</div>';
+      var more=document.createElement('div'); more.className='today-more';
+      var fresh=document.createElement('button'); fresh.className='today-again'; fresh.textContent='↻ 새 세트';
+      fresh.addEventListener('click',function(){ openTodayChunk(true); renderToday(); });
+      more.appendChild(fresh); done.appendChild(more); wrap.appendChild(done);
+      $('today-fill').style.width='100%';
+      return;
+    }
+
+    var cat=item.cat, d=CHUNK_DATA[cat], ch=d.chunks[item.idx];
+    var col=colorVars(d.color);
+    $('today-fill').style.background = col.fg;
+    var streak=chunkStreak(cat, item.idx);
+
+    wrap.innerHTML='';
+    var card=document.createElement('div'); card.className='chunk-card'; card.style.borderColor=col.fg;
+    var tag=document.createElement('div'); tag.className='chunk-tag'; tag.style.color=col.fg; tag.textContent=d.name;
+    var sk=document.createElement('div'); sk.className='chunk-streak';
+    var skLab=document.createElement('span'); skLab.textContent='streak'; sk.appendChild(skLab);
+    for(var s=0;s<CHUNK_STREAK_GOAL;s++){ var dot=document.createElement('span'); dot.className='dot'+(s<streak?' on':''); if(s<streak) dot.style.background=col.fg; sk.appendChild(dot); }
+    card.appendChild(tag); card.appendChild(sk);
+    var body=document.createElement('div'); body.style.width='100%'; card.appendChild(body);
+
+    function paint(){
+      body.innerHTML='';
+      if(!item.flipped){
+        var lab=document.createElement('div'); lab.className='chunk-side'; lab.style.color=col.fg; lab.textContent='Korean';
+        var ko=document.createElement('div'); ko.className='chunk-ko'; ko.textContent=ch.ko;
+        body.appendChild(lab); body.appendChild(ko);
+        var fh=document.createElement('div'); fh.className='chunk-fliphint';
+        fh.textContent = item.graded ? 'Tap to see the chunk again' : 'Tap to see the chunk';
+        body.appendChild(fh);
+      } else {
+        var lab2=document.createElement('div'); lab2.className='chunk-side'; lab2.style.color=col.fg; lab2.textContent='English chunk';
+        var enRow=document.createElement('div'); enRow.style.display='flex'; enRow.style.alignItems='center'; enRow.style.justifyContent='center'; enRow.style.gap='8px'; enRow.style.marginBottom='2px';
+        var en=document.createElement('div'); en.className='chunk-en'; en.innerHTML=chunkBlankHtml(ch.en, cat);
+        enRow.appendChild(en); enRow.appendChild(spkBtn(ch.en,'mini'));
+        var cHint=chunkHintBtn(ch.en, cat); if(cHint) enRow.appendChild(cHint);
+        body.appendChild(lab2); body.appendChild(enRow);
+        var pool=chunkExPool(ch);
+        if(pool && pool.length){
+          if(!item.exPick || !item.exPick.length){ item.exPick=pickTwoEx(pool.length, null); }
+          var exBlock=document.createElement('div'); exBlock.className='ex-block'; exBlock.style.display='block'; exBlock.style.marginTop='12px';
+          var exHead=document.createElement('div'); exHead.className='ex-head';
+          var exLab=document.createElement('span'); exLab.className='lab'; exLab.textContent='Examples';
+          var exRf=document.createElement('button'); exRf.className='refresh-ex'; exRf.innerHTML='↻ 다른 예시';
+          exRf.addEventListener('click',function(ev){ ev.stopPropagation(); item.exPick=pickTwoEx(pool.length, item.exPick); paintEx(); });
+          exHead.appendChild(exLab); exHead.appendChild(exRf); exBlock.appendChild(exHead);
+          var exList=document.createElement('div'); exList.className='ex-list'; exBlock.appendChild(exList);
+          function paintEx(){
+            exList.innerHTML='';
+            item.exPick.forEach(function(idx){
+              var e=pool[idx]; if(!e) return;
+              var row=document.createElement('div'); row.className='ex-item';
+              var txt=document.createElement('div'); txt.style.flex='1';
+              var enL=document.createElement('div'); enL.className='ex-en'; enL.textContent=e.en;
+              var koL=document.createElement('div'); koL.className='ex-ko'; koL.textContent=e.ko;
+              txt.appendChild(enL); txt.appendChild(koL);
+              row.appendChild(txt); row.appendChild(spkBtn(e.en,'small'));
+              exList.appendChild(row);
+            });
+          }
+          paintEx(); body.appendChild(exBlock);
+        }
+        var fh2=document.createElement('div'); fh2.className='chunk-fliphint'; fh2.textContent='Tap for Korean';
+        body.appendChild(fh2);
+      }
+    }
+    paint();
+    card.addEventListener('click',function(ev){ if(ev.target.closest('button')) return; if(!item.graded) return; item.flipped=!item.flipped; paint(); if(item.flipped) speak(ch.en,'en'); });
+    wrap.appendChild(card);
+
+    var gr=document.createElement('div'); gr.className='grade-row'; gr.style.marginTop='14px';
+    if(speakMode){
+      renderSpeakRow(gr, ch.en, function(grade, val){
+        if(item.graded!=null) return;
+        applyTodayChunkGrade(item, ch, grade);
+        item.input=val||''; item.result=grade; item.flipped=true;
+        renderTodayChunk(); speak(ch.en,'en');
+      }, item.graded!=null, item.result, item.input);
+    } else {
+      [['ok','✓ Instantly','grade-ok'],['meh','△ Slowly','grade-meh'],['no','✕ No idea','grade-no']].forEach(function(g){
+        var b=document.createElement('button');
+        b.className='grade-btn '+g[2]+(item.result===g[0]?' picked':'');
+        if(item.graded!=null && item.result!==g[0]) b.classList.add('dim');
+        b.textContent=g[1];
+        b.addEventListener('click',function(){
+          if(item.graded!=null) return;
+          applyTodayChunkGrade(item, ch, g[0]);
+          item.result=g[0]; item.flipped=true;
+          renderTodayChunk(); speak(ch.en,'en');
+        });
+        gr.appendChild(b);
+      });
+    }
+    wrap.appendChild(gr);
+
+    var nav=document.createElement('div'); nav.className='nav';
+    var pv=document.createElement('button'); pv.textContent='← Prev';
+    pv.disabled=(todayChunkDeckPos<=0);
+    pv.addEventListener('click',function(){ if(todayChunkDeckPos>0){ todayChunkDeckPos--; renderTodayChunk(); } });
+    var nx=document.createElement('button'); nx.className='listen';
+    var speakPending=(speakMode && item.graded==null);
+    if(speakPending){ nx.textContent='Submit'; nx.disabled=false; }
+    else { nx.textContent='Next →'; nx.disabled=(item.graded==null); }
+    nx.addEventListener('click',function(){
+      if(speakMode && item.graded==null){ if(speakSubmitFn) speakSubmitFn(); return; }
+      if(item.graded==null) return;
+      if(todayChunkDeckPos >= todayChunkDeck.length-1){
+        todayChunkPos++;
+        var nextItem=pullNextTodayChunk();
+        if(nextItem){ todayChunkDeck.push(nextItem); todayChunkDeckPos++; }
+        else { todayChunkDeckPos=todayChunkDeck.length; }
+      } else { todayChunkDeckPos++; }
+      renderTodayChunk();
+    });
+    nav.appendChild(pv); nav.appendChild(nx); wrap.appendChild(nav);
+  }
+
   function renderTodayHeader(){
     var done = STATS.todayCount();
     var completed = todayPos>=todayTarget;
@@ -4384,6 +4631,10 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   }
 
   function renderToday(){
+    buildTodayModeToggle();
+    if(todayMode==='chunk'){ renderTodayChunk(); return; }
+    var presetRow=$('preset-row'); if(presetRow) presetRow.style.display='';
+    var hi=$('today-help'); if(hi) hi.style.display='';
     var wrap=$('today-card-wrap');
     renderTodayHeader();
     saveTodaySession();
@@ -4599,12 +4850,61 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     row.appendChild(txt); row.appendChild(sw);
     wrap.appendChild(row);
 
+    // ===== 오늘의 학습(청크) 하루 문제 수 =====
+    renderTodayChunkCountOption(wrap);
+
     // ===== 영어 발음 음성 선택 =====
     renderVoiceSection(wrap);
 
     // ===== 계정(구글 로그인 / 게스트) 섹션 =====
     // window.AUTH 가 있으면(=Firebase 활성화) 실제 로그인 UI를, 없으면 안내만 표시.
     renderAccountSection(wrap);
+
+    // ===== 말하기 모드 (최하단) =====
+    renderSpeakModeOption(wrap);
+  }
+
+  function renderTodayChunkCountOption(wrap){
+    var row=document.createElement('div'); row.className='opt-row';
+    var txt=document.createElement('div'); txt.className='opt-text';
+    var t=document.createElement('div'); t.className='opt-title'; t.textContent='오늘의 학습(청크) 하루 표현 수';
+    var d=document.createElement('div'); d.className='opt-desc';
+    d.textContent='오늘의 학습이 청크 모드일 때 하루에 랜덤으로 나오는 표현 개수예요. 10개 단위로 10~100개. (기본 30개)';
+    txt.appendChild(t); txt.appendChild(d);
+    var ctrl=document.createElement('div'); ctrl.style.display='flex'; ctrl.style.alignItems='center'; ctrl.style.gap='10px'; ctrl.style.flex='0 0 auto';
+    var minus=document.createElement('button'); minus.className='mini-btn'; minus.textContent='−';
+    var num=document.createElement('div'); num.style.minWidth='34px'; num.style.textAlign='center'; num.style.fontWeight='700'; num.textContent=String(todayChunkCount());
+    var plus=document.createElement('button'); plus.className='mini-btn'; plus.textContent='+';
+    function apply(n){
+      setTodayChunkCount(n); num.textContent=String(todayChunkCount());
+      openTodayChunk(true);                                  // 세트 새로 구성
+      if(activePanel==='today' && todayMode==='chunk') renderToday();
+    }
+    minus.addEventListener('click',function(){ apply(todayChunkCount()-10); });
+    plus.addEventListener('click',function(){ apply(todayChunkCount()+10); });
+    ctrl.appendChild(minus); ctrl.appendChild(num); ctrl.appendChild(plus);
+    row.appendChild(txt); row.appendChild(ctrl);
+    wrap.appendChild(row);
+  }
+
+  function renderSpeakModeOption(wrap){
+    var row=document.createElement('div'); row.className='opt-row';
+    var txt=document.createElement('div'); txt.className='opt-text';
+    var t=document.createElement('div'); t.className='opt-title'; t.textContent='말하기 모드 (Speak)';
+    var d=document.createElement('div'); d.className='opt-desc';
+    d.textContent='오늘의 학습·레벨별 학습에서 정답을 직접 말하거나 입력해 맞히는 모드예요. 끄면 카드를 뒤집어 스스로 채점합니다. (기본 켜짐)';
+    txt.appendChild(t); txt.appendChild(d);
+    var sw=document.createElement('button'); sw.className='opt-switch'+(speakMode?' on':'');
+    sw.setAttribute('aria-label','말하기 모드 켜고 끄기');
+    sw.addEventListener('click',function(){
+      speakMode=!speakMode;
+      sw.className='opt-switch'+(speakMode?' on':'');
+      if(activePanel==='today') renderToday();
+      else if(activePanel==='study') render();
+      else if(activePanel==='chunks') renderChunk();
+    });
+    row.appendChild(txt); row.appendChild(sw);
+    wrap.appendChild(row);
   }
 
   function renderVoiceSection(wrap){
