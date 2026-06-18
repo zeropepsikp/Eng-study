@@ -4092,7 +4092,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       ['Callirrhoe','편안한'],['Autonoe','화사한'],['Despina','부드러운'],['Erinome','깔끔한'],
       ['Laomedeia','경쾌한'],['Achernar','포근한'],['Sulafat','따뜻한'],['Vindemiatrix','차분한']];
     var personaText=null, learnerText=null, scenList=null, scenCache={};
-    var sess=null, ccOn=false, busy=false, audio=null, logEl=null, wired=false, videoAborted=false, healthChecked=false;
+    var sess=null, ccOn=false, busy=false, audio=null, logEl=null, wired=false, videoAborted=false, healthChecked=false, onVideoProgress=null;
 
     function ls(k,v){ try{ if(v===undefined) return localStorage.getItem(k); localStorage.setItem(k,v); }catch(e){ return null; } }
     function getImg(){ return ls(LS_IMG)||''; }
@@ -4332,7 +4332,9 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
           .then(function(j){
             if(j && j.status==='succeed'){ if(j.url) return j.url; throw new Error('영상 URL 없음'); }
             if(j && j.status==='failed') throw new Error('Kling 실패'+(j.detail?(': '+j.detail):''));
-            var vm=$('vid-msg'); if(vm) vm.innerHTML='🎬 튜터가 말하는 영상을 만들고 있어요… ('+((n+1)*5)+'초)<br>완료되면 대화가 시작돼요.';
+            var sec=(n+1)*5;
+            var vm=$('vid-msg'); if(vm) vm.innerHTML='🎬 튜터가 말하는 영상을 만들고 있어요… ('+sec+'초)<br>완료되면 대화가 시작돼요.';
+            if(onVideoProgress) onVideoProgress(sec);
             return pollVideo(taskId, n+1);
           });
       });
@@ -4446,6 +4448,21 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     }
     function getHistory(){ try{ return JSON.parse(ls(LS_HIST)||'[]'); }catch(e){ return []; } }
     function resetImage(){ try{ localStorage.removeItem(LS_IMG); localStorage.removeItem(LS_VIDEO); localStorage.removeItem(LS_SESS); }catch(e){} sess=null; }
+    function hasImage(){ var i=getImg(); return !!(i && i!=='skip'); }
+    function hasVideo(){ return !!getVideo(); }
+    // 옵션: 현재 이미지로 영상 생성 시도 → 되면 영상 저장, 실패하면 이미지 그대로. cb(state, msg)
+    function generateVideoNow(cb){
+      if(!hasImage()){ if(cb) cb('error','튜터 이미지가 없어요. 먼저 Tutor 탭에서 이미지를 만들어 주세요.'); return; }
+      videoAborted=false;
+      onVideoProgress=function(sec){ if(cb) cb('progress','🎬 영상 제작 중… ('+sec+'초, 최대 3분)'); };
+      if(cb) cb('progress','🎬 영상 제작 시작…');
+      makeVideo(getImg()).then(function(url){
+        onVideoProgress=null; ls(LS_VIDEO,url); if(cb) cb('done','✅ 영상 완성! Tutor를 열면 말할 때 움직여요.');
+      }).catch(function(err){
+        onVideoProgress=null; if(cb) cb('error','영상 실패: '+((err&&err.message)||'')+' — 이미지는 그대로 사용돼요.');
+      });
+    }
+    function removeVideo(){ try{ localStorage.removeItem(LS_VIDEO); }catch(e){} }
 
     // ---- 진입점 ----
     function open(){
@@ -4457,7 +4474,8 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       });
     }
 
-    return { open:open, VOICES:VOICES, getVoice:getVoice, setVoice:setVoice, getHistory:getHistory, resetImage:resetImage, speak:speak, previewVoice:previewVoice };
+    return { open:open, VOICES:VOICES, getVoice:getVoice, setVoice:setVoice, getHistory:getHistory, resetImage:resetImage, speak:speak, previewVoice:previewVoice,
+      generateVideoNow:generateVideoNow, hasImage:hasImage, hasVideo:hasVideo, removeVideo:removeVideo };
   })();
   function openTutor(){ TUTOR.open(); }
 
@@ -5357,8 +5375,36 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     });
     row.appendChild(grid); row.appendChild(fb);
 
+    // 현재 이미지로 영상 만들기 (Kling) — 이미지 재생성 없이 영상만 시도
+    var vrow=document.createElement('div'); vrow.style.marginTop='14px';
+    var vt=document.createElement('div'); vt.className='opt-title'; vt.textContent='튜터 영상 만들기 (Kling)';
+    var vd=document.createElement('div'); vd.className='opt-desc';
+    vd.textContent='지금 튜터 이미지로 "말하는 영상"을 만들어 덮어씌워요. 되면 영상으로, 실패하면 이미지 그대로 유지돼요. (초기화 전까지 1회)';
+    vrow.appendChild(vt); vrow.appendChild(vd);
+    var vbtn=document.createElement('button'); vbtn.className='tutor-submit'; vbtn.style.marginTop='8px'; vbtn.style.padding='9px 14px';
+    vbtn.textContent = TUTOR.hasVideo() ? '🎬 영상 다시 만들기' : '🎬 현재 이미지로 영상 만들기';
+    var vmsg=document.createElement('div'); vmsg.className='opt-desc'; vmsg.style.marginTop='8px';
+    if(!TUTOR.hasImage()) vmsg.textContent='먼저 Tutor 탭에서 이미지를 만들어 주세요.';
+    else if(TUTOR.hasVideo()) vmsg.textContent='현재 영상이 적용돼 있어요.';
+    vbtn.addEventListener('click', function(){
+      vbtn.disabled=true; vmsg.style.color='';
+      TUTOR.generateVideoNow(function(state, msg){
+        vmsg.textContent=msg;
+        if(state==='done'){ vmsg.style.color=''; vbtn.disabled=false; vbtn.textContent='🎬 영상 다시 만들기'; }
+        else if(state==='error'){ vmsg.style.color='var(--coral)'; vbtn.disabled=false; }
+      });
+    });
+    vrow.appendChild(vbtn); vrow.appendChild(vmsg);
+    if(TUTOR.hasVideo()){
+      var vdel=document.createElement('button'); vdel.className='tutor-mic'; vdel.style.marginTop='8px'; vdel.style.marginLeft='8px'; vdel.style.padding='9px 14px';
+      vdel.textContent='영상 끄고 이미지로';
+      vdel.addEventListener('click', function(){ TUTOR.removeVideo(); vmsg.style.color=''; vmsg.textContent='영상을 제거했어요. 이제 이미지로 표시돼요.'; vbtn.textContent='🎬 현재 이미지로 영상 만들기'; vdel.remove(); });
+      vrow.appendChild(vdel);
+    }
+    row.appendChild(vrow);
+
     // 튜터 다시 만들기
-    var reb=document.createElement('button'); reb.className='tutor-mic'; reb.style.marginTop='12px'; reb.style.padding='9px 14px';
+    var reb=document.createElement('button'); reb.className='tutor-mic'; reb.style.marginTop='14px'; reb.style.padding='9px 14px';
     reb.textContent='튜터 이미지 다시 만들기';
     reb.addEventListener('click', function(){ if(confirm('튜터 이미지를 지우고 다시 고를까요?')){ TUTOR.resetImage(); alert('Tutor 탭에서 새로 만들 수 있어요.'); } });
     row.appendChild(reb);
