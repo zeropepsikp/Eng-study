@@ -5,6 +5,7 @@
 
 import { onRequestPost as tutorChat } from "./api/tutor/chat.js";
 import { onRequestPost as tutorTts } from "./api/tutor/tts.js";
+import { onRequestPost as tutorEdgeTts } from "./api/tutor/edge-tts.js";
 import { onRequestPost as tutorImage } from "./api/tutor/image.js";
 import { onRequestPost as tutorVideo } from "./api/tutor/video.js";
 import { onRequestPost as tutorDrill } from "./api/tutor/drill.js";
@@ -15,6 +16,7 @@ import { onRequestPost as openaiTts } from "./api/tts.js";
 const POST_ROUTES = {
   "/api/tutor/chat": tutorChat,
   "/api/tutor/tts": tutorTts,
+  "/api/tutor/edge-tts": tutorEdgeTts,
   "/api/tutor/image": tutorImage,
   "/api/tutor/video": tutorVideo,
   "/api/tutor/drill": tutorDrill,
