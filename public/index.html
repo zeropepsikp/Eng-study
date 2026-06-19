@@ -3451,21 +3451,27 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       return ko.find(function(v){return v.default;}) || ko[0] || null;
     }
   }
-  // ===== 클라우드 TTS — 제미니 2.5 Flash 음성 =====
-  // 브라우저는 우리 사이트의 /api/tutor/tts(Worker)만 호출하고, 실제 키는 서버에만 있다.
-  // 무료 한도 초과/실패 시 → '기본 음성'(폰 내장)으로 자동 폴백.
+  // ===== 발음 TTS — Edge(기본) → Cloudflare(MeloTTS) → 기본음성 순 폴백 =====
   var TTS_FREE = '__free__';                 // '기본 음성'(Web Speech) 선택값
-  var TTS_CONFIG = { endpoint:'/api/tutor/tts', cloudOk:null, probing:false, rate:0.96 };  // cloudOk: null=미확인 / true / false
-  // Cloudflare Workers AI(MeloTTS) — 언어별 단일 음성이라 보이스 선택지는 1개.
+  var TTS_CONFIG = { cloudOk:null, rate:0.96 };
+  var lastTtsEngine = null;                  // 'edge' | 'cf' | 'free'
+  // 선택 가능한 음성: Edge(여러 종) + Cloudflare(1종). 기본 = Edge Aria.
   var TTS_VOICES = [
-    {id:'cf', label:'Cloudflare 음성 (자연스러운 영어)'}
+    {id:'edge:en-US-AriaNeural',        label:'Aria · 미국 여성 (기본)',  grp:'edge'},
+    {id:'edge:en-US-JennyNeural',       label:'Jenny · 미국 여성',        grp:'edge'},
+    {id:'edge:en-US-MichelleNeural',    label:'Michelle · 미국 여성',     grp:'edge'},
+    {id:'edge:en-US-GuyNeural',         label:'Guy · 미국 남성',          grp:'edge'},
+    {id:'edge:en-US-ChristopherNeural', label:'Christopher · 미국 남성',  grp:'edge'},
+    {id:'edge:en-GB-SoniaNeural',       label:'Sonia · 영국 여성',        grp:'edge'},
+    {id:'edge:en-GB-RyanNeural',        label:'Ryan · 영국 남성',         grp:'edge'},
+    {id:'cf',                           label:'Cloudflare 음성',          grp:'cf'}
   ];
-  var TTS_DEFAULT_VOICE = 'cf';              // 기본 = Cloudflare 음성
-  var TTS_PROBE_VOICE = 'cf';                // (사용 안 함)
+  var TTS_DEFAULT_VOICE = 'edge:en-US-AriaNeural';
+  function ttsEndpointFor(voice){ return (voice && voice.indexOf('edge:')===0) ? '/api/tutor/edge-tts' : '/api/tutor/tts'; }
   function ttsVoice(){
     try{ var v = localStorage.getItem('ttsVoice');
       if(v === TTS_FREE) return TTS_FREE;
-      if(v && TTS_VOICES.some(function(x){ return x.id===v; })) return v;   // 유효한 클라우드 음성만
+      if(v && TTS_VOICES.some(function(x){ return x.id===v; })) return v;
     }catch(e){}
     return TTS_DEFAULT_VOICE;
   }
@@ -3473,8 +3479,10 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   // 현재 발음 음성 상태 (배지용)
   function ttsStatusInfo(){
     if(ttsVoice()===TTS_FREE) return { t:'기본 음성', cls:'free' };
-    if(TTS_CONFIG.cloudOk===false) return { t:'기본 음성 (무료 한도 초과)', cls:'fallback' };
-    return { t:'Cloudflare 음성', cls:'ok' };
+    if(lastTtsEngine==='edge') return { t:'Edge 음성', cls:'ok' };
+    if(lastTtsEngine==='cf') return { t:'Cloudflare 음성', cls:'ok' };
+    if(lastTtsEngine==='free') return { t:'기본 음성 (한도/오류)', cls:'fallback' };
+    return { t:(ttsVoice().indexOf('edge:')===0?'Edge 음성':'Cloudflare 음성'), cls:'ok' };
   }
   function updateTtsBadges(){
     var info=ttsStatusInfo();
@@ -3483,40 +3491,30 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     });
   }
   function ttsAvailable(){ return TTS_CONFIG.cloudOk !== false; }   // 재생용: 모르면 시도(폴백 있음)
-  function ttsCloudReady(){ return TTS_CONFIG.cloudOk === true; }   // UI용: 확실히 될 때만 선택 허용
-  // 키가 실제로 작동하는지 한 번 확인(짧은 합성 시도). 결과는 세션 동안 캐시.
-  function probeTts(done){
-    if(TTS_CONFIG.cloudOk !== null){ if(done) done(); return; }
-    if(TTS_CONFIG.probing){ return; }
-    TTS_CONFIG.probing = true;
-    try{
-      fetch(TTS_CONFIG.endpoint, {method:'POST', headers:{'Content-Type':'application/json'},
-                                  body:JSON.stringify({text:'hi', voice:TTS_PROBE_VOICE})})
-        .then(function(r){ TTS_CONFIG.cloudOk = !!r.ok; })
-        .catch(function(){ TTS_CONFIG.cloudOk = false; })
-        .then(function(){ TTS_CONFIG.probing = false; if(done) done(); });
-    }catch(e){ TTS_CONFIG.cloudOk = false; TTS_CONFIG.probing = false; if(done) done(); }
-  }
+  function ttsAvailable(){ return TTS_CONFIG.cloudOk !== false; }
 
   var ttsCache = {};      // "voice\ntext" -> objectURL (재요청 방지)
   var ttsAudio = null;    // 현재 재생 중인 Audio
+  // 선택 음성에 따른 폴백 체인: edge → cf, 또는 cf 단독. 모두 실패하면 onErr(폰 기본음성).
   function cloudSpeak(text, voice, onErr){
     voice = voice || ttsVoice();
-    if(voice === TTS_FREE){ onErr(); return; }            // 무료 음성이면 클라우드 안 씀
-    function play(u){
-      try{ if(ttsAudio){ ttsAudio.pause(); } }catch(e){}
-      ttsAudio = new Audio(u);
-      ttsAudio.play().catch(function(){ onErr(); });
+    if(voice === TTS_FREE){ onErr(); return; }
+    var chain = (voice.indexOf('edge:')===0) ? [voice, 'cf'] : [voice];
+    function play(u){ try{ if(ttsAudio){ ttsAudio.pause(); } }catch(e){} ttsAudio = new Audio(u); ttsAudio.play().catch(function(){ onErr(); }); }
+    function tryAt(i){
+      if(i >= chain.length){ TTS_CONFIG.cloudOk=false; lastTtsEngine='free'; updateTtsBadges(); onErr(); return; }
+      var v = chain[i];
+      var ck = v + '\n' + text;
+      function ok(u){ TTS_CONFIG.cloudOk=true; lastTtsEngine=(v.indexOf('edge:')===0?'edge':'cf'); updateTtsBadges(); play(u); }
+      if(ttsCache[ck]){ ok(ttsCache[ck]); return; }
+      try{
+        fetch(ttsEndpointFor(v), {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({text:text, voice:v})})
+          .then(function(r){ if(!r.ok) throw new Error('tts '+r.status); return r.blob(); })
+          .then(function(b){ var u=URL.createObjectURL(b); ttsCache[ck]=u; ok(u); })
+          .catch(function(){ tryAt(i+1); });
+      }catch(e){ tryAt(i+1); }
     }
-    var ck = voice + '\n' + text;
-    if(ttsCache[ck]){ play(ttsCache[ck]); return; }
-    try{
-      fetch(TTS_CONFIG.endpoint, {method:'POST', headers:{'Content-Type':'application/json'},
-                                  body:JSON.stringify({text:text, voice:voice})})
-        .then(function(r){ if(!r.ok) throw new Error('tts '+r.status); return r.blob(); })
-        .then(function(b){ TTS_CONFIG.cloudOk=true; updateTtsBadges(); var u=URL.createObjectURL(b); ttsCache[ck]=u; play(u); })
-        .catch(function(){ TTS_CONFIG.cloudOk=false; updateTtsBadges(); onErr(); });
-    }catch(e){ onErr(); }
+    tryAt(0);
   }
   // 옵션 메뉴 미리듣기: 특정 음성으로 샘플 문장 재생
   function previewVoice(voice){
@@ -4153,15 +4151,23 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   // ============================================================
   var TUTOR = (function(){
     var LS_IMG='eng_tutor_img', LS_VOICE='eng_tutor_voice', LS_SESS='eng_tutor_sess', LS_HIST='eng_tutor_hist', LS_VIDEO='eng_tutor_video';
-    // Cloudflare Workers AI(MeloTTS) 단일 음성
-    var VOICES=[['cf','Cloudflare 음성']];
+    // Edge(기본) + Cloudflare 음성
+    var VOICES=[
+      ['edge:en-US-AriaNeural','Aria · 미국 여성 (기본)'],
+      ['edge:en-US-JennyNeural','Jenny · 미국 여성'],
+      ['edge:en-US-MichelleNeural','Michelle · 미국 여성'],
+      ['edge:en-US-GuyNeural','Guy · 미국 남성'],
+      ['edge:en-GB-SoniaNeural','Sonia · 영국 여성'],
+      ['edge:en-GB-RyanNeural','Ryan · 영국 남성'],
+      ['cf','Cloudflare 음성']
+    ];
     var personaText=null, learnerText=null, scenList=null, scenCache={};
     var sess=null, ccOn=false, busy=false, audio=null, logEl=null, wired=false, videoAborted=false, healthChecked=false, onVideoProgress=null;
 
     function ls(k,v){ try{ if(v===undefined) return localStorage.getItem(k); localStorage.setItem(k,v); }catch(e){ return null; } }
     function getImg(){ return ls(LS_IMG)||''; }
     function getVideo(){ return ls(LS_VIDEO)||''; }
-    function getVoice(){ return ls(LS_VOICE)||'cf'; }
+    function getVoice(){ return ls(LS_VOICE)||'edge:en-US-AriaNeural'; }
     function setVoice(v){ ls(LS_VOICE,v); }
     function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
@@ -4270,18 +4276,28 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
         }
       }catch(e){ go(); }
     }
-    function isQuota(err){ return /429|한도|quota|exceed|RESOURCE_EXHAUSTED/i.test((err&&err.message)||''); }
-    // Cloudflare 음성 → 실패(무료 한도 초과 등) 시 폰 기본 음성, 작은 안내만 표시
+    // 선택 음성에 따른 폴백 체인 (edge → cf), promise→{blob,engine}
+    function ttsChainFor(voice, text){
+      var chain = (voice.indexOf('edge:')===0)
+        ? [{v:voice,ep:'/api/tutor/edge-tts',name:'edge'},{v:'cf',ep:'/api/tutor/tts',name:'cf'}]
+        : [{v:'cf',ep:'/api/tutor/tts',name:'cf'}];
+      return new Promise(function(resolve,reject){
+        (function tryAt(i){
+          if(i>=chain.length){ reject(); return; }
+          fetchTTS(chain[i].ep,{text:text, voice:chain[i].v})
+            .then(function(b){ resolve({blob:b, engine:chain[i].name}); })
+            .catch(function(){ tryAt(i+1); });
+        })(0);
+      });
+    }
+    // Edge → Cloudflare → 폰 기본 음성
     function speak(text){
       if(!text) return;
       try{ if(audio){ audio.pause(); audio=null; } }catch(e){}
       playStageVideo();
-      fetchTTS('/api/tutor/tts',{text:text, voice:getVoice()})
-        .then(function(b){ setStatus('ok','Cloudflare 음성'); playBlob(b); })
-        .catch(function(err){
-          setStatus('warn', isQuota(err) ? '무료 음성 한도 초과 — 기본 음성으로 재생 중' : '음성 일시 오류 — 기본 음성으로 재생 중');
-          browserSpeak(text);
-        });
+      ttsChainFor(getVoice(), text)
+        .then(function(res){ setStatus('ok', res.engine==='edge'?'Edge 음성':'Cloudflare 음성'); playBlob(res.blob); })
+        .catch(function(){ setStatus('warn','음성 한도/오류 — 기본 음성으로 재생 중'); browserSpeak(text); });
     }
     function playStageVideo(){
       var v=$('tutor-video'); if(!v) return;
@@ -4291,9 +4307,9 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     function previewVoice(voice, cb){
       try{ if(audio){ audio.pause(); audio=null; } }catch(e){}
       var sample="Hi, I'm Mia. Let's practice English together!";
-      fetchTTS('/api/tutor/tts',{text:sample, voice:voice})
-        .then(function(b){ playBlob(b); if(cb) cb(true,''); })
-        .catch(function(err){ browserSpeak("Hi, I'm Mia."); if(cb) cb(false, isQuota(err)?'무료 음성 한도 초과 — 기본 음성':'일시 오류 — 기본 음성'); });
+      ttsChainFor(voice, sample)
+        .then(function(res){ playBlob(res.blob); if(cb) cb(true, res.engine==='edge'?'Edge':'Cloudflare'); })
+        .catch(function(){ browserSpeak("Hi, I'm Mia."); if(cb) cb(false, '한도/오류 — 기본 음성'); });
     }
     // ---- 상태칩 (제미니 키 활성화 표시) ----
     function setStatus(kind, text){
@@ -5604,15 +5620,15 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     TUTOR.VOICES.forEach(function(v){
       var b=document.createElement('button'); b.className='tutor-btn'+(v[0]===cur?' on':'');
       b.style.flex='0 0 auto';
-      b.innerHTML='<div style="font-weight:700;">'+v[0]+'</div><div style="font-size:10px;font-weight:500;opacity:.8;">'+v[1]+'</div>';
+      b.innerHTML='<div style="font-weight:600;font-size:12px;">'+v[1]+'</div>';
       b.addEventListener('click', function(){
         TUTOR.setVoice(v[0]);
         Array.prototype.forEach.call(grid.children, function(c){ c.classList.remove('on'); });
         b.classList.add('on');
-        fb.style.color=''; fb.textContent='▷ '+v[0]+' 미리듣기 중…';
+        fb.style.color=''; fb.textContent='▷ '+v[1]+' 미리듣기 중…';
         TUTOR.previewVoice(v[0], function(ok, msg){
-          if(ok){ fb.style.color=''; fb.textContent='✓ Cloudflare 음성 정상'; }
-          else { fb.style.color='var(--text3)'; fb.textContent='ⓘ '+v[0]+' · '+msg; }
+          if(ok){ fb.style.color=''; fb.textContent='✓ '+v[1]+' ('+msg+' 음성)'; }
+          else { fb.style.color='var(--text3)'; fb.textContent='ⓘ '+v[1]+' · '+msg; }
         });
       });
       grid.appendChild(b);
@@ -5744,7 +5760,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     var head=document.createElement('div'); head.className='opt-text';
     var t=document.createElement('div'); t.className='opt-title'; t.textContent='🔊 영어 발음 음성';
     var d=document.createElement('div'); d.className='opt-desc';
-    d.textContent='문장 듣기에 쓸 영어 음성이에요. Cloudflare 무료 음성(Workers AI)이며, 무료 한도를 다 쓰면 자동으로 기본(폰 내장) 음성으로 바뀝니다.';
+    d.textContent='문장 듣기에 쓸 영어 음성이에요. 기본은 Microsoft Edge 음성(무료)이고, 문제가 생기면 Cloudflare → 폰 기본 음성 순으로 자동 전환됩니다.';
     head.appendChild(t); head.appendChild(d); sec.appendChild(head);
 
     var list=document.createElement('div'); list.style.marginTop='10px'; list.style.display='flex'; list.style.flexDirection='column'; list.style.gap='6px';
@@ -5777,16 +5793,19 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       return item;
     }
 
-    // 1) 기본 음성 (항상 선택 가능)
+    function subHead(txt){
+      var sub=document.createElement('div'); sub.style.margin='12px 2px 2px'; sub.style.fontSize='12px'; sub.style.fontWeight='600'; sub.style.color='var(--text3)';
+      sub.textContent=txt; list.appendChild(sub);
+    }
+    // 1) Microsoft Edge 음성 (최상위 · 기본)
+    subHead('Microsoft Edge 음성 (기본 · 무료)');
+    TTS_VOICES.filter(function(v){ return v.grp==='edge'; }).forEach(function(v){ list.appendChild(makeItem(v.id, v.label, true)); });
+    // 2) Cloudflare 음성
+    subHead('Cloudflare 음성 (Workers AI)');
+    TTS_VOICES.filter(function(v){ return v.grp==='cf'; }).forEach(function(v){ list.appendChild(makeItem(v.id, v.label, true)); });
+    // 3) 기본(폰) 음성
+    subHead('기본 음성');
     list.appendChild(makeItem(TTS_FREE, '기본 음성 (폰 내장)', true));
-
-    // 2) 제미니 음성 구분선
-    var sub=document.createElement('div'); sub.style.margin='10px 2px 2px'; sub.style.fontSize='12px'; sub.style.fontWeight='600'; sub.style.color='var(--text3)';
-    sub.textContent = 'Cloudflare 음성 (Workers AI)';
-    list.appendChild(sub);
-
-    // 3) 제미니 음성들 (항상 선택 가능 — 한도 초과 시 재생만 기본 음성으로 폴백)
-    TTS_VOICES.forEach(function(v){ list.appendChild(makeItem(v.id, v.label, true)); });
 
     sec.appendChild(list);
     wrap.appendChild(sec);
