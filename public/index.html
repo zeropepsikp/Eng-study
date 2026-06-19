@@ -705,7 +705,7 @@
   <!-- 레벨별 학습: 헤더(제목 + 물음표 + 말하기 토글) — 서브탭 위 -->
   <div class="today-head" id="study-head" style="display:none;">
     <div class="study-head-left">
-      <div class="section-title">Level Study <span class="tts-badge ok" id="tts-badge-level">🔊 제미니 음성</span></div>
+      <div class="section-title">Level Study <span class="tts-badge ok" id="tts-badge-level">🔊 Cloudflare 음성</span></div>
     </div>
     <div class="speak-toggle-slot" id="speak-toggle-slot2"></div>
   </div>
@@ -717,7 +717,7 @@
   <!-- TODAY PANEL -->
   <div class="panel show" id="panel-today">
     <div class="today-head">
-      <div class="section-title">Today’s Study <span class="tts-badge ok" id="tts-badge-today">🔊 제미니 음성</span></div>
+      <div class="section-title">Today’s Study <span class="tts-badge ok" id="tts-badge-today">🔊 Cloudflare 음성</span></div>
       <div class="speak-toggle-slot" id="speak-toggle-slot"></div>
     </div>
     <div class="preset-row" id="preset-row"></div>
@@ -785,7 +785,7 @@
 
   <!-- CHUNKS PANEL -->
   <div class="panel" id="panel-chunks">
-    <div class="section-title">Chunks Study <span class="tts-badge ok" id="tts-badge-chunk">🔊 제미니 음성</span></div>
+    <div class="section-title">Chunks Study <span class="tts-badge ok" id="tts-badge-chunk">🔊 Cloudflare 음성</span></div>
     <div class="chunk-head" id="chunk-head">
       <div class="chunk-prog-wrap">
         <div class="chunk-prog-bar"><div class="chunk-fill" id="chunk-fill"></div></div>
@@ -798,7 +798,7 @@
 
   <!-- DRILL PANEL (청크 기반 대화 연습) -->
   <div class="panel" id="panel-drill">
-    <div class="section-title">Drill Study <span class="tts-badge ok" id="tts-badge-drill">🔊 제미니 음성</span></div>
+    <div class="section-title">Drill Study <span class="tts-badge ok" id="tts-badge-drill">🔊 Cloudflare 음성</span></div>
     <div id="drill-body"></div>
   </div>
 
@@ -3456,21 +3456,12 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   // 무료 한도 초과/실패 시 → '기본 음성'(폰 내장)으로 자동 폴백.
   var TTS_FREE = '__free__';                 // '기본 음성'(Web Speech) 선택값
   var TTS_CONFIG = { endpoint:'/api/tutor/tts', cloudOk:null, probing:false, rate:0.96 };  // cloudOk: null=미확인 / true / false
-  // 제미니 음성 목록 (서버 화이트리스트와 일치). 여성/남성 혼합.
+  // Cloudflare Workers AI(MeloTTS) — 언어별 단일 음성이라 보이스 선택지는 1개.
   var TTS_VOICES = [
-    {id:'Kore',        label:'Kore · 여성 또렷'},
-    {id:'Aoede',       label:'Aoede · 여성 산뜻'},
-    {id:'Leda',        label:'Leda · 여성 밝음'},
-    {id:'Callirrhoe',  label:'Callirrhoe · 여성 편안'},
-    {id:'Sulafat',     label:'Sulafat · 여성 따뜻'},
-    {id:'Puck',        label:'Puck · 남성 경쾌'},
-    {id:'Charon',      label:'Charon · 남성 차분'},
-    {id:'Fenrir',      label:'Fenrir · 남성 또렷'},
-    {id:'Orus',        label:'Orus · 남성 단단'},
-    {id:'Enceladus',   label:'Enceladus · 남성 부드러움'}
+    {id:'cf', label:'Cloudflare 음성 (자연스러운 영어)'}
   ];
-  var TTS_DEFAULT_VOICE = 'Kore';            // 기본 = 제미니 음성
-  var TTS_PROBE_VOICE = 'Kore';              // (사용 안 함 — 한도 절약)
+  var TTS_DEFAULT_VOICE = 'cf';              // 기본 = Cloudflare 음성
+  var TTS_PROBE_VOICE = 'cf';                // (사용 안 함)
   function ttsVoice(){
     try{ var v = localStorage.getItem('ttsVoice');
       if(v === TTS_FREE) return TTS_FREE;
@@ -3482,8 +3473,8 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   // 현재 발음 음성 상태 (배지용)
   function ttsStatusInfo(){
     if(ttsVoice()===TTS_FREE) return { t:'기본 음성', cls:'free' };
-    if(TTS_CONFIG.cloudOk===false) return { t:'기본 음성 (제미니 한도 초과)', cls:'fallback' };
-    return { t:'제미니 음성', cls:'ok' };
+    if(TTS_CONFIG.cloudOk===false) return { t:'기본 음성 (무료 한도 초과)', cls:'fallback' };
+    return { t:'Cloudflare 음성', cls:'ok' };
   }
   function updateTtsBadges(){
     var info=ttsStatusInfo();
@@ -4162,16 +4153,15 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   // ============================================================
   var TUTOR = (function(){
     var LS_IMG='eng_tutor_img', LS_VOICE='eng_tutor_voice', LS_SESS='eng_tutor_sess', LS_HIST='eng_tutor_hist', LS_VIDEO='eng_tutor_video';
-    var VOICES=[['Leda','밝고 어린'],['Aoede','산뜻한'],['Kore','또렷한'],['Zephyr','맑고 밝은'],
-      ['Callirrhoe','편안한'],['Autonoe','화사한'],['Despina','부드러운'],['Erinome','깔끔한'],
-      ['Laomedeia','경쾌한'],['Achernar','포근한'],['Sulafat','따뜻한'],['Vindemiatrix','차분한']];
+    // Cloudflare Workers AI(MeloTTS) 단일 음성
+    var VOICES=[['cf','Cloudflare 음성']];
     var personaText=null, learnerText=null, scenList=null, scenCache={};
     var sess=null, ccOn=false, busy=false, audio=null, logEl=null, wired=false, videoAborted=false, healthChecked=false, onVideoProgress=null;
 
     function ls(k,v){ try{ if(v===undefined) return localStorage.getItem(k); localStorage.setItem(k,v); }catch(e){ return null; } }
     function getImg(){ return ls(LS_IMG)||''; }
     function getVideo(){ return ls(LS_VIDEO)||''; }
-    function getVoice(){ return ls(LS_VOICE)||'Leda'; }
+    function getVoice(){ return ls(LS_VOICE)||'cf'; }
     function setVoice(v){ ls(LS_VOICE,v); }
     function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
@@ -4281,13 +4271,13 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       }catch(e){ go(); }
     }
     function isQuota(err){ return /429|한도|quota|exceed|RESOURCE_EXHAUSTED/i.test((err&&err.message)||''); }
-    // 제미니 음성 → 실패(무료 한도 초과 등) 시 폰 기본 음성, 작은 안내만 표시
+    // Cloudflare 음성 → 실패(무료 한도 초과 등) 시 폰 기본 음성, 작은 안내만 표시
     function speak(text){
       if(!text) return;
       try{ if(audio){ audio.pause(); audio=null; } }catch(e){}
       playStageVideo();
       fetchTTS('/api/tutor/tts',{text:text, voice:getVoice()})
-        .then(function(b){ setStatus('ok','제미니 음성 ('+getVoice()+')'); playBlob(b); })
+        .then(function(b){ setStatus('ok','Cloudflare 음성'); playBlob(b); })
         .catch(function(err){
           setStatus('warn', isQuota(err) ? '무료 음성 한도 초과 — 기본 음성으로 재생 중' : '음성 일시 오류 — 기본 음성으로 재생 중');
           browserSpeak(text);
@@ -4311,11 +4301,10 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       el.className='tutor-status'+(kind?(' '+kind):''); tx.textContent=text;
     }
     function checkHealth(){
-      setStatus('', '제미니 키 확인 중…');
+      setStatus('', '연결 확인 중…');
       fetch('/api/tutor/health').then(function(r){ return r.json(); }).then(function(j){
-        if(!j || !j.key){ setStatus('bad','제미니 키 없음 — Cloudflare 변수 확인'); return; }
-        if(j.chat && j.tts){ setStatus('ok','제미니 키 활성화 (대화·음성 OK)'); }
-        else if(j.chat){ setStatus('warn','제미니 대화 OK · 음성 모델 미지원'); }
+        if(!j || !j.key){ setStatus('bad','제미니 키 없음 — 대화 불가 (Cloudflare 변수 확인)'); return; }
+        if(j.chat){ setStatus('ok','제미니 대화 연결됨 · 음성 Cloudflare'); }
         else { setStatus('warn','제미니 키 있음 · 응답 확인 안 됨'); }
       }).catch(function(){ setStatus('warn','상태 확인 실패'); });
     }
@@ -5622,7 +5611,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
         b.classList.add('on');
         fb.style.color=''; fb.textContent='▷ '+v[0]+' 미리듣기 중…';
         TUTOR.previewVoice(v[0], function(ok, msg){
-          if(ok){ fb.style.color=''; fb.textContent='✓ '+v[0]+' (제미니 음성 정상)'; }
+          if(ok){ fb.style.color=''; fb.textContent='✓ Cloudflare 음성 정상'; }
           else { fb.style.color='var(--text3)'; fb.textContent='ⓘ '+v[0]+' · '+msg; }
         });
       });
@@ -5755,7 +5744,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     var head=document.createElement('div'); head.className='opt-text';
     var t=document.createElement('div'); t.className='opt-title'; t.textContent='🔊 영어 발음 음성';
     var d=document.createElement('div'); d.className='opt-desc';
-    d.textContent='문장 듣기에 쓸 영어 음성이에요. 제미니 2.5 Flash 음성이며, 무료 한도를 다 쓰면 자동으로 기본(폰 내장) 음성으로 바뀝니다.';
+    d.textContent='문장 듣기에 쓸 영어 음성이에요. Cloudflare 무료 음성(Workers AI)이며, 무료 한도를 다 쓰면 자동으로 기본(폰 내장) 음성으로 바뀝니다.';
     head.appendChild(t); head.appendChild(d); sec.appendChild(head);
 
     var list=document.createElement('div'); list.style.marginTop='10px'; list.style.display='flex'; list.style.flexDirection='column'; list.style.gap='6px';
@@ -5793,7 +5782,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
 
     // 2) 제미니 음성 구분선
     var sub=document.createElement('div'); sub.style.margin='10px 2px 2px'; sub.style.fontSize='12px'; sub.style.fontWeight='600'; sub.style.color='var(--text3)';
-    sub.textContent = '제미니 2.5 Flash 음성';
+    sub.textContent = 'Cloudflare 음성 (Workers AI)';
     list.appendChild(sub);
 
     // 3) 제미니 음성들 (항상 선택 가능 — 한도 초과 시 재생만 기본 음성으로 폴백)
