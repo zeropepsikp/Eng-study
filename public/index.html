@@ -3899,6 +3899,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     LEVEL_DATA = LEVEL_SETS[s] || window.LEVEL_DATA;
     NUM_LEVELS = Object.keys(LEVEL_DATA).length;
     try{ STATS.setNamespace(s); }catch(e){}
+    levelState = {};   // 세트별 레벨 상태 캐시 초기화 (인덱스 불일치 방지)
     curLevel = 1; curExpr = 0;
     todayBuilt = false; todayDeck = []; todayPos = 0;
     if(todayMode!=='chunk'){ startTodayFresh(); saveTodaySession(); }
