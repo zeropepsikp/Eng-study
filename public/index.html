@@ -423,6 +423,25 @@
   .grade-no{background:var(--coral-bg);color:var(--coral);}
   .grade-btn:hover{filter:brightness(0.98);}
   .grade-btn.dim{opacity:0.4;}
+  /* CEFR 빈칸 채우기 모드 */
+  .fill-wrap{margin-top:2px;}
+  .fill-slots{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:center;gap:1px;font-size:23px;font-weight:700;line-height:1.7;margin-bottom:14px;}
+  .fill-box{display:inline-block;min-width:18px;border-bottom:3px solid var(--border);text-align:center;color:var(--text);}
+  .fill-box.filled{border-bottom-color:var(--info);}
+  .fill-box.wrong{color:var(--coral);border-bottom-color:var(--coral);}
+  .fill-slots.ok .fill-box{color:var(--green);border-bottom-color:var(--green);}
+  .fill-slots.used .fill-box{color:var(--amber);border-bottom-color:var(--amber);}
+  .fill-ch{display:inline-block;color:var(--text2);}
+  .fill-sp{display:inline-block;width:11px;}
+  .fill-slots.shake{animation:shake .4s;}
+  .fill-input{width:100%;box-sizing:border-box;padding:11px 12px;border-radius:12px;border:1px solid var(--border);
+    background:var(--surface);color:var(--text);font-size:16px;text-align:center;}
+  .fill-hint-line{font-size:12px;color:var(--text3);text-align:center;min-height:15px;margin-top:5px;}
+  .fill-btns{display:flex;gap:8px;margin-top:10px;}
+  .fill-btns button{flex:1 1 0;padding:12px 6px;border-radius:12px;border:1px solid var(--border);
+    background:var(--surface2);color:var(--text2);font-size:14px;font-weight:700;cursor:pointer;line-height:1;}
+  .fill-btns button:disabled{opacity:0.5;}
+  .fill-ansbtn{color:var(--info)!important;}
   .grade-ok.picked{background:var(--green);color:#fff;box-shadow:0 3px 10px rgba(59,109,17,0.28);}
   .grade-meh.picked{background:var(--amber);color:#fff;box-shadow:0 3px 10px rgba(133,79,11,0.28);}
   .grade-no.picked{background:var(--coral);color:#fff;box-shadow:0 3px 10px rgba(153,60,29,0.28);}
@@ -4582,7 +4601,142 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   }
 
   // ---------- render card ----------
+  // ============================================================
+  //  CEFR 전용 빈칸 채우기 모드 (말해보카 스타일, 자동 채점)
+  //  어휘(내용어)는 보여주고, 앞쪽 표현(기능어 묶음)을 빈칸으로 채운다.
+  // ============================================================
+  var CEFR_FUNC = (function(){
+    var w = ("i you he she it we they me him her us them my your his its our their this that these those "+
+      "am is are was were be been being do does did have has had will would can could shall should may might must "+
+      "i'm you're he's she's it's we're they're i've you've we've they've i'd you'd he'd she'd we'd they'd "+
+      "i'll you'll he'll she'll we'll they'll isn't aren't wasn't weren't don't doesn't didn't won't wouldn't "+
+      "can't couldn't shouldn't haven't hasn't hadn't that's there's here's what's let's who's how's "+
+      "a an the to of in on at for with from by as and but or so if than then there here not no "+
+      "what where when who why how which whose whom up out off over about into").split(/\s+/);
+    var s={}; w.forEach(function(x){ s[x]=true; }); return s;
+  })();
+  function cefrFill(){ return levelSet==='cefr'; }
+  function isFuncWord(w){ return !!CEFR_FUNC[w.toLowerCase()]; }
+  // 문장 → 표시/빈칸 유닛 + 정답 letter 시퀀스. 앞쪽 기능어 묶음만 빈칸(없으면 첫 단어).
+  function buildFill(en){
+    var tokens = en.match(/[A-Za-z']+|[^A-Za-z']+/g) || [];
+    var blankUntil=-1, firstWord=-1, anyBlank=false;
+    for(var i=0;i<tokens.length;i++){
+      if(/[A-Za-z]/.test(tokens[i])){
+        if(firstWord<0) firstWord=i;
+        if(isFuncWord(tokens[i])){ blankUntil=i; anyBlank=true; }
+        else break;
+      }
+    }
+    if(!anyBlank){ blankUntil=firstWord; }
+    var units=[], target='';
+    for(var t=0;t<tokens.length;t++){
+      var tk=tokens[t], isWord=/[A-Za-z]/.test(tk), doBlank = isWord && t<=blankUntil;
+      for(var c=0;c<tk.length;c++){
+        var ch=tk[c];
+        if(doBlank && /[A-Za-z]/.test(ch)){ units.push({t:'box',ch:ch}); target+=ch.toLowerCase(); }
+        else if(ch===' ') units.push({t:'sp'});
+        else units.push({t:'ch',ch:ch});
+      }
+    }
+    return { units:units, target:target };
+  }
+  // host(채점줄)에 빈칸 UI를 그린다. onDone(grade) 호출 시 상위가 기록·다음으로.
+  function renderCefrFill(host, en, onDone){
+    host.innerHTML='';
+    var fb = buildFill(en);
+    var card=document.createElement('div'); card.className='fill-wrap';
+    var slots=document.createElement('div'); slots.className='fill-slots';
+    var boxes=[];
+    fb.units.forEach(function(u){
+      if(u.t==='box'){ var b=document.createElement('span'); b.className='fill-box'; slots.appendChild(b); boxes.push(b); }
+      else if(u.t==='sp'){ var s=document.createElement('span'); s.className='fill-sp'; slots.appendChild(s); }
+      else { var c=document.createElement('span'); c.className='fill-ch'; c.textContent=u.ch; slots.appendChild(c); }
+    });
+    card.appendChild(slots);
+    var input=document.createElement('input'); input.type='text'; input.className='fill-input';
+    input.setAttribute('autocapitalize','off'); input.setAttribute('autocomplete','off'); input.setAttribute('autocorrect','off');
+    input.placeholder='여기에 입력하거나 🎤 로 말하세요';
+    card.appendChild(input);
+    var hintEl=document.createElement('div'); hintEl.className='fill-hint-line'; card.appendChild(hintEl);
+    var btnRow=document.createElement('div'); btnRow.className='fill-btns';
+    var mic=document.createElement('button'); mic.className='fill-mic'; mic.innerHTML='🎤 말하기';
+    var hintBtn=document.createElement('button'); hintBtn.className='fill-hintbtn'; hintBtn.textContent='💡 힌트';
+    var ansBtn=document.createElement('button'); ansBtn.className='fill-ansbtn'; ansBtn.textContent='정답';
+    btnRow.appendChild(mic); btnRow.appendChild(hintBtn); btnRow.appendChild(ansBtn);
+    card.appendChild(btnRow);
+    host.appendChild(card);
+
+    var usedHelp=false, done=false;
+    function letters(){ return input.value.toLowerCase().replace(/[^a-z]/g,'').slice(0, fb.target.length); }
+    function finish(){
+      if(done) return; done=true;
+      input.disabled=true; mic.disabled=true; hintBtn.disabled=true; ansBtn.disabled=true;
+      var correct = !usedHelp;
+      slots.classList.add(correct?'ok':'used');
+      onDone(correct?'ok':'no');
+    }
+    function paint(){
+      var ls=letters(), wrong=false;
+      for(var i=0;i<boxes.length;i++){
+        if(i<ls.length){ boxes[i].textContent=ls[i].toUpperCase(); boxes[i].classList.add('filled');
+          var bad = ls[i]!==fb.target[i]; boxes[i].classList.toggle('wrong', bad); if(bad) wrong=true; }
+        else { boxes[i].textContent=''; boxes[i].classList.remove('filled','wrong'); }
+      }
+      if(ls.length===fb.target.length){
+        if(!wrong){ finish(); }
+        else { slots.classList.remove('shake'); void slots.offsetWidth; slots.classList.add('shake'); }
+      }
+    }
+    input.addEventListener('input', paint);
+    input.addEventListener('keydown', function(e){ if(e.key==='Enter') e.preventDefault(); });
+    slots.addEventListener('click', function(){ try{ input.focus(); }catch(e){} });
+    hintBtn.addEventListener('click', function(){
+      if(done) return; usedHelp=true;
+      var n=Math.min(fb.target.length, letters().length+1);
+      input.value=fb.target.slice(0,n); paint(); try{ input.focus(); }catch(e){}
+    });
+    ansBtn.addEventListener('click', function(){
+      if(done) return; usedHelp=true; input.value=fb.target; paint();
+    });
+    setupSpeakMic(mic, input, hintEl);
+    // 마이크가 input.value를 바꿔도 paint가 돌도록 (카드가 사라지면 정리)
+    var mo=setInterval(function(){ if(done || !document.body.contains(input)){ clearInterval(mo); return; } paint(); }, 400);
+  }
+
+  function renderCefrCard(){
+    var d = LEVEL_DATA[curLevel], e = curExprObj(), q = curQ(), col = levelColorVars(curLevel);
+    cardTag.textContent = d.name + ' · 문제 ' + (curExpr+1) + ' / ' + d.exprs.length;
+    cardEl.classList.toggle('longtext', q.en.length > 90);
+    cardSpk.innerHTML=''; cardBody.innerHTML='';
+    var lab=document.createElement('div'); lab.className='side-label'; lab.style.color=col.fg; lab.textContent='Korean';
+    var koRow=document.createElement('div'); koRow.className='ko-row';
+    var ko=document.createElement('div'); ko.className='ko-q'; ko.textContent=q.free;
+    var miniSpk=spkBtn(q.en,'mini'); miniSpk.title='정답 영어 발음 듣기';
+    koRow.appendChild(ko); koRow.appendChild(miniSpk);
+    var litq=document.createElement('div'); litq.className='lit'; litq.innerHTML='<b>Literal</b> · '+escHtml(q.lit);
+    var pill=document.createElement('button'); pill.className='struct-pill hint-toggle'; pill.style.background=col.bg; pill.style.color=col.fg;
+    var pillContent='<b>'+escHtml(e.pattern)+'</b><br>'+escHtml(e.desc); var hs=false;
+    function paintPill(){ pill.innerHTML = hs ? pillContent : '💡 패턴 보기'; }
+    paintPill(); pill.addEventListener('click',function(ev){ ev.stopPropagation(); hs=!hs; paintPill(); });
+    cardBody.appendChild(lab); cardBody.appendChild(koRow); cardBody.appendChild(litq); cardBody.appendChild(pill);
+    flipHint.textContent = '빈칸을 채우면 자동으로 채점돼요';
+
+    renderCefrFill(gradeRow, q.en, function(grade){
+      STATS.record(curLevel, curOrig(), qPick[curExpr], grade);
+      graded = true; buildLevelSubtabs();
+      speak(q.en,'en');
+      setTimeout(function(){
+        curExpr = (curExpr+1) % exprOrder.length;
+        rollProblem(curExpr); flipped=false; graded=false; buildChips(); render();
+      }, 850);
+    });
+    var nb=$('next-btn'); if(nb){ nb.disabled=false; nb.textContent='Skip →'; }
+    updateProgress();
+  }
+
   function render(){
+    if(cefrFill()){ renderCefrCard(); return; }
     var d = LEVEL_DATA[curLevel];
     var e = curExprObj();
     var q = curQ();
@@ -5401,6 +5555,11 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
 
   // ---------- navigation ----------
   function nextProblem(){
+    if(cefrFill()){                      // CEFR 빈칸 모드: 채점 없이 건너뛰기
+      curExpr = (curExpr+1) % exprOrder.length;
+      rollProblem(curExpr); flipped=false; graded=false; buildChips(); render();
+      return;
+    }
     if(speakMode && !graded){            // 말하기 모드: 아직 제출 전 → Submit 동작
       if(speakSubmitFn) speakSubmitFn();
       return;
@@ -5421,6 +5580,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
 
   cardEl.addEventListener('click',function(ev){
     if(ev.target.closest('button')) return;
+    if(cefrFill()) return;   // CEFR 빈칸 모드는 카드 뒤집기 없음
     flipped=!flipped; render();
     if(flipped) speak(curQ().en,'en');
   });
