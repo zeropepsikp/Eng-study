@@ -3147,6 +3147,206 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
 </script>
 <script>
 // ============================================================
+// CEFR 레벨 세트 (A1~C2) — 기존 레벨과 동일 구조 {name,sub,blurb,color,exprs:[{pattern,ko,desc,bank:[{en,lit,free}]}]}
+// 옵션 스위치로 기존 레벨과 전환된다. 키는 1~6.
+// ============================================================
+(function(){
+  var C = {};
+  function L(n, ex){ return ex; }
+  C[1] = { name:"A1", sub:"입문 · 자기소개와 기본 질문·대답", blurb:"학습 시작 단계. 자기소개를 하고 간단한 질문에 답할 수 있어요.", color:"green",
+    exprs:[
+      { pattern:"I'm + 이름/직업/상태", ko:"나는 ~야 (소개)", desc:"자기소개의 기본. be동사로 이름·직업·상태를 말한다.", bank:[
+        {en:"I'm Mina.", lit:"나는 미나이다.", free:"저는 미나예요."},
+        {en:"I'm a student.", lit:"나는 학생이다.", free:"저 학생이에요."},
+        {en:"I'm from Korea.", lit:"나는 한국 출신이다.", free:"한국에서 왔어요."},
+        {en:"I'm twenty years old.", lit:"나는 스무 살이다.", free:"스무 살이에요."},
+        {en:"I'm happy to meet you.", lit:"나는 너를 만나서 기쁘다.", free:"만나서 반가워요."},
+        {en:"I'm a little tired.", lit:"나는 조금 피곤하다.", free:"좀 피곤해요."},
+        {en:"I'm hungry now.", lit:"나는 지금 배고프다.", free:"지금 배고파요."},
+        {en:"I'm new here.", lit:"나는 여기 처음이다.", free:"저 여기 처음이에요."}
+      ]},
+      { pattern:"Do you ~? / What is ~?", ko:"~하니? / ~가 뭐야? (기본 질문)", desc:"가장 기본적인 질문 틀.", bank:[
+        {en:"What is your name?", lit:"너의 이름은 무엇이니?", free:"이름이 뭐예요?"},
+        {en:"Where are you from?", lit:"너는 어디 출신이니?", free:"어디서 왔어요?"},
+        {en:"Do you speak English?", lit:"너는 영어를 말하니?", free:"영어 할 줄 알아요?"},
+        {en:"How are you today?", lit:"너는 오늘 어떠니?", free:"오늘 어때요?"},
+        {en:"What do you do?", lit:"너는 무엇을 하니?", free:"무슨 일 하세요?"},
+        {en:"Do you like coffee?", lit:"너는 커피를 좋아하니?", free:"커피 좋아해요?"},
+        {en:"What time is it?", lit:"몇 시이니?", free:"몇 시예요?"},
+        {en:"Can you help me?", lit:"너는 나를 도울 수 있니?", free:"좀 도와줄래요?"}
+      ]},
+      { pattern:"I like / I have / I want", ko:"나는 ~을 좋아해/가지고 있어/원해", desc:"기초 동사로 기호·소유·바람 표현.", bank:[
+        {en:"I like music.", lit:"나는 음악을 좋아한다.", free:"저 음악 좋아해요."},
+        {en:"I have a question.", lit:"나는 질문을 가지고 있다.", free:"질문이 있어요."},
+        {en:"I want some water.", lit:"나는 물을 좀 원한다.", free:"물 좀 주세요."},
+        {en:"I have two brothers.", lit:"나는 형제가 둘 있다.", free:"형제가 둘 있어요."},
+        {en:"I like this place.", lit:"나는 이곳을 좋아한다.", free:"여기 좋아요."},
+        {en:"I want to learn English.", lit:"나는 영어를 배우기를 원한다.", free:"영어 배우고 싶어요."},
+        {en:"I don't like spicy food.", lit:"나는 매운 음식을 좋아하지 않는다.", free:"매운 거 안 좋아해요."},
+        {en:"I have a little time.", lit:"나는 시간이 조금 있다.", free:"시간 조금 있어요."}
+      ]}
+    ]};
+  C[2] = { name:"A2", sub:"기초 · 묘사와 일상 표현", blurb:"간단한 말로 여러 가지를 묘사하고 일상 표현을 이해할 수 있어요.", color:"info",
+    exprs:[
+      { pattern:"It's + 형용사 / There is ~", ko:"~해/~가 있어 (묘사)", desc:"사물·상황을 간단히 묘사.", bank:[
+        {en:"It's really nice today.", lit:"오늘은 정말 좋다.", free:"오늘 날씨 진짜 좋아요."},
+        {en:"There is a cafe near here.", lit:"이 근처에 카페가 있다.", free:"이 근처에 카페 있어요."},
+        {en:"It's too expensive for me.", lit:"그것은 나에게 너무 비싸다.", free:"저한테는 너무 비싸요."},
+        {en:"There are many people here.", lit:"여기 많은 사람들이 있다.", free:"여기 사람 많네요."},
+        {en:"It's not far from here.", lit:"그것은 여기서 멀지 않다.", free:"여기서 안 멀어요."},
+        {en:"It's a little cold inside.", lit:"안은 조금 춥다.", free:"안이 좀 추워요."},
+        {en:"There is no time left.", lit:"남은 시간이 없다.", free:"시간이 없어요."},
+        {en:"It looks delicious.", lit:"그것은 맛있어 보인다.", free:"맛있어 보여요."}
+      ]},
+      { pattern:"I went / I'm going to ~ (과거·예정)", ko:"~했어 / ~할 거야", desc:"간단한 과거와 가까운 미래.", bank:[
+        {en:"I went to the market.", lit:"나는 시장에 갔다.", free:"시장에 갔다 왔어요."},
+        {en:"I'm going to call him later.", lit:"나는 나중에 그에게 전화할 것이다.", free:"이따 걔한테 전화할 거예요."},
+        {en:"I watched a movie last night.", lit:"나는 어젯밤 영화를 봤다.", free:"어젯밤에 영화 봤어요."},
+        {en:"I'm going to be late.", lit:"나는 늦을 것이다.", free:"저 늦을 것 같아요."},
+        {en:"I had lunch with a friend.", lit:"나는 친구와 점심을 먹었다.", free:"친구랑 점심 먹었어요."},
+        {en:"We're going to meet at six.", lit:"우리는 여섯 시에 만날 것이다.", free:"우리 여섯 시에 만나요."},
+        {en:"I didn't sleep well.", lit:"나는 잘 자지 못했다.", free:"잠을 잘 못 잤어요."},
+        {en:"I'm going to take a rest.", lit:"나는 쉴 것이다.", free:"좀 쉬려고요."}
+      ]},
+      { pattern:"Can I ~? / Could you ~? (요청·허락)", ko:"~해도 돼요? / ~해 주실래요?", desc:"공손한 요청·허락.", bank:[
+        {en:"Can I get the menu?", lit:"내가 메뉴를 받아도 되니?", free:"메뉴 좀 주실래요?"},
+        {en:"Could you speak slowly?", lit:"천천히 말해 줄 수 있나요?", free:"천천히 말해 주실래요?"},
+        {en:"Can I pay by card?", lit:"카드로 내도 되나요?", free:"카드로 계산해도 돼요?"},
+        {en:"Could you take a photo?", lit:"사진 찍어 줄 수 있나요?", free:"사진 좀 찍어 주실래요?"},
+        {en:"Can I try this on?", lit:"이거 입어 봐도 되나요?", free:"이거 입어 봐도 돼요?"},
+        {en:"Could you wait a second?", lit:"잠시 기다려 줄 수 있나요?", free:"잠깐만 기다려 주실래요?"},
+        {en:"Can I have the bill?", lit:"계산서를 받아도 되나요?", free:"계산서 주세요."},
+        {en:"Could you say it again?", lit:"다시 말해 줄 수 있나요?", free:"다시 말해 주실래요?"}
+      ]}
+    ]};
+  C[3] = { name:"B1", sub:"중급 · 여행·취미·일·가족 대화", blurb:"여행에서 영어를 쓰고, 취미·일·가족에 관해 대화할 수 있어요.", color:"purple",
+    exprs:[
+      { pattern:"I'd like to ~ / I'm trying to ~", ko:"~하고 싶어요 / ~하려고 해요", desc:"바람·시도를 자연스럽게.", bank:[
+        {en:"I'd like to book a room for two nights.", lit:"이틀 밤 방을 예약하고 싶다.", free:"이틀 묵을 방 예약하고 싶어요."},
+        {en:"I'm trying to save money this year.", lit:"올해 돈을 모으려고 한다.", free:"올해는 돈 좀 모으려고요."},
+        {en:"I'd like to know more about the tour.", lit:"투어에 대해 더 알고 싶다.", free:"그 투어 좀 더 알고 싶어요."},
+        {en:"I'm trying to eat healthier these days.", lit:"요즘 더 건강하게 먹으려 한다.", free:"요즘 더 건강하게 먹으려고 해요."},
+        {en:"I'd like to change my reservation.", lit:"예약을 바꾸고 싶다.", free:"예약 변경하고 싶어요."},
+        {en:"I'm trying to learn the guitar.", lit:"기타를 배우려 한다.", free:"기타 배워 보려고요."},
+        {en:"I'd like to sit by the window.", lit:"창가에 앉고 싶다.", free:"창가 자리로 앉고 싶어요."},
+        {en:"I'm trying to spend more time with family.", lit:"가족과 더 시간을 보내려 한다.", free:"가족이랑 시간을 더 보내려고요."}
+      ]},
+      { pattern:"What do you usually ~? / How often ~?", ko:"보통 ~해요? / 얼마나 자주 ~?", desc:"취미·습관을 묻고 답하기.", bank:[
+        {en:"What do you usually do on weekends?", lit:"주말에 보통 무엇을 하니?", free:"주말에 보통 뭐 해요?"},
+        {en:"How often do you travel?", lit:"얼마나 자주 여행하니?", free:"여행 얼마나 자주 가요?"},
+        {en:"I usually work out in the morning.", lit:"나는 보통 아침에 운동한다.", free:"보통 아침에 운동해요."},
+        {en:"I go hiking once a month.", lit:"나는 한 달에 한 번 등산한다.", free:"한 달에 한 번 등산 가요."},
+        {en:"What kind of music do you like?", lit:"어떤 종류의 음악을 좋아하니?", free:"어떤 음악 좋아해요?"},
+        {en:"I spend weekends with my family.", lit:"나는 주말을 가족과 보낸다.", free:"주말은 가족이랑 보내요."},
+        {en:"How long have you lived here?", lit:"여기 산 지 얼마나 됐니?", free:"여기 산 지 얼마나 됐어요?"},
+        {en:"I work as a designer.", lit:"나는 디자이너로 일한다.", free:"디자이너로 일해요."}
+      ]},
+      { pattern:"I think ~ / I'd say ~ (의견 기초)", ko:"~인 것 같아요 / ~인 듯해요", desc:"가벼운 의견 표현.", bank:[
+        {en:"I think it's a good idea.", lit:"나는 그것이 좋은 생각이라 생각한다.", free:"좋은 생각인 것 같아요."},
+        {en:"I'd say it's worth trying.", lit:"시도할 가치가 있다고 말하겠다.", free:"해 볼 만한 것 같아요."},
+        {en:"I think we should leave soon.", lit:"우리는 곧 떠나야 한다고 생각한다.", free:"곧 나가는 게 좋을 것 같아요."},
+        {en:"I'd say the food was great.", lit:"음식이 훌륭했다고 말하겠다.", free:"음식 진짜 괜찮았던 것 같아요."},
+        {en:"I think it depends on the weather.", lit:"날씨에 달렸다고 생각한다.", free:"날씨에 따라 다를 것 같아요."},
+        {en:"I'd say it's a bit too far.", lit:"조금 너무 멀다고 말하겠다.", free:"좀 멀긴 한 것 같아요."},
+        {en:"I think you're right about that.", lit:"그 점에 대해 네가 옳다고 생각한다.", free:"그건 네 말이 맞는 것 같아."},
+        {en:"I'd say we have enough time.", lit:"시간이 충분하다고 말하겠다.", free:"시간은 충분한 것 같아요."}
+      ]}
+    ]};
+  C[4] = { name:"B2", sub:"중상급 · 복잡한 주제와 유창한 대화", blurb:"복잡한 주제의 대화를 이해하고, 원어민과 막힘없이 대화할 수 있어요.", color:"coral",
+    exprs:[
+      { pattern:"비교·대조: while / whereas / on the other hand", ko:"반면에 / ~인 데 비해", desc:"두 가지를 비교·대조해 설명.", bank:[
+        {en:"This option is cheaper, while that one is faster.", lit:"이 선택은 더 싸고, 반면 저것은 더 빠르다.", free:"이건 더 싸고, 저건 더 빠르죠."},
+        {en:"He prefers texting, whereas I'd rather call.", lit:"그는 문자를 선호하는 데 비해 나는 전화를 택한다.", free:"걔는 문자를 좋아하는데, 난 전화가 나아."},
+        {en:"On the other hand, it could cost us more.", lit:"반면에, 그것은 우리에게 더 많은 비용이 들 수 있다.", free:"반대로 비용이 더 들 수도 있어요."},
+        {en:"The plan looks good, while the budget is tight.", lit:"계획은 좋아 보이지만, 예산은 빠듯하다.", free:"계획은 좋은데 예산이 빠듯하네요."},
+        {en:"She's outgoing, whereas her brother is shy.", lit:"그녀는 외향적인 데 비해 그녀의 남동생은 수줍다.", free:"걔는 외향적인데 동생은 내성적이에요."},
+        {en:"On the other hand, we'd save a lot of time.", lit:"반면에, 우리는 많은 시간을 절약할 것이다.", free:"반면에 시간은 많이 아낄 수 있어요."},
+        {en:"Working from home is flexible, while the office is more focused.", lit:"재택은 유연한 반면 사무실은 더 집중된다.", free:"재택은 유연한데, 사무실은 더 집중되죠."},
+        {en:"The first half was slow, whereas the ending was intense.", lit:"전반은 느렸던 반면 결말은 강렬했다.", free:"전반은 느렸는데 결말은 강렬했어요."}
+      ]},
+      { pattern:"가정·추측: would / might / I suppose", ko:"~할 텐데 / ~일 수도 / ~인 것 같은데", desc:"가정과 조심스러운 추측.", bank:[
+        {en:"I would go, but I'm swamped this week.", lit:"가고 싶지만 이번 주는 너무 바쁘다.", free:"가고 싶은데 이번 주 너무 바빠요."},
+        {en:"It might be better to wait a few days.", lit:"며칠 기다리는 게 나을 수도 있다.", free:"며칠 기다리는 게 나을 수도 있어요."},
+        {en:"I suppose we could try a different approach.", lit:"다른 접근을 시도할 수 있을 것 같다.", free:"다른 방법을 써 볼 수도 있겠네요."},
+        {en:"That would explain why he was late.", lit:"그것이 그가 늦은 이유를 설명할 것이다.", free:"그래서 걔가 늦었나 보네요."},
+        {en:"I might join later if I finish early.", lit:"일찍 끝나면 나중에 합류할 수도 있다.", free:"일찍 끝나면 나중에 갈 수도 있어요."},
+        {en:"I suppose it depends on how busy we are.", lit:"우리가 얼마나 바쁜지에 달린 것 같다.", free:"우리가 얼마나 바쁜지에 달린 것 같아요."},
+        {en:"It would help if we had more details.", lit:"세부 정보가 더 있으면 도움이 될 것이다.", free:"정보가 더 있으면 도움이 될 텐데요."},
+        {en:"They might have already left by now.", lit:"그들은 지금쯤 이미 떠났을 수도 있다.", free:"지금쯤 벌써 갔을 수도 있어요."}
+      ]},
+      { pattern:"의견 강화: I'd argue / The point is / What matters is", ko:"~라고 봐요 / 요점은 ~", desc:"의견을 논리적으로 밀어붙이기.", bank:[
+        {en:"I'd argue that quality matters more than speed.", lit:"속도보다 품질이 더 중요하다고 본다.", free:"속도보다 품질이 더 중요하다고 봐요."},
+        {en:"The point is, we can't keep delaying it.", lit:"요점은, 계속 미룰 수 없다는 것이다.", free:"요점은 계속 미룰 순 없다는 거예요."},
+        {en:"What matters is whether it actually works.", lit:"중요한 것은 그것이 실제로 작동하는지이다.", free:"중요한 건 실제로 되느냐예요."},
+        {en:"I'd argue it's worth the extra cost.", lit:"추가 비용을 들일 가치가 있다고 본다.", free:"추가 비용을 들일 만하다고 봐요."},
+        {en:"The point is, nobody told us in advance.", lit:"요점은, 아무도 우리에게 미리 말하지 않았다는 것이다.", free:"요점은 아무도 미리 말 안 해줬다는 거죠."},
+        {en:"What matters is how we handle it now.", lit:"중요한 것은 지금 우리가 어떻게 대처하느냐이다.", free:"중요한 건 지금 어떻게 대응하느냐예요."},
+        {en:"I'd argue we need more data before deciding.", lit:"결정 전에 더 많은 데이터가 필요하다고 본다.", free:"결정 전에 데이터가 더 필요하다고 봐요."},
+        {en:"The point is, it's not as simple as it sounds.", lit:"요점은, 들리는 것만큼 간단하지 않다는 것이다.", free:"요점은 말처럼 간단하진 않다는 거예요."}
+      ]}
+    ]};
+  C[5] = { name:"C1", sub:"고급 · 사교·학술·업무의 정교한 표현", blurb:"사교·학술·전문 상황에서 능숙하게 구사하고 복잡한 대화를 따라갈 수 있어요.", color:"amber",
+    exprs:[
+      { pattern:"정중한 완충: I was wondering if / Would it be possible to", ko:"혹시 ~해도 될까요 (정중)", desc:"격식 있는 요청·제안.", bank:[
+        {en:"I was wondering if you could review my draft.", lit:"제 초안을 검토해 주실 수 있을지 궁금했습니다.", free:"혹시 제 초안 좀 봐 주실 수 있을까요?"},
+        {en:"Would it be possible to push the deadline?", lit:"마감을 미루는 것이 가능할까요?", free:"마감을 좀 미룰 수 있을까요?"},
+        {en:"I was wondering if now is a good time.", lit:"지금이 좋은 때인지 궁금했습니다.", free:"혹시 지금 괜찮으세요?"},
+        {en:"Would it be possible to get a quick update?", lit:"간단한 업데이트를 받는 것이 가능할까요?", free:"간단히 업데이트 좀 받을 수 있을까요?"},
+        {en:"I was wondering if we could reschedule.", lit:"일정을 다시 잡을 수 있을지 궁금했습니다.", free:"혹시 일정을 다시 잡을 수 있을까요?"},
+        {en:"Would it be possible to clarify this point?", lit:"이 점을 명확히 하는 것이 가능할까요?", free:"이 부분 좀 명확히 해 주실 수 있을까요?"},
+        {en:"I was wondering if you'd considered other options.", lit:"다른 선택지를 고려하셨는지 궁금했습니다.", free:"혹시 다른 선택지도 보셨을까요?"},
+        {en:"Would it be possible to join remotely?", lit:"원격으로 참여하는 것이 가능할까요?", free:"원격으로 참여해도 될까요?"}
+      ]},
+      { pattern:"학술·논리 연결: Given that / In light of / It follows that", ko:"~를 고려하면 / 그에 따라", desc:"근거를 들어 논리적으로 전개.", bank:[
+        {en:"Given that demand is rising, we should scale up.", lit:"수요가 증가함을 고려하면 규모를 키워야 한다.", free:"수요가 느는 걸 보면 규모를 키워야죠."},
+        {en:"In light of recent results, we'll adjust the plan.", lit:"최근 결과에 비추어 계획을 조정할 것이다.", free:"최근 결과를 보고 계획을 조정할게요."},
+        {en:"It follows that we need a bigger budget.", lit:"그에 따라 더 큰 예산이 필요하다.", free:"따라서 예산이 더 필요해요."},
+        {en:"Given that everyone agrees, let's proceed.", lit:"모두가 동의함을 고려하면 진행하자.", free:"다들 동의하니 진행하죠."},
+        {en:"In light of the feedback, we revised the design.", lit:"피드백에 비추어 디자인을 수정했다.", free:"피드백을 반영해 디자인을 고쳤어요."},
+        {en:"It follows that the earlier estimate was too low.", lit:"그에 따라 이전 추정치가 너무 낮았다.", free:"그러니 이전 추정이 너무 낮았던 거죠."},
+        {en:"Given that time is limited, let's prioritize.", lit:"시간이 제한적임을 고려하면 우선순위를 정하자.", free:"시간이 한정적이니 우선순위를 정하죠."},
+        {en:"In light of this, we may need outside help.", lit:"이에 비추어 외부 도움이 필요할 수 있다.", free:"이걸 보면 외부 도움이 필요할 수도요."}
+      ]},
+      { pattern:"부분 동의·조율: I see your point, but / That said / To some extent", ko:"일리 있지만 / 그렇긴 해도 / 어느 정도는", desc:"갈등 없이 의견을 조율.", bank:[
+        {en:"I see your point, but the timing worries me.", lit:"일리 있지만 시점이 걱정된다.", free:"일리 있는데, 타이밍이 걱정이에요."},
+        {en:"That said, we shouldn't rush the decision.", lit:"그렇긴 해도 결정을 서두르면 안 된다.", free:"그렇긴 해도 결정을 서두르면 안 되죠."},
+        {en:"To some extent, I agree with the proposal.", lit:"어느 정도는 그 제안에 동의한다.", free:"어느 정도는 그 제안에 동의해요."},
+        {en:"I see your point, but the data says otherwise.", lit:"일리 있지만 데이터는 다르게 말한다.", free:"일리 있는데, 데이터는 좀 다르네요."},
+        {en:"That said, it's still worth a try.", lit:"그렇긴 해도 여전히 해 볼 가치가 있다.", free:"그래도 한 번 해 볼 만은 해요."},
+        {en:"To some extent, both sides are right.", lit:"어느 정도는 양쪽 다 옳다.", free:"어느 정도는 양쪽 다 맞아요."},
+        {en:"I see your point, but let's not overcommit.", lit:"일리 있지만 너무 많이 떠맡지는 말자.", free:"일리 있는데, 너무 무리하진 말죠."},
+        {en:"That said, the risks are manageable.", lit:"그렇긴 해도 위험은 감당할 만하다.", free:"그래도 위험은 감당할 만해요."}
+      ]}
+    ]};
+  C[6] = { name:"C2", sub:"최상급 · 뉘앙스·관용·추상까지", blurb:"듣고 읽는 것을 거의 다 이해하고, 복잡한 주제에서 생각을 정교하게 표현해요.", color:"pink",
+    exprs:[
+      { pattern:"관용·자연스러움: It's not really my thing / I can't get my head around", ko:"내 취향은 아니야 / 도무지 이해가 안 가", desc:"원어민다운 관용 표현.", bank:[
+        {en:"Honestly, that kind of humor isn't really my thing.", lit:"솔직히 그런 유머는 내 취향이 아니다.", free:"솔직히 그런 개그는 내 취향은 아니야."},
+        {en:"I can't quite get my head around how it works.", lit:"그게 어떻게 작동하는지 도무지 이해가 안 간다.", free:"이게 어떻게 되는 건지 도무지 이해가 안 가요."},
+        {en:"Let's not blow this out of proportion.", lit:"이걸 과장하지 말자.", free:"이걸 너무 부풀리진 말죠."},
+        {en:"It kind of grows on you after a while.", lit:"시간이 지나면 점점 좋아진다.", free:"하다 보면 점점 정들어요."},
+        {en:"I'd take that with a grain of salt.", lit:"그건 걸러 들어야 한다.", free:"그건 좀 걸러 들어야 해요."},
+        {en:"That's easier said than done, to be fair.", lit:"솔직히 그건 말처럼 쉽지 않다.", free:"솔직히 말처럼 쉽진 않죠."},
+        {en:"He tends to read too much into things.", lit:"그는 매사를 지나치게 해석하는 경향이 있다.", free:"걔는 매사를 너무 깊게 해석하는 편이에요."},
+        {en:"Let's play it by ear and see how it goes.", lit:"상황 봐 가며 결정하자.", free:"상황 봐 가면서 하죠."}
+      ]},
+      { pattern:"추상·정교한 의견: arguably / to a large extent / in retrospect", ko:"어쩌면 / 상당 부분 / 돌이켜 보면", desc:"미묘한 뉘앙스로 정교하게 주장.", bank:[
+        {en:"Arguably, the real issue is a lack of trust.", lit:"어쩌면 진짜 문제는 신뢰의 부족이다.", free:"어쩌면 진짜 문제는 신뢰 부족이에요."},
+        {en:"To a large extent, the outcome was predictable.", lit:"상당 부분 결과는 예측 가능했다.", free:"상당 부분 결과는 예측 가능했죠."},
+        {en:"In retrospect, we should have acted sooner.", lit:"돌이켜 보면 더 일찍 움직였어야 했다.", free:"돌이켜 보면 더 일찍 움직였어야 했어요."},
+        {en:"It's arguably the most important factor here.", lit:"어쩌면 여기서 가장 중요한 요소이다.", free:"어쩌면 여기서 제일 중요한 요소예요."},
+        {en:"To a large extent, success comes down to consistency.", lit:"상당 부분 성공은 꾸준함에 달려 있다.", free:"성공은 상당 부분 꾸준함에 달렸어요."},
+        {en:"In retrospect, the warning signs were there all along.", lit:"돌이켜 보면 경고 신호가 내내 있었다.", free:"돌이켜 보면 신호가 내내 있었던 거죠."},
+        {en:"That argument is compelling, if a little idealistic.", lit:"그 주장은 다소 이상적이긴 해도 설득력 있다.", free:"좀 이상적이긴 해도 설득력 있는 주장이에요."},
+        {en:"The distinction is subtle but significant.", lit:"그 구분은 미묘하지만 중요하다.", free:"그 차이는 미묘하지만 중요해요."}
+      ]}
+    ]};
+  window.CEFR_LEVELS = C;
+})();
+
+</script>
+<script>
+// ============================================================
 // 학습 통계 엔진 (localStorage 영구 저장) + 약한 예시 가중 선택
 // 통계 키: 레벨(lv) → 표현(exprIdx) → 예시(bankIdx) → {ok, meh, no}
 //   ok = 맞춤, meh = 애매, no = 모름 (각각 체크된 횟수)
@@ -3155,16 +3355,34 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
 (function(){
   "use strict";
   var KEY = 'eng_flashcards_stats_v1';
-  var store = { stats:{}, daily:{}, version:2 };
+  // 레벨 세트별로 통계를 분리(classic / cefr). store.stats·store.daily 는 항상 "활성" 세트를 가리킨다.
+  var store = { version:3, sets:{ classic:{stats:{},daily:{}}, cefr:{stats:{},daily:{}} }, stats:{}, daily:{} };
+  var curNs = 'classic';
+  function ensureSets(){
+    if(!store.sets) store.sets = {};
+    if(!store.sets.classic) store.sets.classic = { stats:{}, daily:{} };
+    if(!store.sets.cefr) store.sets.cefr = { stats:{}, daily:{} };
+    if(!store.sets.classic.daily) store.sets.classic.daily = {};
+    if(!store.sets.cefr.daily) store.sets.cefr.daily = {};
+  }
+  function applyNs(){ var ns = store.sets[curNs]; store.stats = ns.stats; store.daily = ns.daily; }
+  function setNamespace(ns){ curNs = (ns==='cefr') ? 'cefr' : 'classic'; ensureSets(); applyNs(); }
 
   function load(){
     try{
       var raw = localStorage.getItem(KEY);
-      if(raw){ var p = JSON.parse(raw); if(p && p.stats){ store = p; if(!store.daily) store.daily={}; } }
+      if(raw){
+        var p = JSON.parse(raw);
+        if(p && p.sets){ store = p; ensureSets(); }
+        else if(p && p.stats){ // 구버전(v2) → classic 으로 이관
+          store = { version:3, sets:{ classic:{stats:p.stats, daily:p.daily||{}}, cefr:{stats:{},daily:{}} } };
+        }
+      }
     }catch(e){}
+    ensureSets(); applyNs();
   }
   function save(){
-    try{ localStorage.setItem(KEY, JSON.stringify(store)); }catch(e){}
+    try{ localStorage.setItem(KEY, JSON.stringify({ version:3, sets:store.sets })); }catch(e){}
   }
   load();
 
@@ -3210,8 +3428,9 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       }
       // 구버전 호환: 레벨 통계만 있는 파일
       if(p && p.stats){
-        store = { stats:p.stats||{}, daily:p.daily||{}, version:p.version||2 };
-        try{ localStorage.setItem(KEY, JSON.stringify(store)); }catch(e){}
+        store = { version:3, sets:{ classic:{stats:p.stats||{}, daily:p.daily||{}}, cefr:{stats:{},daily:{}} } };
+        ensureSets(); applyNs();
+        try{ localStorage.setItem(KEY, JSON.stringify({version:3, sets:store.sets})); }catch(e){}
         return true;
       }
     }catch(e){}
@@ -3373,9 +3592,10 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     return candidates[candidates.length-1];
   }
 
-  function resetAll(){ store = {stats:{}, daily:{}, version:2}; save(); }
+  function clearObj(o){ Object.keys(o).forEach(function(k){ delete o[k]; }); }
+  function resetAll(){ clearObj(store.stats); clearObj(store.daily); save(); }   // 현재 활성 세트만 초기화
   function resetLevel(lv){ if(store.stats[lv]){ delete store.stats[lv]; save(); } }
-  function resetDaily(){ store.daily = {}; save(); }
+  function resetDaily(){ clearObj(store.daily); save(); }
 
   // 일별 통계 접근
   function dailyAll(){ return store.daily || {}; }
@@ -3409,6 +3629,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     exprAccuracy:exprAccuracy, levelAccuracy:levelAccuracy,
     resetAll:resetAll, resetLevel:resetLevel, resetDaily:resetDaily,
     dailyAll:dailyAll, dailyFor:dailyFor, todayCount:todayCount, dailyTotals:dailyTotals, dailyTotalsBy:dailyTotalsBy, todayCountBy:todayCountBy, todayKey:todayKey,
+    setNamespace:setNamespace,
     isDue:isDue, dueCount:dueCount,
     // 수동 내보내기/불러오기
     exportDownload:exportDownload, importFile:importFile, setFileStatusCb:setFileStatusCb,
@@ -3421,7 +3642,12 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
 <script>
 (function(){
   "use strict";
-  var LEVEL_DATA = window.LEVEL_DATA;
+  // 레벨 세트: 'classic'(기존) | 'cefr'(CEFR A1~C2). 옵션 스위치로 전환.
+  var LEVEL_SET_KEY = 'eng_level_set';
+  var LEVEL_SETS = { classic: window.LEVEL_DATA, cefr: window.CEFR_LEVELS || {} };
+  var levelSet = (function(){ try{ return localStorage.getItem(LEVEL_SET_KEY)==='cefr' ? 'cefr' : 'classic'; }catch(e){ return 'classic'; } })();
+  var LEVEL_DATA = LEVEL_SETS[levelSet] || window.LEVEL_DATA;
+  try{ if(window.STATS && STATS.setNamespace) STATS.setNamespace(levelSet); }catch(e){}
   var STATS = window.STATS;
 
   // ---------- speech ----------
@@ -3662,6 +3888,24 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   var NUM_LEVELS = Object.keys(LEVEL_DATA).length;
   var curLevel = 1;
   var curExpr = 0;          // position in exprOrder
+
+  // 레벨 세트 전환 (classic ↔ cefr): LEVEL_DATA·통계 네임스페이스·오늘의 학습을 새 세트로 갱신
+  function setLevelSet(s){
+    s = (s==='cefr') ? 'cefr' : 'classic';
+    if(s===levelSet) return;
+    if(activePanel==='study') saveLevelState();
+    levelSet = s;
+    try{ localStorage.setItem(LEVEL_SET_KEY, s); }catch(e){}
+    LEVEL_DATA = LEVEL_SETS[s] || window.LEVEL_DATA;
+    NUM_LEVELS = Object.keys(LEVEL_DATA).length;
+    try{ STATS.setNamespace(s); }catch(e){}
+    curLevel = 1; curExpr = 0;
+    todayBuilt = false; todayDeck = []; todayPos = 0;
+    if(todayMode!=='chunk'){ startTodayFresh(); saveTodaySession(); }
+    if(activePanel==='study') openLevel(curLevel);
+    else if(activePanel==='today') openToday();
+    switchPanel();
+  }
   var flipped = false;
   var graded = false;       // 이번 문제를 채점했는지 (다음으로 가려면 필요)
   var exprOrder = [], qPick = [], exPick = [];
@@ -3786,7 +4030,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
         if(d.situational && !realLifeOn) return;
         var t = document.createElement('button');
         t.className='subtab'+(activePanel==='study'&&lv===curLevel?' active':'');
-        t.textContent = d.name.indexOf('레벨')===0 ? ('L'+lv) : 'Real';
+        t.textContent = d.situational ? 'Real' : (levelSet==='cefr' ? d.name : ('L'+lv));
         t.title = d.name;
         t.addEventListener('click',function(){
           if(activePanel==='study') saveLevelState();
@@ -5565,6 +5809,22 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     renderOverall(wrap);
   }
 
+  function renderLevelSetOption(wrap){
+    var row=document.createElement('div'); row.className='opt-row'; row.style.flexDirection='column'; row.style.alignItems='stretch';
+    var t=document.createElement('div'); t.className='opt-title'; t.textContent='레벨별 학습 종류';
+    var d=document.createElement('div'); d.className='opt-desc';
+    d.textContent='레벨별 학습과 오늘의 학습(레벨 모드)에 쓸 레벨 체계를 고르세요. CEFR은 A1~C2 국제 기준이에요. (각 종류의 진도는 따로 저장돼요)';
+    row.appendChild(t); row.appendChild(d);
+    var seg=document.createElement('div'); seg.className='today-mode-seg'; seg.style.marginTop='10px';
+    [['classic','기존 레벨 (L1~6)'],['cefr','CEFR (A1~C2)']].forEach(function(m){
+      var b=document.createElement('button'); b.className='tm-btn'+(levelSet===m[0]?' on':''); b.textContent=m[1];
+      b.addEventListener('click',function(){ if(levelSet===m[0]) return; setLevelSet(m[0]); renderOptions(); });
+      seg.appendChild(b);
+    });
+    row.appendChild(seg);
+    wrap.appendChild(row);
+  }
+
   function renderOptions(){
     var wrap=$('options-body'); if(!wrap) return;
     wrap.innerHTML='';
@@ -5572,23 +5832,28 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     blurb.textContent='출제에 포함할 항목을 켜고 끌 수 있어요.';
     wrap.appendChild(blurb);
 
-    var row=document.createElement('div'); row.className='opt-row';
-    var txt=document.createElement('div'); txt.className='opt-text';
-    var t=document.createElement('div'); t.className='opt-title'; t.textContent='Real-Life 표현 출제';
-    var d=document.createElement('div'); d.className='opt-desc';
-    d.textContent='식당·길묻기·면접 같은 상황별 정형 문장을 오늘의 학습과 레벨 출제에 섞어요. 끄면 레벨 1~6 문법 패턴만 나옵니다. (면접 표현은 다른 상황 표현을 어느 정도 익히면 열려요.)';
-    txt.appendChild(t); txt.appendChild(d);
-    var sw=document.createElement('button'); sw.className='opt-switch'+(realLifeOn?' on':'');
-    sw.setAttribute('aria-label','Real-Life 표현 출제 켜고 끄기');
-    sw.addEventListener('click',function(){
-      setRealLifeOn(!realLifeOn);
-      sw.className='opt-switch'+(realLifeOn?' on':'');
-      // 켜고 끔이 오늘의 학습 진행 덱에 바로 반영되도록: 아직 안 본 카드부터 새로 뽑게 함
-      trimTodayDeckToPos();
-      if(activePanel==='today') renderToday();
-    });
-    row.appendChild(txt); row.appendChild(sw);
-    wrap.appendChild(row);
+    // ===== 레벨 세트 선택 (기존 / CEFR) =====
+    renderLevelSetOption(wrap);
+
+    // Real-Life 출제는 기존 레벨에서만 의미가 있음 (CEFR에는 상황별 레벨이 없음)
+    if(levelSet!=='cefr'){
+      var row=document.createElement('div'); row.className='opt-row';
+      var txt=document.createElement('div'); txt.className='opt-text';
+      var t=document.createElement('div'); t.className='opt-title'; t.textContent='Real-Life 표현 출제';
+      var d=document.createElement('div'); d.className='opt-desc';
+      d.textContent='식당·길묻기·면접 같은 상황별 정형 문장을 오늘의 학습과 레벨 출제에 섞어요. 끄면 레벨 1~6 문법 패턴만 나옵니다. (면접 표현은 다른 상황 표현을 어느 정도 익히면 열려요.)';
+      txt.appendChild(t); txt.appendChild(d);
+      var sw=document.createElement('button'); sw.className='opt-switch'+(realLifeOn?' on':'');
+      sw.setAttribute('aria-label','Real-Life 표현 출제 켜고 끄기');
+      sw.addEventListener('click',function(){
+        setRealLifeOn(!realLifeOn);
+        sw.className='opt-switch'+(realLifeOn?' on':'');
+        trimTodayDeckToPos();
+        if(activePanel==='today') renderToday();
+      });
+      row.appendChild(txt); row.appendChild(sw);
+      wrap.appendChild(row);
+    }
 
     // ===== 오늘의 학습(청크) 하루 문제 수 =====
     renderTodayChunkCountOption(wrap);
