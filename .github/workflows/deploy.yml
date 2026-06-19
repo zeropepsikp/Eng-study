@@ -1,0 +1,29 @@
+name: Deploy to Cloudflare Workers
+
+# main 에 push 될 때마다 wrangler.jsonc 기준으로 Worker(+정적 자산)를 배포한다.
+# 런타임 API 키(GEMINI_KEY, HUG_FACE_API_KEY, KLING_API_KEY, OPENAI_TTS_KEY)는
+# Cloudflare 대시보드의 Worker Secrets 에 그대로 두면 되고(배포해도 유지됨),
+# 이 워크플로우는 배포만 한다.
+#
+# 필요한 GitHub 저장소 Secrets:
+#   CLOUDFLARE_API_TOKEN  — Workers 배포 권한 토큰
+#   CLOUDFLARE_ACCOUNT_ID — Cloudflare 계정 ID
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy with Wrangler
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
