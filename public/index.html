@@ -4035,7 +4035,8 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     isDue:isDue, dueCount:dueCount,
     // 수동 내보내기/불러오기
     exportDownload:exportDownload, importFile:importFile, setFileStatusCb:setFileStatusCb,
-    raw:function(){ return store.stats; }
+    raw:function(){ return store.stats; },
+    rawFor:function(ns){ return (store.sets && store.sets[ns] && store.sets[ns].stats) || {}; }
   };
 })();
 
@@ -8023,7 +8024,47 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     wrap.appendChild(box);
   }
 
+  // CEFR 단계별 마스터 현황 (cefr 네임스페이스 통계 기준)
+  function renderCefrOverview(wrap){
+    var data = window.CEFR_LEVELS; if(!data) return;
+    var raw = STATS.rawFor('cefr') || {};
+    var box=document.createElement('div'); box.style.marginBottom='16px';
+    var head=document.createElement('div'); head.className='daily-title'; head.textContent='CEFR 단계별 마스터 현황'; box.appendChild(head);
+    var hint=document.createElement('div'); hint.className='acc-note'; hint.style.margin='0 0 8px';
+    hint.innerHTML='문장 정답률 <b>80% 이상</b>이면 그 문장을 "마스터"로 봅니다. (CEFR 진도 기준)';
+    box.appendChild(hint);
+
+    var totMastered=0, totAll=0;
+    Object.keys(data).forEach(function(lv){
+      var d=data[lv]; var lvStats=raw[lv]||{};
+      var mastered=0, all=0, ok=0, n=0;
+      d.exprs.forEach(function(e, ei){
+        var es=lvStats[ei]||{};
+        e.bank.forEach(function(_, bi){
+          all++;
+          var c=es[bi];
+          if(c){ var t=(c.ok||0)+(c.meh||0)+(c.no||0); if(t){ n+=t; ok+=(c.ok||0)+(c.meh||0)*0.5; var acc=((c.ok||0)+(c.meh||0)*0.5)/t; if(acc>=0.8) mastered++; } }
+        });
+      });
+      totMastered+=mastered; totAll+=all;
+      var acc = n? ok/n : 0;
+      var pctM = all? Math.round(mastered/all*100) : 0;
+      var col = colorVars(d.color).fg;
+      var row=document.createElement('div'); row.className='daily-row';
+      row.innerHTML='<div class="daily-date" style="font-weight:700;color:'+col+'">'+d.name+'</div>'+
+        '<div class="daily-mini"><div class="rseg rok" style="width:'+pctM+'%;background:'+col+'"></div></div>'+
+        '<div class="daily-num">'+mastered+' / '+all+' · '+(n?Math.round(acc*100)+'%':'–')+'</div>';
+      box.appendChild(row);
+    });
+    var sum=document.createElement('div'); sum.className='acc-note'; sum.style.marginTop='8px';
+    sum.innerHTML='전체 마스터: <b>'+totMastered+' / '+totAll+'</b> ('+(totAll?Math.round(totMastered/totAll*100):0)+'%)';
+    box.appendChild(sum);
+    wrap.appendChild(box);
+  }
+
   function renderOverall(wrap){
+    // CEFR 단계별 현황 (상단 고정)
+    renderCefrOverview(wrap);
     // 정답률 기준 안내
     var note=document.createElement('div'); note.className='acc-note';
     note.innerHTML='Score: <b>Got it=1, So-so=0.5, No idea=0</b>, averaged.';
