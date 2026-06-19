@@ -22,11 +22,12 @@ function xmlEsc(s) {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
 }
 async function secMsGec() {
-  // Windows file-time(100ns) since 1601, 5분 단위로 내림 + 토큰을 SHA-256(대문자 hex)
-  let ticks = Math.floor(Date.now() / 1000) + 11644473600;
-  ticks -= ticks % 300;
-  ticks *= 10000000;
-  const data = new TextEncoder().encode(String(ticks) + TOKEN);
+  // Windows file-time(100ns) since 1601, 5분 단위로 내림 + 토큰을 SHA-256(대문자 hex).
+  // 값이 2^53 을 초과하므로 BigInt 로 계산해야 정확하다.
+  let ticks = BigInt(Math.floor(Date.now() / 1000)) + 11644473600n;
+  ticks -= ticks % 300n;
+  ticks *= 10000000n;
+  const data = new TextEncoder().encode(ticks.toString() + TOKEN);
   const buf = await crypto.subtle.digest("SHA-256", data);
   const bytes = new Uint8Array(buf);
   let hex = "";
@@ -56,7 +57,8 @@ export async function onRequestPost(context) {
     } catch (e) { cache = null; }
 
     const gec = await secMsGec();
-    const url = WSS + "?TrustedClientToken=" + TOKEN + "&Sec-MS-GEC=" + gec + "&Sec-MS-GEC-Version=" + GEC_VERSION;
+    // Workers의 outbound WebSocket 은 https:// 스킴 + Upgrade 헤더로 연결한다.
+    const url = WSS.replace("wss://", "https://") + "?TrustedClientToken=" + TOKEN + "&Sec-MS-GEC=" + gec + "&Sec-MS-GEC-Version=" + GEC_VERSION;
     let upstream;
     try { upstream = await fetch(url, { headers: { "Upgrade": "websocket" } }); }
     catch (e) { return jsonErr("edge connect failed", 502, String(e && e.message || e)); }
