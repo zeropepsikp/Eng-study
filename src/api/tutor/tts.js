@@ -3,7 +3,7 @@
 // 키는 환경변수 GEMINI_KEY. 실패 시 비-200 → 클라가 브라우저 음성으로 폴백.
 
 const MODEL = "gemini-2.5-flash-preview-tts";
-const ALLOWED = new Set(["Leda", "Aoede", "Kore", "Zephyr", "Callirrhoe", "Autonoe", "Despina", "Erinome", "Laomedeia", "Achernar", "Sulafat", "Vindemiatrix"]);
+const ALLOWED = new Set(["Leda", "Aoede", "Kore", "Zephyr", "Callirrhoe", "Autonoe", "Despina", "Erinome", "Laomedeia", "Achernar", "Sulafat", "Vindemiatrix", "Puck", "Charon", "Fenrir", "Orus", "Enceladus"]);
 const DEFAULT_VOICE = "Leda";
 const MAX_LEN = 700;
 
