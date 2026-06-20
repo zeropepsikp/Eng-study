@@ -60,6 +60,10 @@
   .tts-badge.free{color:var(--text3);}
   .today-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
   .today-head .section-title{margin:0;}
+  .today-stage-row{display:flex;flex-wrap:wrap;gap:6px;margin:-4px 0 14px;}
+  .tstage-btn{border:1px solid var(--border);background:var(--surface);color:var(--text2);
+    border-radius:999px;padding:6px 13px;font-size:13px;font-weight:700;cursor:pointer;line-height:1;}
+  .tstage-btn.on{background:var(--info);color:#fff;border-color:var(--info);}
   /* 시작 난이도 프리셋 */
   /* 시작 난이도 프리셋 — 세그먼트 컨트롤 */
   .preset-row{display:flex;gap:4px;margin-bottom:16px;background:var(--seg);
@@ -749,6 +753,7 @@
       <div class="section-title">Today’s Study <span class="tts-badge ok" id="tts-badge-today">🔊 Cloudflare 음성</span></div>
       <div class="speak-toggle-slot" id="speak-toggle-slot"></div>
     </div>
+    <div class="today-stage-row" id="today-stage-row"></div>
     <div class="preset-row" id="preset-row"></div>
     <div class="progress-row">
       <div class="today-prog-wrap">
@@ -3365,6 +3370,56 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
         {en:"Can I get a bag?", lit:"봉투를 받을 수 있니?", free:"봉투 하나 주세요."},
         {en:"Do you have a smaller size?", lit:"더 작은 사이즈가 있니?", free:"더 작은 사이즈 있어요?"},
         {en:"Just looking, thanks.", lit:"그냥 보는 거예요, 고마워요.", free:"그냥 구경하는 거예요."}
+      ]},
+      { pattern:"과거 be (was / were)", ko:"~였어 / ~했어 (과거 상태)", desc:"과거의 상태·존재.", bank:[
+        {en:"I was at home all day.", lit:"나는 하루 종일 집에 있었다.", free:"하루 종일 집에 있었어요."},
+        {en:"It was really fun.", lit:"그것은 정말 재미있었다.", free:"진짜 재밌었어요."},
+        {en:"We were so tired.", lit:"우리는 너무 피곤했다.", free:"우리 너무 피곤했어요."},
+        {en:"The food was amazing.", lit:"음식이 훌륭했다.", free:"음식이 진짜 맛있었어요."},
+        {en:"She was not there.", lit:"그녀는 거기 없었다.", free:"걔 거기 없었어요."},
+        {en:"Where were you?", lit:"너는 어디 있었니?", free:"어디 있었어요?"},
+        {en:"It was a long day.", lit:"긴 하루였다.", free:"긴 하루였어요."},
+        {en:"They were very kind.", lit:"그들은 매우 친절했다.", free:"다들 친절했어요."}
+      ]},
+      { pattern:"호불호 love / hate / favorite", ko:"정말 좋아/싫어 / 제일 좋아하는", desc:"강한 기호 표현.", bank:[
+        {en:"I love this song.", lit:"나는 이 노래를 정말 좋아한다.", free:"이 노래 완전 좋아해요."},
+        {en:"I hate waiting.", lit:"나는 기다리는 것을 싫어한다.", free:"기다리는 거 진짜 싫어요."},
+        {en:"It's my favorite place.", lit:"그곳은 내가 가장 좋아하는 곳이다.", free:"제일 좋아하는 곳이에요."},
+        {en:"I really like your style.", lit:"나는 너의 스타일을 정말 좋아한다.", free:"스타일 진짜 좋네요."},
+        {en:"I don't really like coffee.", lit:"나는 커피를 별로 좋아하지 않는다.", free:"커피 별로 안 좋아해요."},
+        {en:"What's your favorite food?", lit:"가장 좋아하는 음식이 무엇이니?", free:"제일 좋아하는 음식 뭐예요?"},
+        {en:"I love spending time outdoors.", lit:"나는 야외에서 시간 보내는 걸 정말 좋아한다.", free:"밖에서 시간 보내는 거 좋아해요."},
+        {en:"I'm not a fan of horror movies.", lit:"나는 공포 영화를 좋아하지 않는다.", free:"공포 영화는 별로예요."}
+      ]},
+      { pattern:"맞장구·응답 Sure / Of course / No problem", ko:"그럼 / 물론 / 괜찮아요", desc:"부탁·제안에 답하기.", bank:[
+        {en:"Sure, no problem.", lit:"그럼, 문제없다.", free:"네, 괜찮아요."},
+        {en:"Of course!", lit:"물론이다!", free:"당연하죠!"},
+        {en:"That sounds good.", lit:"그것은 좋게 들린다.", free:"좋아요."},
+        {en:"No worries.", lit:"걱정 마라.", free:"걱정 마세요."},
+        {en:"Sure, go ahead.", lit:"그럼, 어서 해라.", free:"네, 그렇게 하세요."},
+        {en:"Maybe later.", lit:"아마 나중에.", free:"나중에요."},
+        {en:"I'd love to.", lit:"정말 그러고 싶다.", free:"좋죠, 그럴게요."},
+        {en:"Sorry, I can't right now.", lit:"미안, 지금은 안 된다.", free:"미안한데 지금은 안 돼요."}
+      ]},
+      { pattern:"위치 전치사 (in front of / behind / between)", ko:"~앞에/뒤에/사이에", desc:"위치를 자세히 묘사.", bank:[
+        {en:"It's in front of the station.", lit:"그것은 역 앞에 있다.", free:"역 앞에 있어요."},
+        {en:"The car is behind the building.", lit:"차는 건물 뒤에 있다.", free:"차는 건물 뒤에 있어요."},
+        {en:"It's between the bank and the cafe.", lit:"그것은 은행과 카페 사이에 있다.", free:"은행이랑 카페 사이에 있어요."},
+        {en:"Your bag is under the table.", lit:"네 가방은 탁자 아래에 있다.", free:"가방 탁자 밑에 있어요."},
+        {en:"I'm near the entrance.", lit:"나는 입구 근처에 있다.", free:"입구 근처에 있어요."},
+        {en:"It's across from the park.", lit:"그것은 공원 건너편에 있다.", free:"공원 건너편에 있어요."},
+        {en:"Sit next to me.", lit:"내 옆에 앉아라.", free:"제 옆에 앉으세요."},
+        {en:"The keys are on top of the fridge.", lit:"열쇠는 냉장고 위에 있다.", free:"열쇠는 냉장고 위에 있어요."}
+      ]},
+      { pattern:"부탁·허락 May I / Would you", ko:"~해도 될까요 / ~해 주시겠어요", desc:"조금 더 공손한 부탁.", bank:[
+        {en:"May I come in?", lit:"내가 들어가도 되나요?", free:"들어가도 될까요?"},
+        {en:"May I ask your name?", lit:"이름을 물어봐도 되나요?", free:"성함을 여쭤봐도 될까요?"},
+        {en:"Would you like a drink?", lit:"마실 것을 원하시나요?", free:"마실 것 좀 드릴까요?"},
+        {en:"Would you mind helping me?", lit:"저를 도와주시겠어요?", free:"좀 도와주시겠어요?"},
+        {en:"May I use the restroom?", lit:"화장실을 써도 되나요?", free:"화장실 좀 써도 될까요?"},
+        {en:"Would you pass me the salt?", lit:"소금 좀 건네주시겠어요?", free:"소금 좀 건네주실래요?"},
+        {en:"May I have a moment?", lit:"잠시 시간을 내주시겠어요?", free:"잠깐 시간 괜찮으세요?"},
+        {en:"Would you like to join us?", lit:"우리와 함께하시겠어요?", free:"같이 하실래요?"}
       ]}
     ]};
   C[2] = { name:"A2", sub:"기초 · 묘사와 일상 표현", blurb:"간단한 말로 여러 가지를 묘사하고 일상 표현을 이해할 수 있어요.", color:"info",
@@ -3488,6 +3543,56 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
         {en:"I agree with you.", lit:"나는 너에게 동의한다.", free:"동의해요."},
         {en:"I hope you feel better.", lit:"네가 나아지길 바란다.", free:"얼른 나으세요."},
         {en:"I'm not sure about that.", lit:"나는 그것에 대해 확신이 없다.", free:"그건 잘 모르겠어요."}
+      ]},
+      { pattern:"미래 will (즉흥 결정·예측)", ko:"~할게 / ~할 거야", desc:"지금 정한 일이나 예측.", bank:[
+        {en:"I'll get it.", lit:"내가 그것을 가져오겠다.", free:"제가 가져올게요."},
+        {en:"I'll call you tonight.", lit:"오늘 밤 너에게 전화하겠다.", free:"오늘 밤 전화할게요."},
+        {en:"It'll be fine.", lit:"그것은 괜찮을 것이다.", free:"괜찮을 거예요."},
+        {en:"I think it'll rain.", lit:"비가 올 것 같다.", free:"비 올 것 같아요."},
+        {en:"I'll take this one.", lit:"이것으로 하겠다.", free:"이걸로 할게요."},
+        {en:"We'll see.", lit:"두고 보자.", free:"두고 봐요."},
+        {en:"I'll be right back.", lit:"금방 돌아오겠다.", free:"금방 올게요."},
+        {en:"They'll understand.", lit:"그들은 이해할 것이다.", free:"걔네 이해할 거예요."}
+      ]},
+      { pattern:"의무·금지 must / have to / can't", ko:"꼭 ~해야 해 / ~하면 안 돼", desc:"강한 의무와 금지.", bank:[
+        {en:"You must be careful.", lit:"너는 조심해야 한다.", free:"조심해야 해요."},
+        {en:"I have to leave by six.", lit:"나는 여섯 시까지 떠나야 한다.", free:"여섯 시까지 나가야 해요."},
+        {en:"You can't park here.", lit:"여기에 주차하면 안 된다.", free:"여기 주차하면 안 돼요."},
+        {en:"We must hurry.", lit:"우리는 서둘러야 한다.", free:"서둘러야 해요."},
+        {en:"You don't have to come.", lit:"너는 올 필요 없다.", free:"안 와도 돼요."},
+        {en:"I must remember to call her.", lit:"나는 그녀에게 전화할 것을 기억해야 한다.", free:"걔한테 전화하는 거 잊으면 안 돼요."},
+        {en:"You can't smoke inside.", lit:"안에서 담배 피우면 안 된다.", free:"안에서 담배 피우면 안 돼요."},
+        {en:"I have to finish this first.", lit:"나는 이것을 먼저 끝내야 한다.", free:"이거 먼저 끝내야 해요."}
+      ]},
+      { pattern:"제안·약속 잡기 (Let's / What time / Are you free)", ko:"약속 정하기", desc:"만날 시간·장소 정하기.", bank:[
+        {en:"Are you free this weekend?", lit:"이번 주말에 시간 있니?", free:"이번 주말에 시간 돼요?"},
+        {en:"What time works for you?", lit:"몇 시가 너에게 괜찮니?", free:"몇 시가 괜찮아요?"},
+        {en:"Let's meet in front of the cafe.", lit:"카페 앞에서 만나자.", free:"카페 앞에서 만나요."},
+        {en:"Does Friday work?", lit:"금요일 괜찮니?", free:"금요일 괜찮아요?"},
+        {en:"How about around seven?", lit:"일곱 시쯤 어때?", free:"일곱 시쯤 어때요?"},
+        {en:"I'll text you the address.", lit:"주소를 문자로 보내겠다.", free:"주소 문자로 보낼게요."},
+        {en:"Let's grab lunch sometime.", lit:"언제 점심 같이 먹자.", free:"언제 점심 같이 먹어요."},
+        {en:"Can we make it a bit later?", lit:"조금 늦출 수 있을까?", free:"조금 늦게 해도 될까요?"}
+      ]},
+      { pattern:"경험·빈도 묻기 (Have you ever / How often)", ko:"~해 본 적 있어? / 얼마나 자주", desc:"경험과 빈도.", bank:[
+        {en:"Have you ever been abroad?", lit:"외국에 가 본 적 있니?", free:"외국 가 봤어요?"},
+        {en:"How often do you exercise?", lit:"얼마나 자주 운동하니?", free:"운동 얼마나 자주 해요?"},
+        {en:"Have you tried this before?", lit:"이거 전에 해 본 적 있니?", free:"이거 전에 해 봤어요?"},
+        {en:"I've never done that.", lit:"나는 그것을 해 본 적 없다.", free:"그건 해 본 적 없어요."},
+        {en:"How long have you studied English?", lit:"영어를 얼마나 오래 공부했니?", free:"영어 공부한 지 얼마나 됐어요?"},
+        {en:"Have you eaten yet?", lit:"벌써 먹었니?", free:"밥 먹었어요?"},
+        {en:"I've been there once.", lit:"나는 거기 한 번 가 봤다.", free:"거기 한 번 가 봤어요."},
+        {en:"Do you ever feel that way?", lit:"너도 그렇게 느낄 때가 있니?", free:"가끔 그렇게 느낄 때 있어요?"}
+      ]},
+      { pattern:"전화·메시지 표현", ko:"전화·문자 상황", desc:"전화 통화 기본.", bank:[
+        {en:"Can I speak to Mr. Kim?", lit:"김 선생님과 통화할 수 있나요?", free:"김 선생님 좀 바꿔 주세요."},
+        {en:"Who's calling, please?", lit:"전화하시는 분은 누구신가요?", free:"누구세요?"},
+        {en:"Can I leave a message?", lit:"메시지를 남겨도 되나요?", free:"메시지 남겨도 될까요?"},
+        {en:"I'll call you back later.", lit:"나중에 다시 전화하겠다.", free:"이따 다시 전화할게요."},
+        {en:"Sorry, I missed your call.", lit:"미안, 네 전화를 놓쳤다.", free:"전화 못 받아서 미안해요."},
+        {en:"Can you hear me okay?", lit:"내 말 잘 들리니?", free:"제 말 잘 들려요?"},
+        {en:"Hold on a second.", lit:"잠깐만 기다려라.", free:"잠깐만요."},
+        {en:"Text me when you get there.", lit:"거기 도착하면 문자해라.", free:"도착하면 문자 주세요."}
       ]}
     ]};
   C[3] = { name:"B1", sub:"중급 · 여행·취미·일·가족 대화", blurb:"여행에서 영어를 쓰고, 취미·일·가족에 관해 대화할 수 있어요.", color:"purple",
@@ -3571,6 +3676,56 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
         {en:"I think there's been a mistake.", lit:"실수가 있었던 것 같다.", free:"뭔가 착오가 있는 것 같아요."},
         {en:"Sorry to bother you, but I need help.", lit:"귀찮게 해서 미안하지만 도움이 필요하다.", free:"번거롭게 해서 죄송한데 도움이 필요해요."},
         {en:"Is there any way to fix this?", lit:"이것을 고칠 방법이 있나요?", free:"이거 해결할 방법 있을까요?"}
+      ]},
+      { pattern:"계획·바람 (planning to / hoping to / thinking of)", ko:"~할 계획이야 / ~하길 바라", desc:"미래 계획과 바람.", bank:[
+        {en:"I'm planning to travel next month.", lit:"다음 달에 여행할 계획이다.", free:"다음 달에 여행 갈 계획이에요."},
+        {en:"I'm hoping to get a promotion.", lit:"승진하길 바라고 있다.", free:"승진했으면 하고 있어요."},
+        {en:"I'm thinking of changing careers.", lit:"이직을 생각 중이다.", free:"커리어를 바꿀까 생각 중이에요."},
+        {en:"We're planning to move soon.", lit:"우리는 곧 이사할 계획이다.", free:"곧 이사할 계획이에요."},
+        {en:"I'm hoping it works out.", lit:"잘 풀리길 바란다.", free:"잘 풀렸으면 좋겠어요."},
+        {en:"I was thinking of inviting them.", lit:"그들을 초대할까 생각하고 있었다.", free:"걔네 초대할까 했어요."},
+        {en:"I'm planning to save up for a car.", lit:"차를 사려고 돈을 모을 계획이다.", free:"차 사려고 돈 모을 계획이에요."},
+        {en:"We're hoping for good weather.", lit:"좋은 날씨를 바라고 있다.", free:"날씨가 좋길 바라고 있어요."}
+      ]},
+      { pattern:"조언·추천 (You should / I'd recommend / It's worth)", ko:"~하는 게 좋아 / 추천해", desc:"조언과 추천.", bank:[
+        {en:"You should try the local food.", lit:"현지 음식을 먹어 봐야 한다.", free:"현지 음식 꼭 먹어 봐요."},
+        {en:"I'd recommend booking early.", lit:"일찍 예약하는 걸 추천한다.", free:"일찍 예약하는 거 추천해요."},
+        {en:"It's worth visiting at least once.", lit:"적어도 한 번은 가 볼 가치가 있다.", free:"한 번쯤 가 볼 만해요."},
+        {en:"You might want to bring a jacket.", lit:"재킷을 챙기는 게 좋을 거다.", free:"재킷 챙기는 게 좋을 거예요."},
+        {en:"I'd suggest taking the train.", lit:"기차를 타는 걸 제안한다.", free:"기차 타는 걸 추천해요."},
+        {en:"You should get some rest.", lit:"좀 쉬어야 한다.", free:"좀 쉬는 게 좋겠어요."},
+        {en:"It's not worth the trouble.", lit:"그 수고를 들일 가치가 없다.", free:"그 고생할 만한 가치는 없어요."},
+        {en:"I'd avoid rush hour if I were you.", lit:"내가 너라면 출퇴근 시간을 피하겠다.", free:"저라면 출퇴근 시간은 피할 거예요."}
+      ]},
+      { pattern:"관계사 (the one who / that / which)", ko:"~한 그 사람/것", desc:"명사를 설명으로 꾸미기.", bank:[
+        {en:"She's the one who helped me.", lit:"그녀가 나를 도와준 사람이다.", free:"저를 도와준 사람이 걔예요."},
+        {en:"That's the cafe that I told you about.", lit:"저게 내가 말한 그 카페다.", free:"저기가 제가 말한 그 카페예요."},
+        {en:"This is the book which changed my mind.", lit:"이것이 내 생각을 바꾼 책이다.", free:"이게 제 생각을 바꾼 책이에요."},
+        {en:"He's someone you can trust.", lit:"그는 네가 믿을 수 있는 사람이다.", free:"걔는 믿을 만한 사람이에요."},
+        {en:"The place where we met is gone now.", lit:"우리가 만난 곳은 이제 사라졌다.", free:"우리 만났던 곳은 이제 없어졌어요."},
+        {en:"It's a feeling that's hard to explain.", lit:"그것은 설명하기 어려운 느낌이다.", free:"설명하기 어려운 느낌이에요."},
+        {en:"The people who came were really nice.", lit:"온 사람들은 정말 좋았다.", free:"온 사람들 다 좋았어요."},
+        {en:"That's the reason why I left.", lit:"그것이 내가 떠난 이유다.", free:"그게 제가 떠난 이유예요."}
+      ]},
+      { pattern:"감정 깊게 (I'm glad / worried / can't believe)", ko:"~해서 기뻐 / 걱정돼 / 믿기지 않아", desc:"감정을 구체적으로.", bank:[
+        {en:"I'm so glad you came.", lit:"네가 와서 정말 기쁘다.", free:"와 줘서 정말 기뻐요."},
+        {en:"I'm a bit worried about the test.", lit:"시험이 조금 걱정된다.", free:"시험이 좀 걱정돼요."},
+        {en:"I can't believe it's already Friday.", lit:"벌써 금요일이라니 믿기지 않는다.", free:"벌써 금요일이라니 믿기지 않아요."},
+        {en:"I'm relieved it's over.", lit:"끝나서 안심이다.", free:"끝나서 다행이에요."},
+        {en:"I feel bad about what happened.", lit:"일어난 일에 대해 미안하다.", free:"그 일은 좀 미안해요."},
+        {en:"I'm proud of how far you've come.", lit:"네가 여기까지 온 게 자랑스럽다.", free:"여기까지 온 거 자랑스러워요."},
+        {en:"I'm not sure how I feel about it.", lit:"그것에 대해 어떻게 느끼는지 모르겠다.", free:"이거에 대해 기분이 좀 복잡해요."},
+        {en:"It means a lot to me.", lit:"그것은 나에게 큰 의미가 있다.", free:"저한텐 의미가 커요."}
+      ]},
+      { pattern:"의견 교환 (In my opinion / It seems / I'd say)", ko:"내 생각엔 / ~인 것 같아", desc:"의견을 주고받기.", bank:[
+        {en:"In my opinion, it's overrated.", lit:"내 생각엔 그것은 과대평가됐다.", free:"제 생각엔 좀 과대평가된 것 같아요."},
+        {en:"It seems like a good deal.", lit:"좋은 거래인 것 같다.", free:"괜찮은 조건인 것 같아요."},
+        {en:"I'd say it's worth a shot.", lit:"한번 해 볼 만하다고 하겠다.", free:"한번 해 볼 만한 것 같아요."},
+        {en:"From what I've heard, it's reliable.", lit:"내가 들은 바로는 믿을 만하다.", free:"제가 듣기론 믿을 만해요."},
+        {en:"It seems too good to be true.", lit:"너무 좋아서 사실 같지 않다.", free:"너무 좋아서 못 믿겠어요."},
+        {en:"Honestly, I'd go with the cheaper one.", lit:"솔직히 더 싼 걸 택하겠다.", free:"솔직히 더 싼 걸로 갈 것 같아요."},
+        {en:"It depends on what you need.", lit:"네가 무엇이 필요한지에 달렸다.", free:"뭐가 필요한지에 따라 달라요."},
+        {en:"That's just my two cents.", lit:"그냥 내 생각일 뿐이다.", free:"뭐, 그냥 제 생각이에요."}
       ]}
     ]};
   C[4] = { name:"B2", sub:"중상급 · 복잡한 주제와 유창한 대화", blurb:"복잡한 주제의 대화를 이해하고, 원어민과 막힘없이 대화할 수 있어요.", color:"coral",
@@ -3654,6 +3809,56 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
         {en:"Actually, it turned out fine.", lit:"사실 결국 괜찮았다.", free:"사실 결국 괜찮았어요."},
         {en:"That's not entirely true.", lit:"그것은 완전히 사실은 아니다.", free:"꼭 그런 건 아니에요."},
         {en:"To be honest, I had my doubts.", lit:"솔직히 의심이 들었다.", free:"솔직히 좀 의심스러웠어요."}
+      ]},
+      { pattern:"양보 (even though / although / despite)", ko:"~인데도 / 비록 ~지만", desc:"예상과 반대되는 결과를 잇기.", bank:[
+        {en:"Even though it was raining, we went out.", lit:"비가 왔는데도 우리는 나갔다.", free:"비가 왔는데도 나갔어요."},
+        {en:"Although it's expensive, it's worth it.", lit:"비싸긴 하지만 그만한 가치가 있다.", free:"비싸긴 한데 그만한 값을 해요."},
+        {en:"Despite the delay, we made it on time.", lit:"지연에도 불구하고 우리는 제때 도착했다.", free:"지연됐는데도 제때 도착했어요."},
+        {en:"Even though I was tired, I couldn't sleep.", lit:"피곤했는데도 잠을 못 잤다.", free:"피곤한데도 잠이 안 왔어요."},
+        {en:"Although she's young, she's very mature.", lit:"그녀는 어리지만 매우 성숙하다.", free:"걔 어린데도 진짜 어른스러워요."},
+        {en:"Despite our efforts, it didn't work.", lit:"노력했음에도 잘 안 됐다.", free:"노력했는데도 안 됐어요."},
+        {en:"Even so, I'd do it again.", lit:"그렇다 해도 다시 할 것이다.", free:"그래도 다시 할 거예요."},
+        {en:"It's risky, but worth trying anyway.", lit:"위험하지만 그래도 시도할 가치가 있다.", free:"위험하긴 한데 그래도 해 볼 만해요."}
+      ]},
+      { pattern:"목적·결과 (so that / in order to / so ~ that)", ko:"~하려고 / ~하도록 / 너무 ~해서", desc:"목적과 정도의 결과.", bank:[
+        {en:"I left early so that I wouldn't be late.", lit:"늦지 않으려고 일찍 나왔다.", free:"늦지 않으려고 일찍 나왔어요."},
+        {en:"We saved up in order to buy a house.", lit:"집을 사려고 돈을 모았다.", free:"집 사려고 돈을 모았어요."},
+        {en:"It was so loud that I couldn't think.", lit:"너무 시끄러워서 생각을 할 수 없었다.", free:"너무 시끄러워서 생각을 못 했어요."},
+        {en:"He spoke slowly so everyone could follow.", lit:"모두가 따라올 수 있게 천천히 말했다.", free:"다 알아듣게 천천히 말했어요."},
+        {en:"I wrote it down so I wouldn't forget.", lit:"잊지 않으려고 적어 뒀다.", free:"잊을까 봐 적어 뒀어요."},
+        {en:"It was such a mess that we gave up.", lit:"너무 엉망이라 포기했다.", free:"너무 엉망이라 포기했어요."},
+        {en:"We arrived early to get good seats.", lit:"좋은 자리를 잡으려고 일찍 도착했다.", free:"좋은 자리 잡으려고 일찍 갔어요."},
+        {en:"She trained hard so as to win.", lit:"이기려고 열심히 훈련했다.", free:"이기려고 열심히 훈련했어요."}
+      ]},
+      { pattern:"추측 강도 (must be / might be / can't be)", ko:"~임에 틀림없어 / ~일 수도 / ~일 리 없어", desc:"확신의 정도로 추측.", bank:[
+        {en:"You must be exhausted.", lit:"너는 분명 지쳤을 것이다.", free:"엄청 피곤하겠어요."},
+        {en:"It might be a misunderstanding.", lit:"오해일 수도 있다.", free:"오해일 수도 있어요."},
+        {en:"That can't be right.", lit:"그것은 맞을 리가 없다.", free:"그럴 리가 없어요."},
+        {en:"She must have forgotten.", lit:"그녀는 분명 잊었을 것이다.", free:"걔가 깜빡한 게 분명해요."},
+        {en:"They might have left already.", lit:"그들은 이미 떠났을 수도 있다.", free:"벌써 갔을 수도 있어요."},
+        {en:"It can't be that hard.", lit:"그렇게 어려울 리 없다.", free:"그렇게 어려울 리 없어요."},
+        {en:"He must be new here.", lit:"그는 분명 여기 처음일 것이다.", free:"여기 처음인가 봐요."},
+        {en:"There must be a reason.", lit:"분명 이유가 있을 것이다.", free:"분명 이유가 있을 거예요."}
+      ]},
+      { pattern:"정중한 반대·대안 (I see your point, but / Wouldn't it be better)", ko:"일리 있지만 / ~하는 게 낫지 않을까", desc:"부드럽게 반대하고 대안 제시.", bank:[
+        {en:"I see your point, but it's risky.", lit:"일리 있지만 위험하다.", free:"일리 있는데, 좀 위험해요."},
+        {en:"Wouldn't it be better to wait?", lit:"기다리는 게 낫지 않을까?", free:"기다리는 게 낫지 않을까요?"},
+        {en:"I get that, though I'd do it differently.", lit:"이해하지만 나라면 다르게 할 것이다.", free:"이해는 되는데, 저라면 다르게 할 것 같아요."},
+        {en:"That's fair, but have we considered the cost?", lit:"맞는 말이지만 비용은 고려했나?", free:"맞는 말인데, 비용은 생각해 봤어요?"},
+        {en:"I'd argue the opposite, actually.", lit:"사실 나는 반대로 본다.", free:"사실 저는 반대로 생각해요."},
+        {en:"Maybe, but let's not rush it.", lit:"그럴 수도 있지만 서두르지는 말자.", free:"그럴 수도 있는데, 서두르진 말죠."},
+        {en:"Couldn't we try another approach?", lit:"다른 방법을 시도해 볼 수 없을까?", free:"다른 방법을 써 볼 순 없을까요?"},
+        {en:"I hear you, but the timing is off.", lit:"네 말 알겠지만 타이밍이 안 맞다.", free:"무슨 말인지 알겠는데, 타이밍이 안 맞아요."}
+      ]},
+      { pattern:"경향·일반화 (tend to / generally / for the most part)", ko:"~하는 편이야 / 대체로", desc:"전반적인 경향을 말하기.", bank:[
+        {en:"I tend to overthink things.", lit:"나는 매사를 지나치게 생각하는 편이다.", free:"제가 좀 과하게 생각하는 편이에요."},
+        {en:"Generally, prices go up in summer.", lit:"대체로 여름에 가격이 오른다.", free:"보통 여름엔 가격이 올라요."},
+        {en:"For the most part, it went smoothly.", lit:"대부분 순조롭게 진행됐다.", free:"대체로 순조로웠어요."},
+        {en:"People tend to remember the ending.", lit:"사람들은 결말을 기억하는 경향이 있다.", free:"사람들은 결말을 기억하는 편이에요."},
+        {en:"I'm generally pretty easygoing.", lit:"나는 대체로 느긋한 편이다.", free:"저는 대체로 느긋한 편이에요."},
+        {en:"These things tend to work themselves out.", lit:"이런 일들은 대개 저절로 해결되는 편이다.", free:"이런 건 보통 알아서 풀려요."},
+        {en:"On the whole, I'm satisfied.", lit:"전체적으로 나는 만족한다.", free:"전반적으로 만족해요."},
+        {en:"He tends to keep to himself.", lit:"그는 혼자 지내는 편이다.", free:"걔는 혼자 있는 걸 좋아하는 편이에요."}
       ]}
     ]};
   C[5] = { name:"C1", sub:"고급 · 사교·학술·업무의 정교한 표현", blurb:"사교·학술·전문 상황에서 능숙하게 구사하고 복잡한 대화를 따라갈 수 있어요.", color:"amber",
@@ -4499,6 +4704,24 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   // 오늘의 학습 모드: 'chunk'(기본) | 'level'
   var TODAY_MODE_KEY = 'eng_today_mode';
   var todayMode = (function(){ try{ return localStorage.getItem(TODAY_MODE_KEY)==='level' ? 'level' : 'chunk'; }catch(e){ return 'chunk'; } })();
+  // 오늘의 학습 레벨 모드: 어느 단계(레벨)에서 30문제를 낼지
+  var TODAY_STAGE_KEY = 'eng_today_stage';
+  var todayStageLv = (function(){ try{ var v=parseInt(localStorage.getItem(TODAY_STAGE_KEY),10); return (v>=1)?v:1; }catch(e){ return 1; } })();
+  function setTodayStage(lv){ todayStageLv = lv; try{ localStorage.setItem(TODAY_STAGE_KEY, String(lv)); }catch(e){} }
+  function buildTodayStageRow(){
+    var host=$('today-stage-row'); if(!host) return;
+    host.innerHTML='';
+    if(todayMode!=='level'){ host.style.display='none'; return; }
+    host.style.display='flex';
+    if(todayStageLv>NUM_LEVELS) todayStageLv=1;
+    for(var lv=1; lv<=NUM_LEVELS; lv++){ (function(lv){
+      var d=LEVEL_DATA[lv]; if(!d) return; if(d.situational && !realLifeOn) return;
+      var b=document.createElement('button'); b.className='tstage-btn'+(lv===todayStageLv?' on':'');
+      b.textContent = d.situational ? 'Real' : (levelSet==='cefr' ? d.name : ('L'+lv));
+      b.addEventListener('click',function(){ if(lv===todayStageLv) return; setTodayStage(lv); startTodayFresh(); });
+      host.appendChild(b);
+    })(lv); }
+  }
   function setTodayMode(m){ todayMode = (m==='level')?'level':'chunk'; try{ localStorage.setItem(TODAY_MODE_KEY, todayMode); }catch(e){} }
   // 오늘의 학습 헤더 우측: 레벨/청크 전환 토글
   function buildTodayModeToggle(){
@@ -4583,6 +4806,8 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       if(!exprOrder.length) exprOrder = d.exprs.map(function(_,i){return i;});
     } else {
       exprOrder = d.exprs.map(function(_,i){return i;});
+      // 패턴 순서를 매번 무작위로 (같은 레벨도 매번 다른 순서)
+      for(var s=exprOrder.length-1;s>0;s--){ var j=rint(s+1); var tmp=exprOrder[s]; exprOrder[s]=exprOrder[j]; exprOrder[j]=tmp; }
     }
     qPick = new Array(exprOrder.length); exPick = new Array(exprOrder.length);
     for(var p=0;p<exprOrder.length;p++) rollProblem(p);
@@ -5863,14 +6088,8 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   function pickOneProblem(){
     var rev = takeDueReview();
     if(rev) return rev;
-    var w = levelWeightsNow();
-    var maxLv = NUM_LEVELS;
-    var lvs=[], weights=[];
-    for(var lv=1; lv<=maxLv; lv++){ if((w[lv]||0)>0){ lvs.push(lv); weights.push(w[lv]); } }
-    if(!lvs.length){ lvs=[2]; weights=[1]; }
-    var total=weights.reduce(function(a,b){return a+b;},0);
-    var r=Math.random()*total, L=lvs[lvs.length-1];
-    for(var i=0;i<lvs.length;i++){ r-=weights[i]; if(r<=0){ L=lvs[i]; break; } }
+    // 선택한 단계에서만 출제 (그 레벨의 패턴·예시는 약한 것 우선 랜덤)
+    var L = todayStageLv; if(!LEVEL_DATA[L]) L = 1;
     var exprs=LEVEL_DATA[L].exprs;
     var exprIdx;
     if(L===SIT_LV){ exprIdx = sitExprIdxs(); }
@@ -5924,7 +6143,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
 
   // 처음 새 세트 시작: 첫 문제만 즉석으로 뽑고, 이후 진행하며 1개씩 추가
   function startTodayFresh(){
-    todayTarget = TODAY_SIZE;
+    todayTarget = 30;           // 선택한 단계에서 30문제
     reviewQueue = [];
     todayDeck = [ pickOneProblem() ];
     todayPos=0; todayFlipped=false; todayGraded=false; todaySubmitted=false; todayResult=null; todayBuilt=true;
@@ -6220,11 +6439,49 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     var info=$('today-count'); if(info) info.textContent=done+' today';
   }
 
+  // 오늘의 학습 — CEFR 빈칸 채우기 카드
+  function renderTodayCefrCard(item, d, q, col, wrap){
+    wrap.innerHTML='';
+    var card=document.createElement('div'); card.className='card cefr-card';
+    var tag=document.createElement('div'); tag.className='card-tag'; tag.textContent=lvName(d);
+    var body=document.createElement('div'); body.className='card-center';
+    var lab=document.createElement('div'); lab.className='side-label'; lab.style.color=col.fg; lab.textContent='Korean';
+    var koRow=document.createElement('div'); koRow.className='ko-row';
+    var ko=document.createElement('div'); ko.className='ko-q'; ko.textContent=q.free;
+    koRow.appendChild(ko); koRow.appendChild(spkBtn(q.en,'mini'));
+    body.appendChild(lab); body.appendChild(koRow);
+    card.appendChild(tag); card.appendChild(body); wrap.appendChild(card);
+
+    var gr=document.createElement('div'); gr.className='grade-row'; wrap.appendChild(gr);
+    if(!item.graded){
+      renderCefrFill(gr, q.en, function(grade){
+        if(item.graded) return;
+        STATS.record(item.lv, item.ei, item.bi, grade); item.graded=grade; item.result=grade;
+        scheduleReview(item, grade); saveTodaySession(); renderTodayHeader();
+        var nb=$('today-cefr-next'); if(nb) nb.disabled=false;
+        speak(q.en,'en');
+      });
+    } else {
+      var rw=document.createElement('div'); rw.className='fill-wrap';
+      rw.innerHTML='<div class="fill-area"><div class="fill-slots '+(item.result==='no'?'used':'ok')+'">'+escHtml(q.en)+'</div></div>'+
+        '<div class="fill-tap">'+(item.result==='no'?'정답 확인':'정답! 🎉')+'</div>';
+      gr.appendChild(rw);
+    }
+    var nav=document.createElement('div'); nav.className='nav';
+    var pv=document.createElement('button'); pv.textContent='← Prev'; pv.disabled=(todayPos<=0);
+    pv.addEventListener('click',function(){ if(todayPos>0){ todayPos--; renderToday(); } });
+    var nx=document.createElement('button'); nx.className='listen'; nx.id='today-cefr-next'; nx.textContent='Next →';
+    nx.disabled = !item.graded;
+    nx.addEventListener('click',function(){ if(!item.graded) return; todayPos++; renderToday(); });
+    nav.appendChild(pv); nav.appendChild(nx); wrap.appendChild(nav);
+  }
+
   function renderToday(){
     buildTodayModeToggle();
+    buildTodayStageRow();
     if(todayMode==='chunk'){ renderTodayChunk(); return; }
-    var presetRow=$('preset-row'); if(presetRow) presetRow.style.display='';
-    var hi=$('today-help'); if(hi) hi.style.display='';
+    var presetRow=$('preset-row'); if(presetRow) presetRow.style.display='none';   // 단계 선택으로 대체
+    var hi=$('today-help'); if(hi) hi.style.display='none';
     var wrap=$('today-card-wrap');
     renderTodayHeader();
     saveTodaySession();
@@ -6253,6 +6510,8 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     var col=levelColorVars(item.lv);
     $('today-fill').style.width=Math.round((todayPos)/todayTarget*100)+'%';
     $('today-fill').style.background=col.fg;
+
+    if(cefrFill()){ renderTodayCefrCard(item, d, q, col, wrap); return; }
 
     wrap.innerHTML='';
     var card=document.createElement('div'); card.className='card'+(q.en.length>90?' longtext':'');
