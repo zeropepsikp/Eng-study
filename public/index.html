@@ -424,12 +424,15 @@
   .grade-btn:hover{filter:brightness(0.98);}
   .grade-btn.dim{opacity:0.4;}
   /* CEFR 빈칸 채우기 모드 (말해보카 스타일 — 칸 자체가 입력란) */
-  .fill-wrap{margin-top:2px;}
-  .fill-area{position:relative;background:var(--surface2);border:1px solid var(--border);border-radius:14px;
-    padding:18px 12px;min-height:64px;display:flex;align-items:center;justify-content:center;cursor:text;}
-  .fill-slots{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:center;gap:1px;
-    font-size:24px;font-weight:700;line-height:1.9;}
-  .fill-box{display:inline-block;min-width:20px;border-bottom:3px solid var(--border);text-align:center;color:var(--text);
+  .card.cefr-card{min-height:auto;padding:20px 18px;cursor:default;}
+  .card.cefr-card .ko-q{font-size:21px;font-weight:700;}
+  .fill-wrap{margin-top:14px;width:100%;flex:1 1 100%;}
+  .fill-area{position:relative;width:100%;box-sizing:border-box;background:var(--surface);
+    border:1px solid var(--border2);border-radius:var(--radius-lg);
+    padding:22px 16px;min-height:104px;display:flex;align-items:center;justify-content:center;cursor:text;}
+  .fill-slots{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:center;gap:2px;
+    font-size:26px;font-weight:700;line-height:2;}
+  .fill-box{display:inline-block;min-width:22px;border-bottom:3px solid var(--border);text-align:center;color:var(--text);
     transition:border-color .1s;}
   .fill-box.active{border-bottom-color:var(--info);box-shadow:0 3px 0 -1px var(--info);}
   .fill-box.filled{border-bottom-color:var(--info);}
@@ -4727,22 +4730,17 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   }
 
   function renderCefrCard(){
-    var d = LEVEL_DATA[curLevel], e = curExprObj(), q = curQ(), col = levelColorVars(curLevel);
+    var d = LEVEL_DATA[curLevel], q = curQ(), col = levelColorVars(curLevel);
     cardTag.textContent = d.name + ' · 문제 ' + (curExpr+1) + ' / ' + d.exprs.length;
-    cardEl.classList.toggle('longtext', q.en.length > 90);
+    cardEl.classList.remove('longtext'); cardEl.classList.add('cefr-card');
     cardSpk.innerHTML=''; cardBody.innerHTML='';
     var lab=document.createElement('div'); lab.className='side-label'; lab.style.color=col.fg; lab.textContent='Korean';
     var koRow=document.createElement('div'); koRow.className='ko-row';
     var ko=document.createElement('div'); ko.className='ko-q'; ko.textContent=q.free;
     var miniSpk=spkBtn(q.en,'mini'); miniSpk.title='정답 영어 발음 듣기';
     koRow.appendChild(ko); koRow.appendChild(miniSpk);
-    var litq=document.createElement('div'); litq.className='lit'; litq.innerHTML='<b>Literal</b> · '+escHtml(q.lit);
-    var pill=document.createElement('button'); pill.className='struct-pill hint-toggle'; pill.style.background=col.bg; pill.style.color=col.fg;
-    var pillContent='<b>'+escHtml(e.pattern)+'</b><br>'+escHtml(e.desc); var hs=false;
-    function paintPill(){ pill.innerHTML = hs ? pillContent : '💡 패턴 보기'; }
-    paintPill(); pill.addEventListener('click',function(ev){ ev.stopPropagation(); hs=!hs; paintPill(); });
-    cardBody.appendChild(lab); cardBody.appendChild(koRow); cardBody.appendChild(litq); cardBody.appendChild(pill);
-    flipHint.textContent = '빈칸을 채우면 자동으로 채점돼요';
+    cardBody.appendChild(lab); cardBody.appendChild(koRow);
+    flipHint.textContent = '';
 
     renderCefrFill(gradeRow, q.en, function(grade){
       STATS.record(curLevel, curOrig(), qPick[curExpr], grade);
@@ -4759,6 +4757,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
 
   function render(){
     if(cefrFill()){ renderCefrCard(); return; }
+    cardEl.classList.remove('cefr-card');
     var d = LEVEL_DATA[curLevel];
     var e = curExprObj();
     var q = curQ();
