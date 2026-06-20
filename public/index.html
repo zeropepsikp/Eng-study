@@ -436,6 +436,7 @@
     padding:22px 16px;min-height:104px;display:flex;align-items:center;justify-content:center;cursor:text;}
   .fill-slots{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:center;gap:2px;
     font-size:16px;font-weight:700;line-height:2;}
+  .fill-word{display:inline-flex;align-items:flex-end;white-space:nowrap;}
   .fill-box{display:inline-block;min-width:15px;border-bottom:2px solid var(--border);text-align:center;color:var(--text);
     transition:border-color .1s;}
   .fill-box.active{border-bottom-color:var(--info);box-shadow:0 3px 0 -1px var(--info);}
@@ -5093,11 +5094,15 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     var area=document.createElement('div'); area.className='fill-area';
     var slots=document.createElement('div'); slots.className='fill-slots';
     var boxes=[], boxChars=[];
+    var curWord=null;
+    function flushWord(){ if(curWord){ slots.appendChild(curWord); curWord=null; } }
     fb.units.forEach(function(u){
-      if(u.t==='box'){ var b=document.createElement('span'); b.className='fill-box'; slots.appendChild(b); boxes.push(b); boxChars.push(u.ch); }
-      else if(u.t==='sp'){ var s=document.createElement('span'); s.className='fill-sp'; slots.appendChild(s); }
-      else { var c=document.createElement('span'); c.className='fill-ch'; c.textContent=u.ch; slots.appendChild(c); }
+      if(u.t==='sp'){ flushWord(); var s=document.createElement('span'); s.className='fill-sp'; slots.appendChild(s); return; }
+      if(!curWord){ curWord=document.createElement('span'); curWord.className='fill-word'; }
+      if(u.t==='box'){ var b=document.createElement('span'); b.className='fill-box'; curWord.appendChild(b); boxes.push(b); boxChars.push(u.ch); }
+      else { var c=document.createElement('span'); c.className='fill-ch'; c.textContent=u.ch; curWord.appendChild(c); }
     });
+    flushWord();
     area.appendChild(slots);
     // 보이지 않는 입력 — 네모칸 자체가 입력란 역할. 키보드는 탭하면 뜬다.
     var input=document.createElement('input'); input.type='text'; input.className='fill-hidden';
