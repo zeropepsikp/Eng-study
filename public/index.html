@@ -435,8 +435,8 @@
     border:1px solid var(--border2);border-radius:var(--radius-lg);
     padding:22px 16px;min-height:104px;display:flex;align-items:center;justify-content:center;cursor:text;}
   .fill-slots{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:center;gap:2px;
-    font-size:23px;font-weight:700;line-height:2;}
-  .fill-box{display:inline-block;min-width:20px;border-bottom:3px solid var(--border);text-align:center;color:var(--text);
+    font-size:21px;font-weight:700;line-height:2;}
+  .fill-box{display:inline-block;min-width:18px;border-bottom:3px solid var(--border);text-align:center;color:var(--text);
     transition:border-color .1s;}
   .fill-box.active{border-bottom-color:var(--info);box-shadow:0 3px 0 -1px var(--info);}
   .fill-box.filled{border-bottom-color:var(--info);}
@@ -4892,9 +4892,9 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     var card=document.createElement('div'); card.className='fill-wrap';
     var area=document.createElement('div'); area.className='fill-area';
     var slots=document.createElement('div'); slots.className='fill-slots';
-    var boxes=[];
+    var boxes=[], boxChars=[];
     fb.units.forEach(function(u){
-      if(u.t==='box'){ var b=document.createElement('span'); b.className='fill-box'; slots.appendChild(b); boxes.push(b); }
+      if(u.t==='box'){ var b=document.createElement('span'); b.className='fill-box'; slots.appendChild(b); boxes.push(b); boxChars.push(u.ch); }
       else if(u.t==='sp'){ var s=document.createElement('span'); s.className='fill-sp'; slots.appendChild(s); }
       else { var c=document.createElement('span'); c.className='fill-ch'; c.textContent=u.ch; slots.appendChild(c); }
     });
@@ -4932,8 +4932,9 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       var ls=letters(), wrong=false, caret=ls.length;
       for(var i=0;i<boxes.length;i++){
         boxes[i].classList.toggle('active', !done && i===caret);
-        if(i<ls.length){ boxes[i].textContent=ls[i].toUpperCase(); boxes[i].classList.add('filled');
-          var bad = ls[i]!==fb.target[i]; boxes[i].classList.toggle('wrong', bad); if(bad) wrong=true; }
+        if(i<ls.length){ var bad = ls[i]!==fb.target[i];
+          boxes[i].textContent = bad ? ls[i] : boxChars[i];   // 맞으면 문장 원래 대소문자, 틀리면 입력 그대로
+          boxes[i].classList.add('filled'); boxes[i].classList.toggle('wrong', bad); if(bad) wrong=true; }
         else { boxes[i].textContent=''; boxes[i].classList.remove('filled','wrong'); }
       }
       if(ls.length===fb.target.length){
