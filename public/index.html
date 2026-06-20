@@ -4740,6 +4740,8 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     levelState = {};   // 세트별 레벨 상태 캐시 초기화 (인덱스 불일치 방지)
     curLevel = 1; curExpr = 0;
     todayBuilt = false; todayDeck = []; todayPos = 0;
+    cefrPool = []; cefrOrder = []; cefrIdx = 0; cefrSolved = 0;   // CEFR 풀 초기화
+    if(todayStageLv > NUM_LEVELS) todayStageLv = 1;
     if(todayMode!=='chunk'){ startTodayFresh(); saveTodaySession(); }
     if(activePanel==='study') openLevel(curLevel);
     else if(activePanel==='today') openToday();
@@ -6155,6 +6157,8 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       var payload = {
         deck: todayDeck, pos: todayPos, target: todayTarget, correct: todayCorrect,
         preset: startPreset, review: reviewQueue, built: todayBuilt,
+        stage: todayStageLv, set: levelSet,
+        cefr: (cefrPool && cefrPool.length) ? { pool:cefrPool, order:cefrOrder, idx:cefrIdx, solved:cefrSolved } : null,
         day: STATS.todayKey ? STATS.todayKey() : ''
       };
       localStorage.setItem(TODAY_SESSION_KEY, JSON.stringify(payload));
@@ -6165,6 +6169,13 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       var raw = localStorage.getItem(TODAY_SESSION_KEY);
       if(!raw) return false;
       var p = JSON.parse(raw);
+      // CEFR 고정 풀 세션 복원
+      if(cefrFill() && p && p.cefr && p.cefr.pool && p.cefr.pool.length && p.set===levelSet){
+        cefrPool=p.cefr.pool; cefrOrder=p.cefr.order||cefrPool.map(function(_,i){return i;});
+        cefrIdx=p.cefr.idx||0; cefrSolved=p.cefr.solved||0; todayTarget=p.target||cefrPool.length; todayBuilt=true;
+        if(p.stage) todayStageLv=p.stage;
+        return true;
+      }
       if(!p || !p.deck || !p.deck.length) return false;
       todayDeck = p.deck; todayPos = p.pos||0; todayTarget = p.target||30; todayCorrect = p.correct||0;
       startPreset = p.preset || 'intro'; reviewQueue = p.review || []; todayBuilt = true;
@@ -6349,7 +6360,52 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   }
 
   // 처음 새 세트 시작: 첫 문제만 즉석으로 뽑고, 이후 진행하며 1개씩 추가
+  // ===== CEFR 오늘의 학습: 고정 30표현 풀 (다 맞출 때까지, 틀린 건 5문제 내 재등장) =====
+  var cefrPool=[], cefrOrder=[], cefrIdx=0, cefrSolved=0;
+  function buildCefrPool(n){
+    var L=todayStageLv; if(!LEVEL_DATA[L]) L=1;
+    var exprs=(LEVEL_DATA[L]&&LEVEL_DATA[L].exprs)||[];
+    var all=[]; for(var ei=0;ei<exprs.length;ei++){ for(var bi=0;bi<exprs[ei].bank.length;bi++){ all.push({lv:L,ei:ei,bi:bi,solved:false}); } }
+    for(var i=all.length-1;i>0;i--){ var j=rint(i+1); var t=all[i];all[i]=all[j];all[j]=t; }
+    return all.slice(0, Math.min(n, all.length));
+  }
+  function startCefrToday(){
+    cefrPool = buildCefrPool(30);
+    cefrOrder = cefrPool.map(function(_,i){ return i; });
+    cefrIdx = 0; cefrSolved = 0; todayTarget = cefrPool.length; todayBuilt=true;
+    saveTodaySession(); renderToday();
+  }
+  function extendCefrToday(n){
+    var add = buildCefrPool(n); var base = cefrPool.length;
+    cefrPool = cefrPool.concat(add);
+    for(var i=0;i<add.length;i++) cefrOrder.push(base+i);
+    todayTarget = cefrPool.length;
+    saveTodaySession(); renderToday();
+  }
+  function cefrCurIdx(){
+    while(cefrIdx<cefrOrder.length && cefrPool[cefrOrder[cefrIdx]] && cefrPool[cefrOrder[cefrIdx]].solved) cefrIdx++;
+    if(cefrIdx>=cefrOrder.length && cefrSolved<cefrPool.length){
+      var uns=[]; for(var k=0;k<cefrPool.length;k++){ if(!cefrPool[k].solved) uns.push(k); }
+      for(var i=uns.length-1;i>0;i--){ var j=rint(i+1); var t=uns[i];uns[i]=uns[j];uns[j]=t; }
+      cefrOrder = cefrOrder.concat(uns);
+    }
+    return cefrOrder[cefrIdx];
+  }
+  function cefrAnswer(grade){
+    var idx=cefrOrder[cefrIdx]; var it=cefrPool[idx]; if(!it || it.solved) return;
+    STATS.record(it.lv, it.ei, it.bi, grade);
+    if(grade!=='no'){ it.solved=true; cefrSolved++; }
+    else {                                  // 틀림 → 3~5문제 뒤에 같은 표현 다시
+      var off=3+Math.floor(Math.random()*3);
+      cefrOrder.splice(Math.min(cefrOrder.length, cefrIdx+off), 0, idx);
+    }
+    saveTodaySession();
+  }
+  function cefrNext(){ cefrIdx++; renderToday(); }
+  function cefrPrev(){ if(cefrIdx>0){ cefrIdx--; renderToday(); } }
+
   function startTodayFresh(){
+    if(cefrFill()){ startCefrToday(); return; }
     todayTarget = 30;           // 선택한 단계에서 30문제(맞힌 기준)
     reviewQueue = [];
     todayDeck = [ pickOneProblem() ];
@@ -6386,6 +6442,10 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       return;
     }
     buildPresetRow();
+    if(cefrFill()){
+      if(!cefrPool.length){ if(!loadTodaySession() || !cefrPool.length){ startCefrToday(); return; } }
+      renderToday(); return;
+    }
     if(!todayBuilt || !todayDeck.length){
       if(!loadTodaySession()){ startTodayFresh(); return; }
     }
@@ -6409,6 +6469,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     saveTodaySession();
   }
   function extendToday(n){
+    if(cefrFill()){ extendCefrToday(n); return; }
     todayTarget += n;
     if(todayPos>=todayDeck.length) todayDeck.push(pickOneProblem());
     todayFlipped=false; todayGraded=false;
@@ -6647,7 +6708,33 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   }
 
   // 오늘의 학습 — CEFR 빈칸 채우기 카드
-  function renderTodayCefrCard(item, d, q, col, wrap){
+  // CEFR 오늘의 학습 — 고정 풀 진행/렌더 (다 맞출 때까지)
+  function renderTodayCefrFlow(wrap){
+    if(!cefrPool.length){ startCefrToday(); return; }
+    var target=cefrPool.length;
+    // 헤더/진척도 (맞힌 표현 수 기준)
+    $('today-prog').textContent = cefrSolved+' / '+target+' 맞힘  ·  '+lvName(LEVEL_DATA[todayStageLv]);
+    var info=$('today-count'); if(info) info.textContent=STATS.todayCount()+' today';
+    saveTodaySession();
+
+    if(cefrSolved>=target){
+      $('today-fill').style.width='100%';
+      wrap.innerHTML='';
+      var done=document.createElement('div'); done.className='today-done';
+      done.innerHTML='<div class="big">단계 완료! 🎉</div><div class="sub">'+target+'개 표현을 모두 맞혔어요.</div>';
+      var moreWrap=document.createElement('div'); moreWrap.className='today-more';
+      [10,20,30].forEach(function(n){ var mb=document.createElement('button'); mb.className='today-again'; mb.textContent='+'+n+' more';
+        mb.addEventListener('click',function(){ extendCefrToday(n); }); moreWrap.appendChild(mb); });
+      var fresh=document.createElement('button'); fresh.className='today-again ghost'; fresh.textContent='New set';
+      fresh.addEventListener('click',function(){ startCefrToday(); });
+      moreWrap.appendChild(fresh); done.appendChild(moreWrap); wrap.appendChild(done);
+      return;
+    }
+    var idx=cefrCurIdx(); var item=cefrPool[idx];
+    var d=LEVEL_DATA[item.lv], q=d.exprs[item.ei].bank[item.bi], col=levelColorVars(item.lv);
+    $('today-fill').style.width=Math.round(cefrSolved/target*100)+'%';
+    $('today-fill').style.background=col.fg;
+
     wrap.innerHTML='';
     var card=document.createElement('div'); card.className='card cefr-card';
     var tag=document.createElement('div'); tag.className='card-tag'; tag.textContent=lvName(d);
@@ -6660,27 +6747,22 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     card.appendChild(tag); card.appendChild(body); wrap.appendChild(card);
 
     var gr=document.createElement('div'); gr.className='grade-row'; wrap.appendChild(gr);
-    if(!item.graded){
-      renderCefrFill(gr, q.en, function(grade){
-        if(item.graded) return;
-        STATS.record(item.lv, item.ei, item.bi, grade); item.graded=grade; item.result=grade;
-        if(grade!=='no') todayCorrect++;            // 맞혔을 때만 진척도 ↑
-        scheduleReview(item, grade); saveTodaySession(); renderTodayHeader();
-        var nb=$('today-cefr-next'); if(nb) nb.disabled=false;
-        speak(q.en,'en');
-      });
-    } else {
-      var rw=document.createElement('div'); rw.className='fill-wrap';
-      rw.innerHTML='<div class="fill-area"><div class="fill-slots '+(item.result==='no'?'used':'ok')+'">'+escHtml(q.en)+'</div></div>'+
-        '<div class="fill-tap">'+(item.result==='no'?'정답 확인':'정답! 🎉')+'</div>';
-      gr.appendChild(rw);
-    }
+    var answered=false;
+    renderCefrFill(gr, q.en, function(grade){
+      if(answered) return; answered=true;
+      cefrAnswer(grade);
+      var nb=$('today-cefr-next'); if(nb) nb.disabled=false;
+      $('today-prog').textContent = cefrSolved+' / '+target+' 맞힘  ·  '+lvName(LEVEL_DATA[todayStageLv]);
+      $('today-fill').style.width=Math.round(cefrSolved/target*100)+'%';
+      speak(q.en,'en');
+    });
+
     var nav=document.createElement('div'); nav.className='nav';
-    var pv=document.createElement('button'); pv.textContent='← Prev'; pv.disabled=(todayPos<=0);
-    pv.addEventListener('click',function(){ if(todayPos>0){ todayPos--; renderToday(); } });
+    var pv=document.createElement('button'); pv.textContent='← Prev'; pv.disabled=(cefrIdx<=0);
+    pv.addEventListener('click', cefrPrev);
     var nx=document.createElement('button'); nx.className='listen'; nx.id='today-cefr-next'; nx.textContent='Next →';
-    nx.disabled = !item.graded;
-    nx.addEventListener('click',function(){ if(!item.graded) return; todayPos++; renderToday(); });
+    nx.disabled = true;
+    nx.addEventListener('click', cefrNext);
     nav.appendChild(pv); nav.appendChild(nx); wrap.appendChild(nav);
   }
 
@@ -6691,6 +6773,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     var presetRow=$('preset-row'); if(presetRow) presetRow.style.display='none';   // 단계 선택으로 대체
     var hi=$('today-help'); if(hi) hi.style.display='none';
     var wrap=$('today-card-wrap');
+    if(cefrFill()){ renderTodayCefrFlow(wrap); return; }
     renderTodayHeader();
     saveTodaySession();
     if(!todayDeck.length){ wrap.innerHTML='<div class="empty">Couldn\'t prepare any content.</div>'; return; }
@@ -6719,7 +6802,6 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     $('today-fill').style.width=Math.round(todayCorrect/todayTarget*100)+'%';
     $('today-fill').style.background=col.fg;
 
-    if(cefrFill()){ renderTodayCefrCard(item, d, q, col, wrap); return; }
 
     wrap.innerHTML='';
     var card=document.createElement('div'); card.className='card'+(q.en.length>90?' longtext':'');
