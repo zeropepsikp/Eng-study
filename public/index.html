@@ -435,15 +435,15 @@
     border:1px solid var(--border2);border-radius:var(--radius-lg);
     padding:22px 16px;min-height:104px;display:flex;align-items:center;justify-content:center;cursor:text;}
   .fill-slots{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:center;gap:2px;
-    font-size:21px;font-weight:700;line-height:2;}
-  .fill-box{display:inline-block;min-width:18px;border-bottom:3px solid var(--border);text-align:center;color:var(--text);
+    font-size:18px;font-weight:700;line-height:2;}
+  .fill-box{display:inline-block;min-width:15px;border-bottom:2px solid var(--border);text-align:center;color:var(--text);
     transition:border-color .1s;}
   .fill-box.active{border-bottom-color:var(--info);box-shadow:0 3px 0 -1px var(--info);}
   .fill-box.filled{border-bottom-color:var(--info);}
   .fill-box.wrong{color:var(--coral);border-bottom-color:var(--coral);}
   .fill-slots.ok .fill-box{color:var(--green);border-bottom-color:var(--green);}
   .fill-slots.used .fill-box{color:var(--amber);border-bottom-color:var(--amber);}
-  .fill-ch{display:inline-block;color:var(--text2);}
+  .fill-ch{display:inline-block;color:var(--text2);font-size:15px;}
   .fill-sp{display:inline-block;width:12px;}
   .fill-slots.shake{animation:shake .4s;}
   /* 키보드를 부르는 보이지 않는 입력 (칸 위에 투명하게) */
@@ -3420,6 +3420,26 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
         {en:"Would you pass me the salt?", lit:"소금 좀 건네주시겠어요?", free:"소금 좀 건네주실래요?"},
         {en:"May I have a moment?", lit:"잠시 시간을 내주시겠어요?", free:"잠깐 시간 괜찮으세요?"},
         {en:"Would you like to join us?", lit:"우리와 함께하시겠어요?", free:"같이 하실래요?"}
+      ]},
+      { pattern:"인사·예절 (Thank you / Sorry / Excuse me)", ko:"고마워요 / 미안해요 / 실례합니다", desc:"기본 예절 표현.", bank:[
+        {en:"Thank you so much.", lit:"정말 고맙다.", free:"정말 감사해요."},
+        {en:"Thanks for your help.", lit:"도와줘서 고맙다.", free:"도와줘서 고마워요."},
+        {en:"I'm so sorry.", lit:"정말 미안하다.", free:"정말 죄송해요."},
+        {en:"Excuse me, can I get through?", lit:"실례지만 지나가도 될까요?", free:"실례합니다, 좀 지나갈게요."},
+        {en:"No problem at all.", lit:"전혀 문제없다.", free:"전혀 문제없어요."},
+        {en:"You're welcome.", lit:"천만에.", free:"천만에요."},
+        {en:"Sorry to bother you.", lit:"귀찮게 해서 미안하다.", free:"번거롭게 해서 죄송해요."},
+        {en:"Thanks anyway.", lit:"어쨌든 고맙다.", free:"그래도 고마워요."}
+      ]},
+      { pattern:"되묻기·이해 (Sorry? / What does it mean? / I don't get it)", ko:"네? / 무슨 뜻이에요? / 잘 모르겠어요", desc:"못 알아들었을 때 되묻기.", bank:[
+        {en:"Sorry, what did you say?", lit:"미안, 뭐라고 했니?", free:"네? 뭐라고 하셨어요?"},
+        {en:"Could you say that again?", lit:"다시 말해 줄 수 있나요?", free:"다시 말해 주실래요?"},
+        {en:"What does this word mean?", lit:"이 단어는 무슨 뜻이니?", free:"이 단어 무슨 뜻이에요?"},
+        {en:"I don't understand.", lit:"나는 이해하지 못한다.", free:"이해가 안 돼요."},
+        {en:"How do you say this in English?", lit:"이걸 영어로 어떻게 말하니?", free:"이거 영어로 어떻게 말해요?"},
+        {en:"Can you speak more slowly?", lit:"더 천천히 말해 줄 수 있나요?", free:"좀 더 천천히 말해 주실래요?"},
+        {en:"Sorry, I didn't catch that.", lit:"미안, 그것을 못 알아들었다.", free:"죄송해요, 못 알아들었어요."},
+        {en:"What do you mean?", lit:"무슨 뜻이니?", free:"무슨 말이에요?"}
       ]}
     ]};
   C[2] = { name:"A2", sub:"기초 · 묘사와 일상 표현", blurb:"간단한 말로 여러 가지를 묘사하고 일상 표현을 이해할 수 있어요.", color:"info",
@@ -3593,6 +3613,26 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
         {en:"Can you hear me okay?", lit:"내 말 잘 들리니?", free:"제 말 잘 들려요?"},
         {en:"Hold on a second.", lit:"잠깐만 기다려라.", free:"잠깐만요."},
         {en:"Text me when you get there.", lit:"거기 도착하면 문자해라.", free:"도착하면 문자 주세요."}
+      ]},
+      { pattern:"as ~ as 비교 (만큼)", ko:"~만큼 ~한 / ~만큼은 아닌", desc:"동등 비교.", bank:[
+        {en:"It's as easy as it looks.", lit:"그것은 보이는 것만큼 쉽다.", free:"보이는 것만큼 쉬워요."},
+        {en:"This isn't as good as the last one.", lit:"이것은 지난 것만큼 좋지 않다.", free:"이건 지난번만큼은 아니에요."},
+        {en:"Come as soon as you can.", lit:"가능한 한 빨리 와라.", free:"되도록 빨리 오세요."},
+        {en:"It's not as far as I thought.", lit:"내 생각만큼 멀지 않다.", free:"생각만큼 멀진 않아요."},
+        {en:"She works as hard as anyone.", lit:"그녀는 누구 못지않게 열심히 일한다.", free:"걔는 누구 못지않게 열심히 해요."},
+        {en:"It costs twice as much.", lit:"그것은 두 배만큼 비싸다.", free:"두 배는 비싸요."},
+        {en:"Take as much as you need.", lit:"필요한 만큼 가져가라.", free:"필요한 만큼 가져가세요."},
+        {en:"It's just as important.", lit:"그것은 똑같이 중요하다.", free:"그것도 똑같이 중요해요."}
+      ]},
+      { pattern:"이야기 연결 (first / then / after that / finally)", ko:"먼저 / 그 다음 / 마지막으로", desc:"순서대로 설명하기.", bank:[
+        {en:"First, I checked the schedule.", lit:"먼저 나는 일정을 확인했다.", free:"먼저 일정을 확인했어요."},
+        {en:"Then we took the bus.", lit:"그 다음 우리는 버스를 탔다.", free:"그 다음에 버스를 탔어요."},
+        {en:"After that, we grabbed lunch.", lit:"그 후에 우리는 점심을 먹었다.", free:"그 다음에 점심 먹었어요."},
+        {en:"Finally, we headed home.", lit:"마지막으로 우리는 집으로 향했다.", free:"마지막으로 집에 갔어요."},
+        {en:"In the end, it worked out.", lit:"결국 잘 풀렸다.", free:"결국 잘 풀렸어요."},
+        {en:"By the way, did you call her?", lit:"그런데 그녀에게 전화했니?", free:"그건 그렇고, 걔한테 전화했어요?"},
+        {en:"Anyway, let's move on.", lit:"어쨌든 넘어가자.", free:"아무튼 넘어가요."},
+        {en:"At first I wasn't sure, but now I am.", lit:"처음엔 확신이 없었지만 지금은 있다.", free:"처음엔 긴가민가했는데 이제 확실해요."}
       ]}
     ]};
   C[3] = { name:"B1", sub:"중급 · 여행·취미·일·가족 대화", blurb:"여행에서 영어를 쓰고, 취미·일·가족에 관해 대화할 수 있어요.", color:"purple",
@@ -3726,6 +3766,26 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
         {en:"Honestly, I'd go with the cheaper one.", lit:"솔직히 더 싼 걸 택하겠다.", free:"솔직히 더 싼 걸로 갈 것 같아요."},
         {en:"It depends on what you need.", lit:"네가 무엇이 필요한지에 달렸다.", free:"뭐가 필요한지에 따라 달라요."},
         {en:"That's just my two cents.", lit:"그냥 내 생각일 뿐이다.", free:"뭐, 그냥 제 생각이에요."}
+      ]},
+      { pattern:"인상·묘사 (It looks like / feels like / kind of)", ko:"~인 것 같아 / ~한 느낌이야", desc:"인상과 분위기 묘사.", bank:[
+        {en:"It looks like it might rain.", lit:"비가 올 것 같아 보인다.", free:"비 올 것 같아 보여요."},
+        {en:"It feels like winter already.", lit:"벌써 겨울 같은 느낌이다.", free:"벌써 겨울 같아요."},
+        {en:"It's kind of awkward, to be honest.", lit:"솔직히 좀 어색하다.", free:"솔직히 좀 어색해요."},
+        {en:"It sounds like a great opportunity.", lit:"좋은 기회처럼 들린다.", free:"좋은 기회 같네요."},
+        {en:"She seems a bit off today.", lit:"그녀는 오늘 좀 이상해 보인다.", free:"걔 오늘 좀 안 좋아 보여요."},
+        {en:"It came across as rude.", lit:"그것은 무례하게 느껴졌다.", free:"좀 무례하게 느껴졌어요."},
+        {en:"The place has a cozy vibe.", lit:"그곳은 아늑한 분위기다.", free:"거기 분위기가 아늑해요."},
+        {en:"It feels too good to be true.", lit:"너무 좋아서 사실 같지 않다.", free:"너무 좋아서 안 믿겨요."}
+      ]},
+      { pattern:"약속 조정 (I can't make it / reschedule / running late)", ko:"못 갈 것 같아 / 일정 변경 / 늦을 것 같아", desc:"약속을 정중히 조정.", bank:[
+        {en:"I'm afraid I can't make it tonight.", lit:"유감이지만 오늘 밤은 못 간다.", free:"아쉽지만 오늘 밤은 못 갈 것 같아요."},
+        {en:"Could we reschedule for next week?", lit:"다음 주로 일정을 바꿀 수 있을까?", free:"다음 주로 옮길 수 있을까요?"},
+        {en:"I'm running a bit late, sorry.", lit:"조금 늦고 있어서 미안하다.", free:"좀 늦을 것 같아요, 미안해요."},
+        {en:"Something came up, can we move it?", lit:"일이 생겼는데 옮길 수 있을까?", free:"갑자기 일이 생겨서, 시간 옮길 수 있을까요?"},
+        {en:"Let's push it back an hour.", lit:"한 시간 미루자.", free:"한 시간 미뤄요."},
+        {en:"I'll be there in about ten minutes.", lit:"10분쯤 후에 도착하겠다.", free:"10분쯤 뒤에 도착해요."},
+        {en:"Can we take a rain check?", lit:"다음 기회로 미뤄도 될까?", free:"다음에 하면 안 될까요?"},
+        {en:"Sorry for the short notice.", lit:"갑작스러운 통보 미안하다.", free:"갑자기 말해서 미안해요."}
       ]}
     ]};
   C[4] = { name:"B2", sub:"중상급 · 복잡한 주제와 유창한 대화", blurb:"복잡한 주제의 대화를 이해하고, 원어민과 막힘없이 대화할 수 있어요.", color:"coral",
@@ -3859,6 +3919,26 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
         {en:"These things tend to work themselves out.", lit:"이런 일들은 대개 저절로 해결되는 편이다.", free:"이런 건 보통 알아서 풀려요."},
         {en:"On the whole, I'm satisfied.", lit:"전체적으로 나는 만족한다.", free:"전반적으로 만족해요."},
         {en:"He tends to keep to himself.", lit:"그는 혼자 지내는 편이다.", free:"걔는 혼자 있는 걸 좋아하는 편이에요."}
+      ]},
+      { pattern:"정중한 문의·부탁 (I was wondering if / Would it be possible)", ko:"혹시 ~할 수 있을까요", desc:"격식 있는 부탁.", bank:[
+        {en:"I was wondering if you could help.", lit:"도와주실 수 있을지 궁금했다.", free:"혹시 좀 도와주실 수 있을까요?"},
+        {en:"Would it be possible to get a refund?", lit:"환불받는 것이 가능할까요?", free:"혹시 환불 가능할까요?"},
+        {en:"Do you think you could send it today?", lit:"오늘 보내 줄 수 있을 것 같나요?", free:"오늘 보내 주실 수 있을까요?"},
+        {en:"I'd appreciate it if you let me know.", lit:"알려 주시면 감사하겠다.", free:"알려 주시면 감사하겠어요."},
+        {en:"Would you mind taking a look?", lit:"한번 봐 주시겠어요?", free:"한번 봐 주실 수 있을까요?"},
+        {en:"If it's not too much trouble, could you call?", lit:"번거롭지 않다면 전화해 주실래요?", free:"번거롭지 않으시면 전화 주실래요?"},
+        {en:"I hope you don't mind me asking.", lit:"여쭤봐도 괜찮길 바란다.", free:"여쭤봐도 괜찮을까요?"},
+        {en:"Could you possibly clarify that?", lit:"그것을 명확히 해 주실 수 있을까요?", free:"그 부분 좀 명확히 해 주실 수 있을까요?"}
+      ]},
+      { pattern:"요약·전환 (In short / To sum up / Long story short)", ko:"요컨대 / 요약하면 / 길게 말하면 복잡하지만", desc:"핵심을 정리하고 마무리.", bank:[
+        {en:"In short, it wasn't worth it.", lit:"요컨대 그럴 가치가 없었다.", free:"요컨대 별로였어요."},
+        {en:"To sum up, we need more time and money.", lit:"요약하면 시간과 돈이 더 필요하다.", free:"요약하면 시간이랑 돈이 더 필요해요."},
+        {en:"Long story short, we missed the flight.", lit:"길게 말하면 복잡하지만, 비행기를 놓쳤다.", free:"길게 말하면 복잡한데, 비행기 놓쳤어요."},
+        {en:"At the end of the day, it's your call.", lit:"결국 그것은 네 결정이다.", free:"결국 당신이 정할 일이에요."},
+        {en:"To put it simply, it's a trade-off.", lit:"간단히 말해 그것은 절충이다.", free:"간단히 말하면 절충이에요."},
+        {en:"All in all, it was a good experience.", lit:"전체적으로 좋은 경험이었다.", free:"전반적으로 좋은 경험이었어요."},
+        {en:"The takeaway is to plan ahead.", lit:"핵심은 미리 계획하라는 것이다.", free:"핵심은 미리 계획하라는 거예요."},
+        {en:"Bottom line, we can't afford to wait.", lit:"결론은 기다릴 여유가 없다는 것이다.", free:"결론은 기다릴 여유가 없다는 거예요."}
       ]}
     ]};
   C[5] = { name:"C1", sub:"고급 · 사교·학술·업무의 정교한 표현", blurb:"사교·학술·전문 상황에서 능숙하게 구사하고 복잡한 대화를 따라갈 수 있어요.", color:"amber",
@@ -3922,6 +4002,76 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
         {en:"In essence, it comes down to trust.", lit:"본질적으로 그것은 신뢰의 문제다.", free:"본질적으로 신뢰 문제예요."},
         {en:"By and large, people were satisfied.", lit:"대체로 사람들은 만족했다.", free:"대체로 다들 만족했어요."},
         {en:"That's beside the point, frankly.", lit:"솔직히 그것은 요점에서 벗어난다.", free:"솔직히 그건 요점에서 벗어난 거예요."}
+      ]},
+      { pattern:"후회·가정 심화 (should have / wish + had)", ko:"~했어야 했는데 / ~했더라면", desc:"과거에 대한 후회와 비현실 가정.", bank:[
+        {en:"I should have spoken up earlier.", lit:"더 일찍 말했어야 했다.", free:"더 일찍 말했어야 했어요."},
+        {en:"We shouldn't have rushed the decision.", lit:"결정을 서두르지 말았어야 했다.", free:"결정을 서두르지 말았어야 했어요."},
+        {en:"I wish I had taken that opportunity.", lit:"그 기회를 잡았더라면 좋았을 텐데.", free:"그 기회를 잡았더라면 좋았을 텐데요."},
+        {en:"Had I known, I'd have done things differently.", lit:"알았더라면 다르게 했을 것이다.", free:"알았더라면 다르게 했을 거예요."},
+        {en:"You could have handled that better.", lit:"그것을 더 잘 처리할 수 있었을 텐데.", free:"그건 더 잘 대처할 수 있었을 텐데요."},
+        {en:"I wish things had turned out differently.", lit:"상황이 다르게 풀렸더라면.", free:"상황이 다르게 풀렸으면 좋았을 텐데요."},
+        {en:"In hindsight, I'd have prepared more.", lit:"돌이켜 보면 더 준비했을 것이다.", free:"돌이켜 보면 더 준비했을 거예요."},
+        {en:"If only we'd started sooner.", lit:"더 일찍 시작했더라면.", free:"더 일찍 시작했더라면 좋았을 텐데요."}
+      ]},
+      { pattern:"강조 도치 (Not only ~ but also / Only then)", ko:"~뿐 아니라 / 그제서야", desc:"격식 있는 강조와 도치.", bank:[
+        {en:"Not only is it cheaper, but it's also faster.", lit:"더 쌀 뿐 아니라 더 빠르기도 하다.", free:"더 쌀 뿐 아니라 더 빠르기도 해요."},
+        {en:"Only then did I realize the mistake.", lit:"그제서야 나는 실수를 깨달았다.", free:"그제서야 실수를 알아챘어요."},
+        {en:"Rarely have I seen such dedication.", lit:"그런 헌신은 좀처럼 본 적이 없다.", free:"그런 헌신은 좀처럼 못 봤어요."},
+        {en:"Not until later did it make sense.", lit:"나중에서야 비로소 말이 됐다.", free:"한참 뒤에야 이해가 됐어요."},
+        {en:"So compelling was the argument that everyone agreed.", lit:"주장이 너무 설득력 있어서 모두가 동의했다.", free:"주장이 너무 설득력 있어서 다들 동의했어요."},
+        {en:"Little did we know what was coming.", lit:"무슨 일이 닥칠지 우리는 거의 몰랐다.", free:"무슨 일이 올지 전혀 몰랐죠."},
+        {en:"Not only did they apologize, they fixed it.", lit:"그들은 사과했을 뿐 아니라 고치기까지 했다.", free:"사과만 한 게 아니라 고쳐 주기까지 했어요."},
+        {en:"Under no circumstances should you share this.", lit:"어떤 경우에도 이것을 공유해선 안 된다.", free:"어떤 경우에도 이건 공유하면 안 돼요."}
+      ]},
+      { pattern:"완곡·외교적 표현 (I'm afraid / with respect / I'd be inclined to)", ko:"유감이지만 / 외람되지만 / ~하는 쪽이에요", desc:"부드럽고 정중하게.", bank:[
+        {en:"I'm afraid that won't be possible.", lit:"유감이지만 그것은 불가능하다.", free:"유감이지만 그건 어렵겠어요."},
+        {en:"With respect, I see it differently.", lit:"외람되지만 나는 다르게 본다.", free:"외람되지만 저는 좀 다르게 봐요."},
+        {en:"I'd be inclined to wait and see.", lit:"나는 기다려 보는 쪽으로 기운다.", free:"저는 좀 지켜보는 쪽이에요."},
+        {en:"I'm not entirely convinced, to be honest.", lit:"솔직히 완전히 확신이 서지는 않는다.", free:"솔직히 아직 완전히 납득이 안 돼요."},
+        {en:"That may be true, but it's not the whole picture.", lit:"그럴 수도 있지만 전부는 아니다.", free:"그럴 수도 있는데, 그게 전부는 아니에요."},
+        {en:"I'd rather not commit to that just yet.", lit:"아직은 그것에 확답하고 싶지 않다.", free:"아직은 확답하고 싶지 않아요."},
+        {en:"If I may, I'd suggest a slightly different angle.", lit:"괜찮다면 조금 다른 관점을 제안하겠다.", free:"괜찮으시면 조금 다른 관점을 제안드려요."},
+        {en:"I appreciate the point, though I have reservations.", lit:"그 점은 이해하지만 유보적이다.", free:"그 점은 이해하지만 좀 유보적이에요."}
+      ]},
+      { pattern:"조건·단서 (provided that / as long as / unless)", ko:"~한다면 / ~하는 한 / ~하지 않으면", desc:"정교한 조건 설정.", bank:[
+        {en:"We can proceed, provided that everyone agrees.", lit:"모두가 동의한다면 진행할 수 있다.", free:"다들 동의한다면 진행할 수 있어요."},
+        {en:"It's fine as long as we stay within budget.", lit:"예산 안에 있는 한 괜찮다.", free:"예산만 안 넘으면 괜찮아요."},
+        {en:"Unless something changes, we're on track.", lit:"뭔가 바뀌지 않는 한 우리는 순조롭다.", free:"별일 없으면 순조로워요."},
+        {en:"I'll help, provided I have the time.", lit:"시간이 있다면 돕겠다.", free:"시간만 되면 도울게요."},
+        {en:"As long as it's safe, I'm okay with it.", lit:"안전하기만 하면 나는 괜찮다.", free:"안전하기만 하면 괜찮아요."},
+        {en:"Unless I hear otherwise, I'll assume it's approved.", lit:"별다른 말이 없으면 승인된 것으로 보겠다.", free:"별말 없으면 승인된 걸로 알게요."},
+        {en:"We'll deliver on time, barring any delays.", lit:"지연만 없다면 제때 전달하겠다.", free:"지연만 없으면 제때 드려요."},
+        {en:"You can stay, so long as you're quiet.", lit:"조용히 하는 한 머물러도 된다.", free:"조용히만 하면 있어도 돼요."}
+      ]},
+      { pattern:"추론·함의 (which suggests / implies / it follows)", ko:"그것은 ~을 시사해 / 따라서", desc:"근거에서 결론을 끌어내기.", bank:[
+        {en:"Sales are up, which suggests the strategy is working.", lit:"매출이 올랐고, 이는 전략이 통한다는 것을 시사한다.", free:"매출이 올랐으니 전략이 통한다는 거죠."},
+        {en:"That implies we need more staff.", lit:"그것은 인력이 더 필요함을 의미한다.", free:"그건 인력이 더 필요하다는 뜻이에요."},
+        {en:"It follows that the earlier plan was flawed.", lit:"따라서 이전 계획에 결함이 있었다.", free:"그러니 이전 계획에 문제가 있었던 거죠."},
+        {en:"The data points to a clear trend.", lit:"데이터는 명확한 추세를 가리킨다.", free:"데이터가 뚜렷한 추세를 보여줘요."},
+        {en:"This raises an important question.", lit:"이것은 중요한 질문을 제기한다.", free:"이건 중요한 의문을 던지죠."},
+        {en:"Which brings me to my main point.", lit:"그래서 본론으로 들어가게 된다.", free:"그래서 본론으로 넘어가면요."},
+        {en:"That would account for the discrepancy.", lit:"그것이 그 불일치를 설명할 것이다.", free:"그러면 그 차이가 설명되네요."},
+        {en:"All of this points in the same direction.", lit:"이 모든 것이 같은 방향을 가리킨다.", free:"이게 다 같은 방향을 가리켜요."}
+      ]},
+      { pattern:"평가·비교 (compared to / relative to / in contrast)", ko:"~에 비하면 / 그에 반해", desc:"기준 대비 평가.", bank:[
+        {en:"Compared to last year, we've improved a lot.", lit:"작년에 비하면 우리는 많이 나아졌다.", free:"작년에 비하면 많이 좋아졌어요."},
+        {en:"Relative to its price, it's excellent.", lit:"가격에 비하면 그것은 훌륭하다.", free:"가격 대비 훌륭해요."},
+        {en:"In contrast, the older model was clunky.", lit:"그에 반해 구형 모델은 투박했다.", free:"반대로 구형은 좀 투박했죠."},
+        {en:"It's a marked improvement over the last version.", lit:"이전 버전보다 눈에 띄게 개선되었다.", free:"이전 버전보다 확연히 좋아졌어요."},
+        {en:"By comparison, our costs are quite low.", lit:"비교해 보면 우리 비용은 꽤 낮다.", free:"비교해 보면 우리 비용은 꽤 낮아요."},
+        {en:"It pales in comparison to the original.", lit:"원작에 비하면 빛이 바랜다.", free:"원작에 비하면 좀 부족해요."},
+        {en:"On par with the competition, if not better.", lit:"경쟁사와 대등하거나 그 이상이다.", free:"경쟁사랑 대등하거나 더 나아요."},
+        {en:"Whereas before it lagged, now it leads.", lit:"전엔 뒤처졌던 반면 지금은 앞선다.", free:"전엔 뒤처졌는데 지금은 앞서요."}
+      ]},
+      { pattern:"인용·근거 (according to / it's been argued / studies show)", ko:"~에 따르면 / ~라고 주장돼 왔어", desc:"출처를 들어 신뢰성 부여.", bank:[
+        {en:"According to the report, demand is rising.", lit:"보고서에 따르면 수요가 증가하고 있다.", free:"보고서에 따르면 수요가 늘고 있어요."},
+        {en:"It's been argued that less is more.", lit:"적은 것이 더 낫다고 주장돼 왔다.", free:"적을수록 낫다고들 하잖아요."},
+        {en:"Studies show that sleep affects focus.", lit:"연구에 따르면 수면은 집중력에 영향을 미친다.", free:"연구를 보면 잠이 집중력에 영향을 줘요."},
+        {en:"As far as I'm aware, nothing has changed.", lit:"내가 아는 한 바뀐 것은 없다.", free:"제가 알기론 바뀐 게 없어요."},
+        {en:"Sources suggest the launch is delayed.", lit:"소식통에 따르면 출시가 미뤄졌다.", free:"들리는 바로는 출시가 미뤄졌대요."},
+        {en:"Evidence points to a different conclusion.", lit:"증거는 다른 결론을 가리킨다.", free:"증거는 다른 결론을 가리켜요."},
+        {en:"By all accounts, it went smoothly.", lit:"누구 말을 들어도 순조로웠다.", free:"다들 순조로웠다고 하더라고요."},
+        {en:"Critics have praised its design.", lit:"비평가들은 그 디자인을 칭찬했다.", free:"평론가들이 디자인을 호평했어요."}
       ]}
     ]};
   C[6] = { name:"C2", sub:"최상급 · 뉘앙스·관용·추상까지", blurb:"듣고 읽는 것을 거의 다 이해하고, 복잡한 주제에서 생각을 정교하게 표현해요.", color:"pink",
@@ -3975,6 +4125,56 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
         {en:"Ultimately, it's their call, not ours.", lit:"궁극적으로 그것은 우리가 아니라 그들의 결정이다.", free:"결국 우리가 아니라 그쪽 결정이에요."},
         {en:"To put it simply, less is more here.", lit:"간단히 말해, 여기서는 적을수록 낫다.", free:"간단히 말하면 여긴 적을수록 좋아요."},
         {en:"On balance, the pros outweigh the cons.", lit:"전체적으로 장점이 단점을 능가한다.", free:"종합하면 장점이 단점보다 커요."}
+      ]},
+      { pattern:"관용·은유 (blessing in disguise / double-edged sword)", ko:"전화위복 / 양날의 검", desc:"원어민다운 관용·비유.", bank:[
+        {en:"Losing that job was a blessing in disguise.", lit:"그 일을 잃은 것이 전화위복이었다.", free:"그 일 잃은 게 오히려 전화위복이었어요."},
+        {en:"More freedom is a double-edged sword.", lit:"더 많은 자유는 양날의 검이다.", free:"자유가 많은 건 양날의 검이에요."},
+        {en:"That's a slippery slope, if you ask me.", lit:"내 생각엔 그것은 미끄러운 비탈길이다.", free:"제 생각엔 그건 위험한 시작이에요."},
+        {en:"We're cutting corners, and it shows.", lit:"우리는 대충 하고 있고, 그게 티가 난다.", free:"대충 하고 있는 게 티가 나요."},
+        {en:"The bottom line is, it has to be profitable.", lit:"결론은, 수익이 나야 한다는 것이다.", free:"결국 핵심은 수익이 나야 한다는 거예요."},
+        {en:"Let's not throw the baby out with the bathwater.", lit:"빈대 잡으려고 초가삼간 태우지 말자.", free:"좋은 것까지 다 버리진 말죠."},
+        {en:"It's the elephant in the room.", lit:"모두가 알지만 아무도 말 안 하는 문제다.", free:"다들 알면서 말 안 하는 문제잖아요."},
+        {en:"That ship has sailed, unfortunately.", lit:"아쉽지만 그 기회는 지나갔다.", free:"아쉽지만 그건 이미 지난 일이에요."}
+      ]},
+      { pattern:"미묘한 완충 (if you will / so to speak / for what it's worth)", ko:"말하자면 / 굳이 말하면 / 참고로 말하면", desc:"고급 담화 완충어.", bank:[
+        {en:"It's a kind of reset, if you will.", lit:"말하자면 일종의 리셋이다.", free:"말하자면 일종의 리셋이에요."},
+        {en:"He's the gatekeeper, so to speak.", lit:"말하자면 그가 문지기다.", free:"말하자면 그 사람이 관문이에요."},
+        {en:"For what it's worth, I'd go for it.", lit:"참고로 말하면 나는 하겠다.", free:"참고로 말하면 저는 할 것 같아요."},
+        {en:"It's not ideal, to put it mildly.", lit:"완곡히 말하면 이상적이지 않다.", free:"좋게 말해도 이상적이진 않아요."},
+        {en:"That's putting it generously.", lit:"그건 후하게 말한 거다.", free:"그것도 후하게 말한 거예요."},
+        {en:"In a manner of speaking, yes.", lit:"어떤 의미에선 그렇다.", free:"어떤 의미에선 맞아요."},
+        {en:"Suffice it to say, it didn't go well.", lit:"잘 안 됐다고만 해 두자.", free:"잘 안 됐다고만 해 둘게요."},
+        {en:"Needless to say, we were thrilled.", lit:"말할 것도 없이 우리는 신났다.", free:"말할 것도 없이 완전 신났죠."}
+      ]},
+      { pattern:"정밀한 주장 (I'd venture to say / one could argue / arguably)", ko:"감히 말하면 / ~라고 볼 수도 / 어쩌면", desc:"신중하게 강한 주장.", bank:[
+        {en:"I'd venture to say it's the best option.", lit:"감히 말하면 그것이 최선이다.", free:"감히 말하면 그게 최선이에요."},
+        {en:"One could argue it was inevitable.", lit:"그것은 불가피했다고 볼 수도 있다.", free:"불가피했다고 볼 수도 있어요."},
+        {en:"Arguably, the timing made all the difference.", lit:"어쩌면 타이밍이 모든 차이를 만들었다.", free:"어쩌면 타이밍이 다 결정했어요."},
+        {en:"It's debatable whether that's fair.", lit:"그것이 공정한지는 논쟁의 여지가 있다.", free:"그게 공정한지는 논쟁의 여지가 있어요."},
+        {en:"I'd go so far as to call it a turning point.", lit:"전환점이라 부를 정도라고 하겠다.", free:"전환점이라고까지 할 수 있어요."},
+        {en:"It's fair to say expectations were high.", lit:"기대가 높았다고 말해도 무방하다.", free:"기대가 높았다고 봐도 돼요."},
+        {en:"One might reasonably conclude otherwise.", lit:"누군가는 합리적으로 다른 결론을 낼 수도 있다.", free:"합리적으로 다른 결론을 낼 수도 있어요."},
+        {en:"I'd hesitate to call it a failure.", lit:"그것을 실패라 부르기는 망설여진다.", free:"그걸 실패라고 부르긴 좀 그래요."}
+      ]},
+      { pattern:"고급 양보·연결 (be that as it may / notwithstanding / insofar as)", ko:"그렇다 하더라도 / ~에도 불구하고 / ~하는 한에서", desc:"격식 높은 연결어.", bank:[
+        {en:"Be that as it may, the deadline stands.", lit:"그렇다 하더라도 마감은 그대로다.", free:"그렇다 해도 마감은 그대로예요."},
+        {en:"Notwithstanding the cost, it's worthwhile.", lit:"비용에도 불구하고 그것은 가치가 있다.", free:"비용에도 불구하고 할 가치가 있어요."},
+        {en:"Insofar as it helps, I'm supportive.", lit:"그것이 도움이 되는 한 나는 지지한다.", free:"도움이 되는 한 저는 찬성이에요."},
+        {en:"That said, exceptions can be made.", lit:"그렇긴 해도 예외는 둘 수 있다.", free:"그렇긴 해도 예외는 둘 수 있어요."},
+        {en:"Granted, it's imperfect; even so, it works.", lit:"인정하건대 완벽하진 않지만 그래도 작동한다.", free:"완벽하진 않지만 그래도 잘 돌아가요."},
+        {en:"For all intents and purposes, it's finished.", lit:"사실상 그것은 끝났다.", free:"사실상 끝난 거나 다름없어요."},
+        {en:"However you look at it, the result is the same.", lit:"어떻게 보든 결과는 같다.", free:"어떻게 봐도 결과는 같아요."},
+        {en:"All else being equal, I'd choose the simpler path.", lit:"다른 조건이 같다면 더 단순한 길을 택하겠다.", free:"다른 게 같다면 더 단순한 쪽을 택할래요."}
+      ]},
+      { pattern:"추상·논증 (by extension / paradoxically / it stands to reason)", ko:"나아가 / 역설적으로 / 당연히 ~인 셈이야", desc:"추상적 논리 전개.", bank:[
+        {en:"By extension, the whole system is at risk.", lit:"나아가 시스템 전체가 위험에 처한다.", free:"나아가 시스템 전체가 위험해져요."},
+        {en:"Paradoxically, doing less achieved more.", lit:"역설적으로 덜 함으로써 더 이뤘다.", free:"역설적으로 덜 하니까 더 잘됐어요."},
+        {en:"It stands to reason that trust takes time.", lit:"신뢰는 시간이 걸리는 게 당연하다.", free:"신뢰는 시간이 걸리는 게 당연하죠."},
+        {en:"In essence, it's a question of priorities.", lit:"본질적으로 그것은 우선순위의 문제다.", free:"본질적으로 우선순위 문제예요."},
+        {en:"That logic, taken to its extreme, falls apart.", lit:"그 논리를 극단으로 밀면 무너진다.", free:"그 논리도 극단으로 가면 무너져요."},
+        {en:"Counterintuitively, the cheaper one lasted longer.", lit:"직관과 달리 더 싼 것이 더 오래갔다.", free:"의외로 더 싼 게 더 오래갔어요."},
+        {en:"The implications are far-reaching.", lit:"그 함의는 광범위하다.", free:"그 파급 효과는 광범위해요."},
+        {en:"It cuts to the heart of the matter.", lit:"그것은 문제의 핵심을 찌른다.", free:"그게 문제의 핵심을 찔러요."}
       ]}
     ]};
   window.CEFR_LEVELS = C;
