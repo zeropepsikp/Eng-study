@@ -423,20 +423,27 @@
   .grade-no{background:var(--coral-bg);color:var(--coral);}
   .grade-btn:hover{filter:brightness(0.98);}
   .grade-btn.dim{opacity:0.4;}
-  /* CEFR 빈칸 채우기 모드 */
+  /* CEFR 빈칸 채우기 모드 (말해보카 스타일 — 칸 자체가 입력란) */
   .fill-wrap{margin-top:2px;}
-  .fill-slots{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:center;gap:1px;font-size:23px;font-weight:700;line-height:1.7;margin-bottom:14px;}
-  .fill-box{display:inline-block;min-width:18px;border-bottom:3px solid var(--border);text-align:center;color:var(--text);}
+  .fill-area{position:relative;background:var(--surface2);border:1px solid var(--border);border-radius:14px;
+    padding:18px 12px;min-height:64px;display:flex;align-items:center;justify-content:center;cursor:text;}
+  .fill-slots{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:center;gap:1px;
+    font-size:24px;font-weight:700;line-height:1.9;}
+  .fill-box{display:inline-block;min-width:20px;border-bottom:3px solid var(--border);text-align:center;color:var(--text);
+    transition:border-color .1s;}
+  .fill-box.active{border-bottom-color:var(--info);box-shadow:0 3px 0 -1px var(--info);}
   .fill-box.filled{border-bottom-color:var(--info);}
   .fill-box.wrong{color:var(--coral);border-bottom-color:var(--coral);}
   .fill-slots.ok .fill-box{color:var(--green);border-bottom-color:var(--green);}
   .fill-slots.used .fill-box{color:var(--amber);border-bottom-color:var(--amber);}
   .fill-ch{display:inline-block;color:var(--text2);}
-  .fill-sp{display:inline-block;width:11px;}
+  .fill-sp{display:inline-block;width:12px;}
   .fill-slots.shake{animation:shake .4s;}
-  .fill-input{width:100%;box-sizing:border-box;padding:11px 12px;border-radius:12px;border:1px solid var(--border);
-    background:var(--surface);color:var(--text);font-size:16px;text-align:center;}
-  .fill-hint-line{font-size:12px;color:var(--text3);text-align:center;min-height:15px;margin-top:5px;}
+  /* 키보드를 부르는 보이지 않는 입력 (칸 위에 투명하게) */
+  .fill-hidden{position:absolute;inset:0;width:100%;height:100%;opacity:0;border:0;background:transparent;
+    font-size:16px;color:transparent;caret-color:transparent;text-align:center;pointer-events:none;}
+  .fill-tap{font-size:12px;color:var(--text3);text-align:center;margin-top:8px;}
+  .fill-hint-line{font-size:12px;color:var(--text3);text-align:center;min-height:15px;margin-top:3px;}
   .fill-btns{display:flex;gap:8px;margin-top:10px;}
   .fill-btns button{flex:1 1 0;padding:12px 6px;border-radius:12px;border:1px solid var(--border);
     background:var(--surface2);color:var(--text2);font-size:14px;font-weight:700;cursor:pointer;line-height:1;}
@@ -4646,6 +4653,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     host.innerHTML='';
     var fb = buildFill(en);
     var card=document.createElement('div'); card.className='fill-wrap';
+    var area=document.createElement('div'); area.className='fill-area';
     var slots=document.createElement('div'); slots.className='fill-slots';
     var boxes=[];
     fb.units.forEach(function(u){
@@ -4653,11 +4661,14 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       else if(u.t==='sp'){ var s=document.createElement('span'); s.className='fill-sp'; slots.appendChild(s); }
       else { var c=document.createElement('span'); c.className='fill-ch'; c.textContent=u.ch; slots.appendChild(c); }
     });
-    card.appendChild(slots);
-    var input=document.createElement('input'); input.type='text'; input.className='fill-input';
+    area.appendChild(slots);
+    // 보이지 않는 입력 — 네모칸 자체가 입력란 역할. 키보드는 탭하면 뜬다.
+    var input=document.createElement('input'); input.type='text'; input.className='fill-hidden';
     input.setAttribute('autocapitalize','off'); input.setAttribute('autocomplete','off'); input.setAttribute('autocorrect','off');
-    input.placeholder='여기에 입력하거나 🎤 로 말하세요';
-    card.appendChild(input);
+    input.setAttribute('aria-label','정답 입력');
+    area.appendChild(input);
+    card.appendChild(area);
+    var tapHint=document.createElement('div'); tapHint.className='fill-tap'; tapHint.textContent='칸을 탭해서 입력하거나 🎤 로 말하세요'; card.appendChild(tapHint);
     var hintEl=document.createElement('div'); hintEl.className='fill-hint-line'; card.appendChild(hintEl);
     var btnRow=document.createElement('div'); btnRow.className='fill-btns';
     var mic=document.createElement('button'); mic.className='fill-mic'; mic.innerHTML='🎤 말하기';
@@ -4669,16 +4680,19 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
 
     var usedHelp=false, done=false;
     function letters(){ return input.value.toLowerCase().replace(/[^a-z]/g,'').slice(0, fb.target.length); }
+    function focusInput(){ try{ input.focus({preventScroll:true}); }catch(e){ try{input.focus();}catch(_){} } }
     function finish(){
       if(done) return; done=true;
-      input.disabled=true; mic.disabled=true; hintBtn.disabled=true; ansBtn.disabled=true;
+      mic.disabled=true; hintBtn.disabled=true; ansBtn.disabled=true;
       var correct = !usedHelp;
-      slots.classList.add(correct?'ok':'used');
+      slots.classList.remove('shake'); slots.classList.add(correct?'ok':'used');
+      tapHint.textContent = correct ? '정답! 🎉' : '정답을 확인했어요';
       onDone(correct?'ok':'no');
     }
     function paint(){
-      var ls=letters(), wrong=false;
+      var ls=letters(), wrong=false, caret=ls.length;
       for(var i=0;i<boxes.length;i++){
+        boxes[i].classList.toggle('active', !done && i===caret);
         if(i<ls.length){ boxes[i].textContent=ls[i].toUpperCase(); boxes[i].classList.add('filled');
           var bad = ls[i]!==fb.target[i]; boxes[i].classList.toggle('wrong', bad); if(bad) wrong=true; }
         else { boxes[i].textContent=''; boxes[i].classList.remove('filled','wrong'); }
@@ -4690,11 +4704,18 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     }
     input.addEventListener('input', paint);
     input.addEventListener('keydown', function(e){ if(e.key==='Enter') e.preventDefault(); });
-    slots.addEventListener('click', function(){ try{ input.focus(); }catch(e){} });
+    // 영역/칸 탭 → 입력 위치 지정 + 키보드 호출
+    area.addEventListener('click', function(){ if(!done) focusInput(); });
+    boxes.forEach(function(b, idx){
+      b.addEventListener('click', function(ev){ ev.stopPropagation(); if(done) return;
+        // 그 칸까지만 남기고 거기서부터 입력 (탭한 위치로 커서 이동)
+        input.value = letters().slice(0, idx); paint(); focusInput();
+      });
+    });
     hintBtn.addEventListener('click', function(){
       if(done) return; usedHelp=true;
       var n=Math.min(fb.target.length, letters().length+1);
-      input.value=fb.target.slice(0,n); paint(); try{ input.focus(); }catch(e){}
+      input.value=fb.target.slice(0,n); paint(); focusInput();
     });
     ansBtn.addEventListener('click', function(){
       if(done) return; usedHelp=true; input.value=fb.target; paint();
@@ -4702,6 +4723,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     setupSpeakMic(mic, input, hintEl);
     // 마이크가 input.value를 바꿔도 paint가 돌도록 (카드가 사라지면 정리)
     var mo=setInterval(function(){ if(done || !document.body.contains(input)){ clearInterval(mo); return; } paint(); }, 400);
+    paint();
   }
 
   function renderCefrCard(){
