@@ -4689,7 +4689,9 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       mic.disabled=true; hintBtn.disabled=true; ansBtn.disabled=true;
       var correct = !usedHelp;
       slots.classList.remove('shake'); slots.classList.add(correct?'ok':'used');
-      tapHint.textContent = correct ? '정답! 🎉' : '정답을 확인했어요';
+      boxes.forEach(function(b){ b.classList.remove('active'); });
+      tapHint.textContent = correct ? '정답! 🎉  아래 Next로 넘어가세요' : '정답을 확인했어요  ·  Next로 넘어가세요';
+      try{ input.blur(); }catch(e){}   // 키패드 닫기 / 커서 해제
       onDone(correct?'ok':'no');
     }
     function paint(){
@@ -4746,12 +4748,9 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       STATS.record(curLevel, curOrig(), qPick[curExpr], grade);
       graded = true; buildLevelSubtabs();
       speak(q.en,'en');
-      setTimeout(function(){
-        curExpr = (curExpr+1) % exprOrder.length;
-        rollProblem(curExpr); flipped=false; graded=false; buildChips(); render();
-      }, 850);
+      var nb2=$('next-btn'); if(nb2){ nb2.disabled=false; nb2.textContent='Next →'; }  // 정답 시 활성화
     });
-    var nb=$('next-btn'); if(nb){ nb.disabled=false; nb.textContent='Skip →'; }
+    var nb=$('next-btn'); if(nb){ nb.disabled=true; nb.textContent='Next →'; }   // 정답 전엔 비활성
     updateProgress();
   }
 
@@ -5576,7 +5575,8 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
 
   // ---------- navigation ----------
   function nextProblem(){
-    if(cefrFill()){                      // CEFR 빈칸 모드: 채점 없이 건너뛰기
+    if(cefrFill()){                      // CEFR 빈칸 모드: 정답을 맞춰야(graded) 다음
+      if(!graded) return;
       curExpr = (curExpr+1) % exprOrder.length;
       rollProblem(curExpr); flipped=false; graded=false; buildChips(); render();
       return;
