@@ -60,6 +60,10 @@
   .tts-badge.free{color:var(--text3);}
   .today-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
   .today-head .section-title{margin:0;}
+  .today-stage-row{display:flex;flex-wrap:wrap;gap:6px;margin:-4px 0 14px;}
+  .tstage-btn{border:1px solid var(--border);background:var(--surface);color:var(--text2);
+    border-radius:999px;padding:6px 13px;font-size:13px;font-weight:700;cursor:pointer;line-height:1;}
+  .tstage-btn.on{background:var(--info);color:#fff;border-color:var(--info);}
   /* 시작 난이도 프리셋 */
   /* 시작 난이도 프리셋 — 세그먼트 컨트롤 */
   .preset-row{display:flex;gap:4px;margin-bottom:16px;background:var(--seg);
@@ -749,6 +753,7 @@
       <div class="section-title">Today’s Study <span class="tts-badge ok" id="tts-badge-today">🔊 Cloudflare 음성</span></div>
       <div class="speak-toggle-slot" id="speak-toggle-slot"></div>
     </div>
+    <div class="today-stage-row" id="today-stage-row"></div>
     <div class="preset-row" id="preset-row"></div>
     <div class="progress-row">
       <div class="today-prog-wrap">
@@ -4699,6 +4704,24 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   // 오늘의 학습 모드: 'chunk'(기본) | 'level'
   var TODAY_MODE_KEY = 'eng_today_mode';
   var todayMode = (function(){ try{ return localStorage.getItem(TODAY_MODE_KEY)==='level' ? 'level' : 'chunk'; }catch(e){ return 'chunk'; } })();
+  // 오늘의 학습 레벨 모드: 어느 단계(레벨)에서 30문제를 낼지
+  var TODAY_STAGE_KEY = 'eng_today_stage';
+  var todayStageLv = (function(){ try{ var v=parseInt(localStorage.getItem(TODAY_STAGE_KEY),10); return (v>=1)?v:1; }catch(e){ return 1; } })();
+  function setTodayStage(lv){ todayStageLv = lv; try{ localStorage.setItem(TODAY_STAGE_KEY, String(lv)); }catch(e){} }
+  function buildTodayStageRow(){
+    var host=$('today-stage-row'); if(!host) return;
+    host.innerHTML='';
+    if(todayMode!=='level'){ host.style.display='none'; return; }
+    host.style.display='flex';
+    if(todayStageLv>NUM_LEVELS) todayStageLv=1;
+    for(var lv=1; lv<=NUM_LEVELS; lv++){ (function(lv){
+      var d=LEVEL_DATA[lv]; if(!d) return; if(d.situational && !realLifeOn) return;
+      var b=document.createElement('button'); b.className='tstage-btn'+(lv===todayStageLv?' on':'');
+      b.textContent = d.situational ? 'Real' : (levelSet==='cefr' ? d.name : ('L'+lv));
+      b.addEventListener('click',function(){ if(lv===todayStageLv) return; setTodayStage(lv); startTodayFresh(); });
+      host.appendChild(b);
+    })(lv); }
+  }
   function setTodayMode(m){ todayMode = (m==='level')?'level':'chunk'; try{ localStorage.setItem(TODAY_MODE_KEY, todayMode); }catch(e){} }
   // 오늘의 학습 헤더 우측: 레벨/청크 전환 토글
   function buildTodayModeToggle(){
@@ -6065,14 +6088,8 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   function pickOneProblem(){
     var rev = takeDueReview();
     if(rev) return rev;
-    var w = levelWeightsNow();
-    var maxLv = NUM_LEVELS;
-    var lvs=[], weights=[];
-    for(var lv=1; lv<=maxLv; lv++){ if((w[lv]||0)>0){ lvs.push(lv); weights.push(w[lv]); } }
-    if(!lvs.length){ lvs=[2]; weights=[1]; }
-    var total=weights.reduce(function(a,b){return a+b;},0);
-    var r=Math.random()*total, L=lvs[lvs.length-1];
-    for(var i=0;i<lvs.length;i++){ r-=weights[i]; if(r<=0){ L=lvs[i]; break; } }
+    // 선택한 단계에서만 출제 (그 레벨의 패턴·예시는 약한 것 우선 랜덤)
+    var L = todayStageLv; if(!LEVEL_DATA[L]) L = 1;
     var exprs=LEVEL_DATA[L].exprs;
     var exprIdx;
     if(L===SIT_LV){ exprIdx = sitExprIdxs(); }
@@ -6126,7 +6143,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
 
   // 처음 새 세트 시작: 첫 문제만 즉석으로 뽑고, 이후 진행하며 1개씩 추가
   function startTodayFresh(){
-    todayTarget = TODAY_SIZE;
+    todayTarget = 30;           // 선택한 단계에서 30문제
     reviewQueue = [];
     todayDeck = [ pickOneProblem() ];
     todayPos=0; todayFlipped=false; todayGraded=false; todaySubmitted=false; todayResult=null; todayBuilt=true;
@@ -6422,11 +6439,49 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     var info=$('today-count'); if(info) info.textContent=done+' today';
   }
 
+  // 오늘의 학습 — CEFR 빈칸 채우기 카드
+  function renderTodayCefrCard(item, d, q, col, wrap){
+    wrap.innerHTML='';
+    var card=document.createElement('div'); card.className='card cefr-card';
+    var tag=document.createElement('div'); tag.className='card-tag'; tag.textContent=lvName(d);
+    var body=document.createElement('div'); body.className='card-center';
+    var lab=document.createElement('div'); lab.className='side-label'; lab.style.color=col.fg; lab.textContent='Korean';
+    var koRow=document.createElement('div'); koRow.className='ko-row';
+    var ko=document.createElement('div'); ko.className='ko-q'; ko.textContent=q.free;
+    koRow.appendChild(ko); koRow.appendChild(spkBtn(q.en,'mini'));
+    body.appendChild(lab); body.appendChild(koRow);
+    card.appendChild(tag); card.appendChild(body); wrap.appendChild(card);
+
+    var gr=document.createElement('div'); gr.className='grade-row'; wrap.appendChild(gr);
+    if(!item.graded){
+      renderCefrFill(gr, q.en, function(grade){
+        if(item.graded) return;
+        STATS.record(item.lv, item.ei, item.bi, grade); item.graded=grade; item.result=grade;
+        scheduleReview(item, grade); saveTodaySession(); renderTodayHeader();
+        var nb=$('today-cefr-next'); if(nb) nb.disabled=false;
+        speak(q.en,'en');
+      });
+    } else {
+      var rw=document.createElement('div'); rw.className='fill-wrap';
+      rw.innerHTML='<div class="fill-area"><div class="fill-slots '+(item.result==='no'?'used':'ok')+'">'+escHtml(q.en)+'</div></div>'+
+        '<div class="fill-tap">'+(item.result==='no'?'정답 확인':'정답! 🎉')+'</div>';
+      gr.appendChild(rw);
+    }
+    var nav=document.createElement('div'); nav.className='nav';
+    var pv=document.createElement('button'); pv.textContent='← Prev'; pv.disabled=(todayPos<=0);
+    pv.addEventListener('click',function(){ if(todayPos>0){ todayPos--; renderToday(); } });
+    var nx=document.createElement('button'); nx.className='listen'; nx.id='today-cefr-next'; nx.textContent='Next →';
+    nx.disabled = !item.graded;
+    nx.addEventListener('click',function(){ if(!item.graded) return; todayPos++; renderToday(); });
+    nav.appendChild(pv); nav.appendChild(nx); wrap.appendChild(nav);
+  }
+
   function renderToday(){
     buildTodayModeToggle();
+    buildTodayStageRow();
     if(todayMode==='chunk'){ renderTodayChunk(); return; }
-    var presetRow=$('preset-row'); if(presetRow) presetRow.style.display='';
-    var hi=$('today-help'); if(hi) hi.style.display='';
+    var presetRow=$('preset-row'); if(presetRow) presetRow.style.display='none';   // 단계 선택으로 대체
+    var hi=$('today-help'); if(hi) hi.style.display='none';
     var wrap=$('today-card-wrap');
     renderTodayHeader();
     saveTodaySession();
@@ -6455,6 +6510,8 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     var col=levelColorVars(item.lv);
     $('today-fill').style.width=Math.round((todayPos)/todayTarget*100)+'%';
     $('today-fill').style.background=col.fg;
+
+    if(cefrFill()){ renderTodayCefrCard(item, d, q, col, wrap); return; }
 
     wrap.innerHTML='';
     var card=document.createElement('div'); card.className='card'+(q.en.length>90?' longtext':'');
