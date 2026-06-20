@@ -431,8 +431,8 @@
     border:1px solid var(--border2);border-radius:var(--radius-lg);
     padding:22px 16px;min-height:104px;display:flex;align-items:center;justify-content:center;cursor:text;}
   .fill-slots{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:center;gap:2px;
-    font-size:26px;font-weight:700;line-height:2;}
-  .fill-box{display:inline-block;min-width:22px;border-bottom:3px solid var(--border);text-align:center;color:var(--text);
+    font-size:23px;font-weight:700;line-height:2;}
+  .fill-box{display:inline-block;min-width:20px;border-bottom:3px solid var(--border);text-align:center;color:var(--text);
     transition:border-color .1s;}
   .fill-box.active{border-bottom-color:var(--info);box-shadow:0 3px 0 -1px var(--info);}
   .fill-box.filled{border-bottom-color:var(--info);}
@@ -4626,25 +4626,34 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     var s={}; w.forEach(function(x){ s[x]=true; }); return s;
   })();
   function cefrFill(){ return levelSet==='cefr'; }
-  function isFuncWord(w){ return !!CEFR_FUNC[w.toLowerCase()]; }
-  // 문장 → 표시/빈칸 유닛 + 정답 letter 시퀀스. 앞쪽 기능어 묶음만 빈칸(없으면 첫 단어).
+  // 어휘(명사 등)만 보여주고 문장 구조 대부분을 빈칸으로. 명사 = 관사/소유격 뒤의 내용어로 추정.
+  var CEFR_ART = (function(){ var s={}; "a an the my your his her its our their this that these those".split(/\s+/).forEach(function(x){s[x]=1;}); return s; })();
+  var CEFR_ADV = (function(){ var s={}; ("yesterday today tomorrow tonight now then soon later ago again always usually "+
+    "sometimes never often rarely really very too just also still early late fast hard well here there away back "+
+    "around almost maybe perhaps actually honestly probably definitely recently already yet ever once twice").split(/\s+/).forEach(function(x){s[x]=1;}); return s; })();
+  function alwaysBlank(w){ w=w.toLowerCase(); return !!(CEFR_FUNC[w] || CEFR_ADV[w]); }
   function buildFill(en){
     var tokens = en.match(/[A-Za-z']+|[^A-Za-z']+/g) || [];
-    var blankUntil=-1, firstWord=-1, anyBlank=false;
-    for(var i=0;i<tokens.length;i++){
-      if(/[A-Za-z]/.test(tokens[i])){
-        if(firstWord<0) firstWord=i;
-        if(isFuncWord(tokens[i])){ blankUntil=i; anyBlank=true; }
-        else break;
+    var words=[]; for(var i=0;i<tokens.length;i++){ if(/[A-Za-z]/.test(tokens[i])) words.push({i:i, w:tokens[i]}); }
+    var show = {};
+    // 관사/소유격 뒤의 내용어 묶음(명사구)을 보여줌
+    for(var k=0;k<words.length;k++){
+      if(CEFR_ART[words[k].w.toLowerCase()]){
+        var phrase=[], m=k+1;
+        while(m<words.length && !alwaysBlank(words[m].w) && phrase.length<3){ phrase.push(words[m].i); m++; }
+        if(phrase.length){ show[words[k].i]=true; phrase.forEach(function(ti){ show[ti]=true; }); k=m-1; }
       }
     }
-    if(!anyBlank){ blankUntil=firstWord; }
+    // 아무것도 못 찾으면 마지막 내용어 하나라도 보여줌(앵커)
+    if(!Object.keys(show).length){
+      for(var z=words.length-1;z>=0;z--){ if(!alwaysBlank(words[z].w)){ show[words[z].i]=true; break; } }
+    }
     var units=[], target='';
     for(var t=0;t<tokens.length;t++){
-      var tk=tokens[t], isWord=/[A-Za-z]/.test(tk), doBlank = isWord && t<=blankUntil;
+      var tk=tokens[t], isWord=/[A-Za-z]/.test(tk), shown = isWord && show[t];
       for(var c=0;c<tk.length;c++){
         var ch=tk[c];
-        if(doBlank && /[A-Za-z]/.test(ch)){ units.push({t:'box',ch:ch}); target+=ch.toLowerCase(); }
+        if(isWord && !shown && /[A-Za-z]/.test(ch)){ units.push({t:'box',ch:ch}); target+=ch.toLowerCase(); }
         else if(ch===' ') units.push({t:'sp'});
         else units.push({t:'ch',ch:ch});
       }
@@ -4725,9 +4734,22 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     ansBtn.addEventListener('click', function(){
       if(done) return; usedHelp=true; input.value=fb.target; paint();
     });
-    setupSpeakMic(mic, input, hintEl);
-    // 마이크가 input.value를 바꿔도 paint가 돌도록 (카드가 사라지면 정리)
-    var mo=setInterval(function(){ if(done || !document.body.contains(input)){ clearInterval(mo); return; } paint(); }, 400);
+    // 마이크: 문장 전체를 말하면 정답 판정 (빈칸이 흩어져 있어 타이핑과 분리)
+    var micRec=null;
+    mic.addEventListener('click', function(ev){
+      ev.stopPropagation(); if(done) return;
+      var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+      if(!SR){ hintEl.textContent='이 브라우저는 음성 입력을 지원하지 않아요.'; return; }
+      if(micRec){ try{ micRec.stop(); }catch(e){} micRec=null; mic.innerHTML='🎤 말하기'; return; }
+      micRec=new SR(); micRec.lang='en-US'; micRec.interimResults=false; micRec.continuous=false;
+      micRec.onstart=function(){ mic.innerHTML='⏺ 멈추기'; hintEl.textContent='지금 문장을 말하세요'; };
+      micRec.onresult=function(e){ var txt=''; for(var i=0;i<e.results.length;i++) txt+=e.results[i][0].transcript;
+        if(isAnswerCorrect(txt, en)){ input.value=fb.target; paint(); }
+        else { hintEl.textContent='“'+txt+'” — 다시 시도'; } };
+      micRec.onerror=function(ev){ hintEl.textContent=(ev.error==='not-allowed')?'마이크 권한을 허용해 주세요.':'인식 실패, 다시 시도'; };
+      micRec.onend=function(){ mic.innerHTML='🎤 말하기'; micRec=null; };
+      try{ micRec.start(); }catch(e){}
+    });
     paint();
   }
 
