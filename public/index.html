@@ -5878,6 +5878,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   // ============================================================
   var todayDeck = [];   // [{lv, ei, bi}] — 지금까지 보여준 문제들(실시간으로 1개씩 추가)
   var todayPos = 0, todayFlipped=false, todayGraded=false;
+  var todayCorrect = 0;   // 맞힌 개수 (진척도 기준 — 틀리면 안 오름)
   var todaySubmitted=false, todayResult=null;
   var todayBuilt = false;
   var TODAY_SIZE = 100;    // 한 세트 목표
@@ -5946,7 +5947,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   function saveTodaySession(){
     try{
       var payload = {
-        deck: todayDeck, pos: todayPos, target: todayTarget,
+        deck: todayDeck, pos: todayPos, target: todayTarget, correct: todayCorrect,
         preset: startPreset, review: reviewQueue, built: todayBuilt,
         day: STATS.todayKey ? STATS.todayKey() : ''
       };
@@ -5959,7 +5960,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       if(!raw) return false;
       var p = JSON.parse(raw);
       if(!p || !p.deck || !p.deck.length) return false;
-      todayDeck = p.deck; todayPos = p.pos||0; todayTarget = p.target||TODAY_SIZE;
+      todayDeck = p.deck; todayPos = p.pos||0; todayTarget = p.target||30; todayCorrect = p.correct||0;
       startPreset = p.preset || 'intro'; reviewQueue = p.review || []; todayBuilt = true;
       return true;
     }catch(e){ return false; }
@@ -6143,10 +6144,10 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
 
   // 처음 새 세트 시작: 첫 문제만 즉석으로 뽑고, 이후 진행하며 1개씩 추가
   function startTodayFresh(){
-    todayTarget = 30;           // 선택한 단계에서 30문제
+    todayTarget = 30;           // 선택한 단계에서 30문제(맞힌 기준)
     reviewQueue = [];
     todayDeck = [ pickOneProblem() ];
-    todayPos=0; todayFlipped=false; todayGraded=false; todaySubmitted=false; todayResult=null; todayBuilt=true;
+    todayPos=0; todayCorrect=0; todayFlipped=false; todayGraded=false; todaySubmitted=false; todayResult=null; todayBuilt=true;
     renderToday();
   }
   // 시작 난이도 프리셋 버튼들
@@ -6432,8 +6433,8 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
 
   function renderTodayHeader(){
     var done = STATS.todayCount();
-    var completed = todayPos>=todayTarget;
-    var posTxt = completed ? ('Done '+todayTarget+' / '+todayTarget) : ((todayPos+1)+' / '+todayTarget);
+    var completed = todayCorrect>=todayTarget;
+    var posTxt = completed ? ('Done '+todayTarget+' / '+todayTarget) : (todayCorrect+' / '+todayTarget+' 맞힘');
     var lvLabel = (!completed && todayDeck[todayPos]) ? ('  ·  '+lvName(LEVEL_DATA[todayDeck[todayPos].lv])) : '';
     $('today-prog').textContent = posTxt + lvLabel;
     var info=$('today-count'); if(info) info.textContent=done+' today';
@@ -6457,6 +6458,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       renderCefrFill(gr, q.en, function(grade){
         if(item.graded) return;
         STATS.record(item.lv, item.ei, item.bi, grade); item.graded=grade; item.result=grade;
+        if(grade!=='no') todayCorrect++;            // 맞혔을 때만 진척도 ↑
         scheduleReview(item, grade); saveTodaySession(); renderTodayHeader();
         var nb=$('today-cefr-next'); if(nb) nb.disabled=false;
         speak(q.en,'en');
@@ -6486,10 +6488,10 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     renderTodayHeader();
     saveTodaySession();
     if(!todayDeck.length){ wrap.innerHTML='<div class="empty">Couldn\'t prepare any content.</div>'; return; }
-    if(todayPos>=todayTarget){
+    if(todayCorrect>=todayTarget){
       wrap.innerHTML='';
       var done=document.createElement('div'); done.className='today-done';
-      done.innerHTML='<div class="big">Set complete! 🎉</div><div class="sub">You\'ve finished '+todayTarget+' items.</div>';
+      done.innerHTML='<div class="big">Set complete! 🎉</div><div class="sub">'+todayTarget+'문제를 모두 맞혔어요.</div>';
       var moreWrap=document.createElement('div'); moreWrap.className='today-more';
       [10,20,30].forEach(function(n){
         var mb=document.createElement('button'); mb.className='today-again'; mb.textContent='+'+n+' more';
@@ -6508,7 +6510,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     var item=todayDeck[todayPos];
     var d=LEVEL_DATA[item.lv], e=d.exprs[item.ei], q=e.bank[item.bi];
     var col=levelColorVars(item.lv);
-    $('today-fill').style.width=Math.round((todayPos)/todayTarget*100)+'%';
+    $('today-fill').style.width=Math.round(todayCorrect/todayTarget*100)+'%';
     $('today-fill').style.background=col.fg;
 
     if(cefrFill()){ renderTodayCefrCard(item, d, q, col, wrap); return; }
@@ -6607,6 +6609,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
         if(item.graded) return;            // 이미 채점됨 → 변경 불가
         STATS.record(item.lv, item.ei, item.bi, grade);
         item.graded=grade; item.submitted=true; item.result=grade; item.speakInput=val||''; item.flipped=true;
+        if(grade!=='no') todayCorrect++;
         scheduleReview(item, grade);
         renderToday(); renderTodayHeader();
         speak(q.en,'en');                  // 정답 카드 전환 시 원어민 발음
@@ -6621,6 +6624,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
           if(item.graded) return;          // 한 번 풀면 못 바꿈
           STATS.record(item.lv, item.ei, item.bi, g[0]);
           item.graded=g[0];
+          if(g[0]!=='no') todayCorrect++;
           scheduleReview(item, g[0]);
           renderToday(); renderTodayHeader();
         });
