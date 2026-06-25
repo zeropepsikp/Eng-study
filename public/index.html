@@ -609,6 +609,9 @@
   .chint-ex{font-size:12px;color:var(--text2);margin-bottom:5px;}
   .chint-ex b{color:var(--text);font-weight:700;}
   .chint-desc{font-size:11.5px;color:var(--text3);line-height:1.5;}
+  .chint-sent{font-size:12px;color:var(--text2);margin-top:6px;padding-top:6px;border-top:1px solid var(--border);line-height:1.55;}
+  .chint-sent b{color:var(--text);font-weight:700;}
+  .chint-sent-ko{display:block;color:var(--text3);font-size:11px;margin-top:1px;}
   .chint-pop::after{content:"";position:absolute;bottom:100%;left:50%;transform:translateX(-50%);
     border:6px solid transparent;border-bottom-color:var(--border);}
   .chunk-side{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
@@ -2582,6 +2585,8 @@ var CHUNK_DATA = {
       {en:"Is it", ko:"이거 ~야?", ex:[{en:"Is it far?",ko:"멀어?"},{en:"Is it okay?",ko:"괜찮아?"}]},
       {en:"What time", ko:"몇 시에 ~?", ex:[{en:"What time is it?",ko:"몇 시야?"},{en:"What time do you start?",ko:"몇 시에 시작해?"}]},
       {en:"What kind of", ko:"어떤 종류의 ~?", ex:[{en:"What kind of food?",ko:"어떤 음식?"}]},
+      {en:"What", ko:"무슨/어떤 ~? (What + 명사 바로)", ex:[{en:"What sports can you play?",ko:"무슨 운동 할 수 있어요?"},{en:"What color do you like?",ko:"무슨 색 좋아해요?"},{en:"What music do you listen to?",ko:"무슨 음악 들어요?"},{en:"What languages do you speak?",ko:"무슨 언어 할 줄 알아요?"}]},
+      {en:"Which", ko:"어느/무슨 ~? (여럿 중 선택)", ex:[{en:"Which one do you want?",ko:"어느 거 원해요?"},{en:"Which bus goes downtown?",ko:"어느 버스가 시내 가요?"},{en:"Which day works for you?",ko:"무슨 요일이 괜찮아요?"}]},
       {en:"How about", ko:"~는 어때?", ex:[{en:"How about tomorrow?",ko:"내일은 어때?"},{en:"How about you?",ko:"넌 어때?"}]},
       {en:"How do you", ko:"너 어떻게 ~해?", ex:[{en:"How do you know?",ko:"어떻게 알아?"}]},
       {en:"How long", ko:"얼마나 오래/얼마 동안 ~?", ex:[{en:"How long does it take?",ko:"얼마나 걸려?"}]},
@@ -7940,6 +7945,16 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   // ===== 청크 문법 힌트: 뒤에 무엇이 오는가 =====
   // 반환 {form, ex, desc}. OVERRIDE 우선, 없으면 규칙 추론.
   var CHUNK_HINT_OVERRIDE = {
+    "What": {
+        "form": "+ 명사 (바로)",
+        "ex": "sports · color · music",
+        "desc": "What 뒤에 명사가 바로 와요. 예: What sports can you play?"
+    },
+    "Which": {
+        "form": "+ 명사",
+        "ex": "one · bus · day",
+        "desc": "여럿 중 고를 때. Which 뒤에 명사."
+    },
     "I want to": {
         "form": "+ 동사원형",
         "ex": "go home · eat · try this",
@@ -9054,16 +9069,26 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     // 스크롤하거나 ESC 눌러도 닫힘
     document.addEventListener('keydown', function(ev){ if(ev.key==='Escape') closeAllChunkHints(); });
   }
-  function chunkHintBtn(en, cat){
+  function chunkHintBtn(en, cat, exObj){
     var h=chunkHint(en, cat);
-    if(h.form==="완성 표현") return null;   // 완성 문장엔 힌트 불필요
+    var isWhole = (h.form==="완성 표현");
+    // 완성 표현이라도 예문이 있으면 ? 버튼을 보여준다(예문 안내용).
+    if(isWhole && !exObj) return null;
     var btn=document.createElement('button'); btn.className='chint'; btn.type='button';
     btn.textContent='?'; btn.setAttribute('aria-label','뒤에 무엇이 오는지');
     var pop=document.createElement('span'); pop.className='chint-pop';
-    var f=document.createElement('div'); f.className='chint-form'; f.textContent=h.form;
-    pop.appendChild(f);
-    if(h.ex){ var e=document.createElement('div'); e.className='chint-ex'; e.innerHTML='예: <b>'+escHtml(h.ex)+'</b>'; pop.appendChild(e); }
-    if(h.desc){ var dsc=document.createElement('div'); dsc.className='chint-desc'; dsc.textContent=h.desc; pop.appendChild(dsc); }
+    if(!isWhole){
+      var f=document.createElement('div'); f.className='chint-form'; f.textContent=h.form;
+      pop.appendChild(f);
+      if(h.ex){ var e=document.createElement('div'); e.className='chint-ex'; e.innerHTML='예: <b>'+escHtml(h.ex)+'</b>'; pop.appendChild(e); }
+      if(h.desc){ var dsc=document.createElement('div'); dsc.className='chint-desc'; dsc.textContent=h.desc; pop.appendChild(dsc); }
+    }
+    // 실제 예문 문장 1개(있을 때)
+    if(exObj && exObj.en){
+      var ex1=document.createElement('div'); ex1.className='chint-sent';
+      ex1.innerHTML='예문: <b>'+escHtml(exObj.en)+'</b>'+(exObj.ko?' <span class="chint-sent-ko">'+escHtml(exObj.ko)+'</span>':'');
+      pop.appendChild(ex1);
+    }
     btn.appendChild(pop);
     btn.addEventListener('click',function(ev){
       ev.stopPropagation();
@@ -9489,7 +9514,8 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
           var sideL2=document.createElement('div'); sideL2.className='cstat-side'; sideL2.style.color=colorVars(d.color).fg; sideL2.textContent='English';
           var en=document.createElement('div'); en.className='cstat-en'; en.innerHTML=chunkBlankHtml(ch.en, cat);
           en.appendChild(spkBtn(ch.en,'small'));
-          var sHint=chunkHintBtn(ch.en, cat); if(sHint){ sHint.style.color='var(--text2)'; en.appendChild(sHint); }
+          var sPool=chunkExPool(ch); var sEx=(sPool&&sPool.length)?sPool[0]:(ch.ex&&ch.ex[0]);
+          var sHint=chunkHintBtn(ch.en, cat, sEx); if(sHint){ sHint.style.color='var(--text2)'; en.appendChild(sHint); }
           txt.appendChild(sideL2); txt.appendChild(en);
         }
       }
