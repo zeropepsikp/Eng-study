@@ -3441,7 +3441,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
         {en:"Sorry, what did you say?", lit:"미안, 뭐라고 했니?", free:"네? 뭐라고 하셨어요?"},
         {en:"Could you say that again?", lit:"다시 말해 줄 수 있나요?", free:"다시 말해 주실래요?"},
         {en:"What does this word mean?", lit:"이 단어는 무슨 뜻이니?", free:"이 단어 무슨 뜻이에요?"},
-        {en:"I don't understand.", lit:"나는 이해하지 못한다.", free:"이해가 안 돼요."},
+        {en:"Could you explain that?", lit:"그것을 설명해 줄 수 있니?", free:"설명해 주실 수 있어요?"},
         {en:"How do you say this in English?", lit:"이걸 영어로 어떻게 말하니?", free:"이거 영어로 어떻게 말해요?"},
         {en:"Can you speak more slowly?", lit:"더 천천히 말해 줄 수 있나요?", free:"좀 더 천천히 말해 주실래요?"},
         {en:"Sorry, I didn't catch that.", lit:"미안, 그것을 못 알아들었다.", free:"죄송해요, 못 알아들었어요."},
@@ -3460,7 +3460,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       { pattern:"나이·생일", ko:"나이·생일 말하기", desc:"나이와 생일을 묻고 답한다.", bank:[
         {en:"How old are you?", lit:"너는 몇 살이니?", free:"몇 살이에요?"},
         {en:"I'm twenty-five.", lit:"나는 스물다섯이다.", free:"스물다섯이에요."},
-        {en:"My birthday is in May.", lit:"내 생일은 5월이다.", free:"제 생일은 5월이에요."},
+        {en:"My birthday is next week.", lit:"내 생일은 다음 주다.", free:"제 생일은 다음 주예요."},
         {en:"When is your birthday?", lit:"네 생일은 언제니?", free:"생일이 언제예요?"},
         {en:"She is ten years old.", lit:"그녀는 열 살이다.", free:"그녀는 열 살이에요."},
         {en:"My son is five.", lit:"내 아들은 다섯 살이다.", free:"제 아들은 다섯 살이에요."},
@@ -3473,14 +3473,14 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
         {en:"I have a cold.", lit:"나는 감기에 걸렸다.", free:"감기 걸렸어요."},
         {en:"My stomach hurts.", lit:"내 배가 아프다.", free:"배가 아파요."},
         {en:"I need to see a doctor.", lit:"나는 의사를 봐야 한다.", free:"병원에 가야 해요."},
-        {en:"I feel much better now.", lit:"나는 이제 훨씬 낫다.", free:"이제 한결 나아요."},
+        {en:"I have a runny nose.", lit:"나는 콧물이 난다.", free:"콧물이 나요."},
         {en:"Take care of yourself.", lit:"네 몸을 잘 챙겨라.", free:"몸조심하세요."},
         {en:"I'm really tired today.", lit:"나는 오늘 정말 피곤하다.", free:"오늘 정말 피곤해요."}
       ]},
       { pattern:"교통수단", ko:"~로 가요 (교통수단)", desc:"이동 수단과 길 가는 법을 말한다.", bank:[
-        {en:"I go to work by subway.", lit:"나는 지하철로 출근한다.", free:"지하철로 출근해요."},
+        {en:"I take the train to work.", lit:"나는 기차로 출근한다.", free:"기차로 출근해요."},
         {en:"Let's take a taxi.", lit:"택시를 타자.", free:"택시 타요."},
-        {en:"How do I get to the station?", lit:"역에 어떻게 가나요?", free:"역에 어떻게 가요?"},
+        {en:"Is the airport far from here?", lit:"공항이 여기서 머니?", free:"공항이 여기서 멀어요?"},
         {en:"The bus stop is over there.", lit:"버스 정류장은 저쪽에 있다.", free:"버스 정류장은 저쪽이에요."},
         {en:"It takes ten minutes on foot.", lit:"걸어서 10분 걸린다.", free:"걸어서 10분 걸려요."},
         {en:"I usually walk to school.", lit:"나는 보통 걸어서 학교에 간다.", free:"보통 걸어서 학교 가요."},
@@ -3490,12 +3490,52 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       { pattern:"하루 일과 (시각)", ko:"몇 시에 ~해요 (일과)", desc:"하루 일과를 시각과 함께 말한다.", bank:[
         {en:"I get up at seven.", lit:"나는 7시에 일어난다.", free:"7시에 일어나요."},
         {en:"I have lunch at noon.", lit:"나는 정오에 점심을 먹는다.", free:"정오에 점심 먹어요."},
-        {en:"I go to bed at eleven.", lit:"나는 11시에 잔다.", free:"11시에 자요."},
+        {en:"I go to bed around midnight.", lit:"나는 자정쯤에 잔다.", free:"자정쯤에 자요."},
         {en:"I start work at nine.", lit:"나는 9시에 일을 시작한다.", free:"9시에 일 시작해요."},
         {en:"What time do you finish?", lit:"너는 몇 시에 끝나니?", free:"몇 시에 끝나요?"},
         {en:"I take a shower in the morning.", lit:"나는 아침에 샤워한다.", free:"아침에 샤워해요."},
         {en:"She gets home late.", lit:"그녀는 늦게 집에 온다.", free:"그녀는 늦게 집에 와요."},
         {en:"We have dinner together.", lit:"우리는 함께 저녁을 먹는다.", free:"우리 같이 저녁 먹어요."}
+      ]},
+      { pattern:"안부 인사·근황", ko:"오랜만이에요 / 어떻게 지내요?", desc:"오랜만에 만나거나 근황을 묻는다.", bank:[
+        {en:"How's it going?", lit:"어떻게 지내니?", free:"어떻게 지내요?"},
+        {en:"Long time no see.", lit:"오랜만이다.", free:"오랜만이에요."},
+        {en:"It's been a while.", lit:"꽤 됐다.", free:"꽤 됐네요."},
+        {en:"How have you been?", lit:"그동안 어떻게 지냈니?", free:"그동안 어떻게 지냈어요?"},
+        {en:"What have you been up to?", lit:"요즘 뭐 하고 지냈니?", free:"요즘 뭐 하고 지내요?"},
+        {en:"Good to see you.", lit:"만나서 반갑다.", free:"만나서 반가워요."},
+        {en:"Same to you.", lit:"너도 마찬가지야.", free:"당신도요."},
+        {en:"Keep in touch.", lit:"연락하고 지내자.", free:"연락하고 지내요."}
+      ]},
+      { pattern:"축하·기원·위로", ko:"축하하고 잘 되길 빌어주기", desc:"축하·격려·위로를 전한다.", bank:[
+        {en:"Good luck!", lit:"행운을 빈다!", free:"행운을 빌어요!"},
+        {en:"Congratulations!", lit:"축하한다!", free:"축하해요!"},
+        {en:"Happy birthday!", lit:"생일 축하한다!", free:"생일 축하해요!"},
+        {en:"Well done!", lit:"잘했다!", free:"잘했어요!"},
+        {en:"Get well soon.", lit:"빨리 낫기를.", free:"빨리 나으세요."},
+        {en:"I'm sorry for your loss.", lit:"상심이 크겠다.", free:"삼가 위로의 말씀을 드려요."},
+        {en:"Cheer up!", lit:"기운 내!", free:"기운 내요!"},
+        {en:"Hang in there.", lit:"조금만 버텨.", free:"조금만 버텨요."}
+      ]},
+      { pattern:"주의·재촉·진정", ko:"조심해요 / 서둘러요 / 진정해요", desc:"주의·재촉·진정을 짧게 말한다.", bank:[
+        {en:"Watch out!", lit:"조심해!", free:"조심해요!"},
+        {en:"Be careful.", lit:"조심해라.", free:"조심하세요."},
+        {en:"Hurry up!", lit:"서둘러!", free:"서둘러요!"},
+        {en:"Calm down.", lit:"진정해.", free:"진정해요."},
+        {en:"Never mind.", lit:"신경 쓰지 마.", free:"신경 쓰지 마세요."},
+        {en:"Forget it.", lit:"됐어.", free:"됐어요."},
+        {en:"Slow down.", lit:"좀 천천히 해.", free:"좀 천천히요."},
+        {en:"Hang on a second.", lit:"잠깐만.", free:"잠깐만요."}
+      ]},
+      { pattern:"건넬 때·대접할 때", ko:"여기요 / 마음껏 드세요", desc:"물건을 건네거나 대접할 때.", bank:[
+        {en:"Here you go.", lit:"여기 있다.", free:"여기요."},
+        {en:"Help yourself.", lit:"마음껏 먹어라.", free:"마음껏 드세요."},
+        {en:"After you.", lit:"먼저 가세요.", free:"먼저 가세요."},
+        {en:"Be my guest.", lit:"얼마든지.", free:"얼마든지요."},
+        {en:"It's on me.", lit:"내가 낼게.", free:"제가 살게요."},
+        {en:"Keep the change.", lit:"잔돈은 됐다.", free:"잔돈은 됐어요."},
+        {en:"Let's split the bill.", lit:"나눠 내자.", free:"더치페이해요."},
+        {en:"Make yourself at home.", lit:"편하게 있어.", free:"편하게 계세요."}
       ]}
     ]};
   C[2] = { name:"A2", sub:"기초 · 묘사와 일상 표현", blurb:"간단한 말로 여러 가지를 묘사하고 일상 표현을 이해할 수 있어요.", color:"info",
@@ -3736,15 +3776,15 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
         {en:"It doesn't fit.", lit:"그것은 맞지 않는다.", free:"이거 안 맞아요."},
         {en:"Do you have the receipt?", lit:"영수증을 가지고 있나요?", free:"영수증 있으세요?"},
         {en:"This one is broken.", lit:"이것은 고장 났다.", free:"이거 고장 났어요."},
-        {en:"Can I get a refund?", lit:"환불받을 수 있나요?", free:"환불 받을 수 있어요?"},
+        {en:"Is there a return policy?", lit:"환불 규정이 있나요?", free:"환불 규정이 있어요?"},
         {en:"Is it on sale?", lit:"그것은 세일 중인가요?", free:"이거 세일해요?"},
         {en:"Do you have a bigger size?", lit:"더 큰 사이즈가 있나요?", free:"더 큰 사이즈 있어요?"}
       ]},
       { pattern:"호텔·예약", ko:"예약하기 (호텔·식당)", desc:"방·자리를 예약하고 확인한다.", bank:[
         {en:"I'd like to book a room.", lit:"나는 방을 하나 예약하고 싶다.", free:"방 하나 예약하고 싶어요."},
-        {en:"Is breakfast included?", lit:"조식이 포함되나요?", free:"조식 포함이에요?"},
+        {en:"Do you have room service?", lit:"룸서비스가 되나요?", free:"룸서비스 되나요?"},
         {en:"I have a reservation.", lit:"나는 예약을 했다.", free:"예약했어요."},
-        {en:"What time is check-out?", lit:"체크아웃은 몇 시인가요?", free:"체크아웃 몇 시예요?"},
+        {en:"Can I check in early?", lit:"일찍 체크인할 수 있나요?", free:"일찍 체크인 돼요?"},
         {en:"Do you have a room for tonight?", lit:"오늘 밤 방이 있나요?", free:"오늘 밤 방 있어요?"},
         {en:"Can I book a table for two?", lit:"두 명 자리를 예약할 수 있나요?", free:"두 명 예약돼요?"},
         {en:"Could I see the room first?", lit:"방을 먼저 볼 수 있을까요?", free:"방 먼저 볼 수 있어요?"},
@@ -3779,6 +3819,36 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
         {en:"They're getting married in May.", lit:"그들은 5월에 결혼한다.", free:"그들은 5월에 결혼해요."},
         {en:"I'm seeing the doctor at three.", lit:"나는 3시에 의사를 본다.", free:"3시에 병원 가요."},
         {en:"We're having dinner with friends.", lit:"우리는 친구들과 저녁을 먹는다.", free:"우리 친구들이랑 저녁 먹기로 했어요."}
+      ]},
+      { pattern:"What if / 상관없어요", ko:"~하면 어쩌죠? / 상관없어요", desc:"가정과 무관함을 말한다.", bank:[
+        {en:"What if it rains?", lit:"비 오면 어떡하니?", free:"비 오면 어떡하죠?"},
+        {en:"What if I'm wrong?", lit:"내가 틀리면 어떡하니?", free:"제가 틀리면 어떡하죠?"},
+        {en:"It doesn't matter.", lit:"그건 중요하지 않다.", free:"상관없어요."},
+        {en:"No matter what.", lit:"무슨 일이 있어도.", free:"무슨 일이 있어도요."},
+        {en:"Either way is fine.", lit:"어느 쪽이든 괜찮다.", free:"어느 쪽이든 괜찮아요."},
+        {en:"It's up to you.", lit:"네가 정해라.", free:"당신이 정하세요."},
+        {en:"Suit yourself.", lit:"마음대로 해라.", free:"마음대로 하세요."},
+        {en:"Just in case.", lit:"혹시 모르니까.", free:"혹시 모르니까요."}
+      ]},
+      { pattern:"몸 상태·기분", ko:"몸 상태·기분 말하기", desc:"컨디션과 기분을 말한다.", bank:[
+        {en:"I'm freezing.", lit:"나는 너무 춥다.", free:"너무 추워요."},
+        {en:"I'm not feeling well.", lit:"나는 몸이 안 좋다.", free:"몸이 좀 안 좋아요."},
+        {en:"I'm not in the mood.", lit:"나는 그럴 기분이 아니다.", free:"그럴 기분이 아니에요."},
+        {en:"I think I'm coming down with something.", lit:"나는 몸살 기운이 있는 것 같다.", free:"뭔가 몸살 기운이 있어요."},
+        {en:"I'm dying to see it.", lit:"나는 그것이 너무 보고 싶다.", free:"너무 보고 싶어요."},
+        {en:"My feet are killing me.", lit:"내 발이 너무 아프다.", free:"발이 너무 아파요."},
+        {en:"I can't stop coughing.", lit:"나는 기침을 멈출 수 없다.", free:"기침이 멈추질 않아요."},
+        {en:"I need to lie down.", lit:"나는 좀 누워야겠다.", free:"좀 누워야겠어요."}
+      ]},
+      { pattern:"허락·배려", ko:"~해도 될까요 / 편히 하세요", desc:"양해를 구하거나 배려한다.", bank:[
+        {en:"Do you mind if I sit here?", lit:"내가 여기 앉아도 되니?", free:"여기 앉아도 될까요?"},
+        {en:"Could you do me a favor?", lit:"부탁 하나 들어줄래?", free:"부탁 하나 들어주실래요?"},
+        {en:"Feel free to ask.", lit:"편하게 물어봐.", free:"편하게 물어보세요."},
+        {en:"Take your time.", lit:"천천히 해.", free:"천천히 하세요."},
+        {en:"No rush.", lit:"급할 거 없다.", free:"급하지 않아요."},
+        {en:"Don't hesitate to ask.", lit:"망설이지 말고 물어봐라.", free:"망설이지 말고 물어보세요."},
+        {en:"It's fine, don't worry.", lit:"괜찮아, 걱정 마.", free:"괜찮아요, 걱정 마세요."},
+        {en:"Whatever works for you.", lit:"네가 편한 대로.", free:"편하신 대로 하세요."}
       ]}
     ]};
   C[3] = { name:"B1", sub:"중급 · 여행·취미·일·가족 대화", blurb:"여행에서 영어를 쓰고, 취미·일·가족에 관해 대화할 수 있어요.", color:"purple",
@@ -3976,7 +4046,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       { pattern:"불만·컴플레인 (정중)", ko:"문제를 정중히 말하기", desc:"불편·문제를 예의 있게 제기한다.", bank:[
         {en:"There's a problem with my order.", lit:"내 주문에 문제가 있다.", free:"주문에 문제가 있어요."},
         {en:"I'd like to make a complaint.", lit:"나는 항의를 하고 싶다.", free:"항의 좀 하고 싶어요."},
-        {en:"This isn't what I ordered.", lit:"이것은 내가 주문한 게 아니다.", free:"이거 제가 주문한 게 아니에요."},
+        {en:"This is the wrong order.", lit:"이건 잘못 나온 주문이다.", free:"주문이 잘못 나왔어요."},
         {en:"The room wasn't clean.", lit:"방이 깨끗하지 않았다.", free:"방이 깨끗하지 않았어요."},
         {en:"Could you fix this, please?", lit:"이것을 고쳐 주실 수 있나요?", free:"이거 좀 해결해 주실 수 있어요?"},
         {en:"I've been waiting too long.", lit:"나는 너무 오래 기다렸다.", free:"너무 오래 기다렸어요."},
@@ -4005,7 +4075,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       ]},
       { pattern:"후기·리뷰", ko:"영화·식당 감상 말하기", desc:"본 것·먹은 것의 감상을 말한다.", bank:[
         {en:"The movie was worth watching.", lit:"그 영화는 볼 만했다.", free:"그 영화 볼 만했어요."},
-        {en:"The food was amazing.", lit:"음식이 정말 맛있었다.", free:"음식이 정말 맛있었어요."},
+        {en:"The dessert was incredible.", lit:"디저트가 끝내줬다.", free:"디저트가 끝내줬어요."},
         {en:"It was a bit disappointing.", lit:"그것은 조금 실망스러웠다.", free:"좀 실망스러웠어요."},
         {en:"I'd definitely recommend it.", lit:"나는 그것을 꼭 추천하겠다.", free:"진짜 추천해요."},
         {en:"The service was slow.", lit:"서비스가 느렸다.", free:"서비스가 느렸어요."},
@@ -4021,7 +4091,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
         {en:"That's so frustrating.", lit:"그것은 정말 답답하다.", free:"진짜 답답해요."},
         {en:"I'm proud of you.", lit:"나는 네가 자랑스럽다.", free:"당신이 정말 자랑스러워요."},
         {en:"I was deeply moved.", lit:"나는 깊이 감동받았다.", free:"정말 감동받았어요."},
-        {en:"I'm a little nervous.", lit:"나는 조금 긴장된다.", free:"좀 긴장돼요."}
+        {en:"I'm a bit anxious about it.", lit:"나는 그것이 좀 불안하다.", free:"그게 좀 불안해요."}
       ]},
       { pattern:"길게 설명하기", ko:"이유 들어 설명하기", desc:"상황을 이어서 자세히 설명한다.", bank:[
         {en:"It's hard to explain, but I'll try.", lit:"설명하기 어렵지만 해 보겠다.", free:"설명하기 어려운데 해볼게요."},
@@ -4052,6 +4122,46 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
         {en:"He's really tall, isn't he?", lit:"그는 정말 키가 크지?", free:"그는 키 정말 크죠?"},
         {en:"We've met before, haven't we?", lit:"우리 전에 만났지?", free:"우리 전에 만난 적 있죠?"},
         {en:"It works, doesn't it?", lit:"그거 되지, 안 그래?", free:"되긴 되죠?"}
+      ]},
+      { pattern:"못 참겠어요·결국 (can't help / ended up)", ko:"~할 수밖에 / 결국 ~했어요", desc:"억제 못함·예정·결과를 말한다.", bank:[
+        {en:"I can't help it.", lit:"나는 어쩔 수가 없다.", free:"어쩔 수가 없어요."},
+        {en:"I couldn't help laughing.", lit:"나는 웃음을 참을 수 없었다.", free:"웃음을 참을 수 없었어요."},
+        {en:"I can't wait to see you.", lit:"나는 너를 빨리 보고 싶다.", free:"빨리 보고 싶어요."},
+        {en:"I ended up staying home.", lit:"나는 결국 집에 있었다.", free:"결국 집에 있었어요."},
+        {en:"I'm supposed to be there by nine.", lit:"나는 9시까지 거기 가기로 되어 있다.", free:"9시까지 가기로 돼 있어요."},
+        {en:"I might as well start now.", lit:"나는 차라리 지금 시작하는 게 낫다.", free:"차라리 지금 시작하는 게 낫겠어요."},
+        {en:"I can't stop thinking about it.", lit:"나는 그 생각을 멈출 수 없다.", free:"자꾸 그 생각이 나요."},
+        {en:"It just happened.", lit:"그냥 그렇게 됐다.", free:"그냥 그렇게 됐어요."}
+      ]},
+      { pattern:"부정·단념 (no way / no idea)", ko:"~할 리 없어요 / 모르겠어요", desc:"불가능·모름·무의미를 말한다.", bank:[
+        {en:"There's no way.", lit:"그럴 리가 없다.", free:"그럴 리 없어요."},
+        {en:"I have no idea.", lit:"나는 전혀 모르겠다.", free:"전혀 모르겠어요."},
+        {en:"What's the point?", lit:"그게 무슨 소용이니?", free:"그게 무슨 소용이에요?"},
+        {en:"There's no point in waiting.", lit:"기다려도 소용없다.", free:"기다려 봐야 소용없어요."},
+        {en:"It's no use.", lit:"해도 소용없다.", free:"해 봐야 소용없어요."},
+        {en:"I don't get it.", lit:"나는 이해가 안 된다.", free:"이해가 안 돼요."},
+        {en:"That makes no sense.", lit:"그건 말이 안 된다.", free:"말이 안 돼요."},
+        {en:"I give up.", lit:"나는 포기한다.", free:"포기할래요."}
+      ]},
+      { pattern:"맞장구·강한 반응", ko:"놀람·동의·불신 반응", desc:"강하게 맞장구치고 반응한다.", bank:[
+        {en:"No way!", lit:"말도 안 돼!", free:"말도 안 돼요!"},
+        {en:"No kidding!", lit:"진짜니?", free:"진짜요?"},
+        {en:"You've got to be kidding.", lit:"농담이지?", free:"농담이죠?"},
+        {en:"Give me a break.", lit:"좀 봐줘.", free:"좀 봐주세요."},
+        {en:"You don't say.", lit:"설마.", free:"설마요."},
+        {en:"I couldn't agree more.", lit:"완전 동감이다.", free:"완전 동감이에요."},
+        {en:"That's news to me.", lit:"처음 듣는 얘기다.", free:"금시초문이에요."},
+        {en:"That figures.", lit:"그럴 줄 알았다.", free:"그럴 줄 알았어요."}
+      ]},
+      { pattern:"연락·신세", ko:"연락 약속·도움 주고받기", desc:"연락 약속과 신세를 표현한다.", bank:[
+        {en:"Keep me posted.", lit:"계속 알려줘.", free:"계속 알려주세요."},
+        {en:"I'll keep you posted.", lit:"내가 계속 알려줄게.", free:"계속 알려드릴게요."},
+        {en:"I owe you one.", lit:"내가 신세 졌다.", free:"신세 졌어요."},
+        {en:"I'll make it up to you.", lit:"나중에 꼭 갚을게.", free:"나중에 꼭 갚을게요."},
+        {en:"Let me get back to you.", lit:"다시 연락할게.", free:"다시 연락드릴게요."},
+        {en:"It's the least I can do.", lit:"이 정도는 해야지.", free:"이 정도는 해야죠."},
+        {en:"Don't mention it.", lit:"별말씀을.", free:"별말씀을요."},
+        {en:"Anytime.", lit:"언제든지.", free:"언제든지요."}
       ]}
     ]};
   C[4] = { name:"B2", sub:"중상급 · 복잡한 주제와 유창한 대화", blurb:"복잡한 주제의 대화를 이해하고, 원어민과 막힘없이 대화할 수 있어요.", color:"coral",
@@ -4230,7 +4340,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
         {en:"That must be hard.", lit:"그것은 정말 힘들겠다.", free:"정말 힘들겠어요."},
         {en:"I know what you mean.", lit:"나는 네 말뜻을 안다.", free:"무슨 말인지 알아요."},
         {en:"I can imagine.", lit:"상상이 간다.", free:"상상이 가요."},
-        {en:"That makes sense.", lit:"그것은 말이 된다.", free:"말 되네요."},
+        {en:"I see your point.", lit:"네 말이 이해된다.", free:"무슨 말인지 알겠어요."},
         {en:"I'm sorry to hear that.", lit:"그 얘기를 들으니 안타깝다.", free:"그 얘기 들으니 안타깝네요."},
         {en:"You must be so proud.", lit:"너는 정말 뿌듯하겠다.", free:"정말 뿌듯하시겠어요."},
         {en:"I feel the same way.", lit:"나도 같은 기분이다.", free:"저도 그래요."},
@@ -4345,6 +4455,46 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
         {en:"How can that be true?", lit:"그것이 어떻게 사실일 수 있니?", free:"그게 어떻게 사실일 수 있죠?"},
         {en:"How could I have known?", lit:"내가 어떻게 알 수 있었겠니?", free:"제가 어떻게 알았겠어요?"},
         {en:"How can I ever repay you?", lit:"내가 너에게 어떻게 다 갚겠니?", free:"이 은혜를 제가 어떻게 다 갚죠?"}
+      ]},
+      { pattern:"화제 전환·회상 (come to think of it)", ko:"생각해 보니 / 말 나온 김에", desc:"문득 떠오르거나 화제를 돌린다.", bank:[
+        {en:"Come to think of it, you're right.", lit:"생각해 보니 네 말이 맞다.", free:"생각해 보니 당신 말이 맞아요."},
+        {en:"Now that you mention it, I remember.", lit:"말 나온 김에 보니 기억난다.", free:"말 나온 김에 보니 기억나요."},
+        {en:"That reminds me of something.", lit:"그러고 보니 생각났다.", free:"그러고 보니 생각났어요."},
+        {en:"On second thought, let's wait.", lit:"다시 생각해 보니 기다리자.", free:"다시 생각해 보니 우리 기다리죠."},
+        {en:"Speaking of which, did you call?", lit:"말 나온 김에, 전화했니?", free:"말 나온 김에, 전화했어요?"},
+        {en:"Funny you should mention that.", lit:"마침 그 얘기가 나와서 말인데.", free:"마침 그 얘기가 나와서 말인데요."},
+        {en:"While we're at it, let's check this too.", lit:"하는 김에 이것도 보자.", free:"하는 김에 이것도 보죠."},
+        {en:"Anyway, where were we?", lit:"아무튼, 어디까지 했지?", free:"아무튼, 어디까지 했죠?"}
+      ]},
+      { pattern:"추측·뜻밖 (chances are / no wonder)", ko:"아마 ~일 거예요 / 어쩐지", desc:"뜻밖·확률·납득을 말한다.", bank:[
+        {en:"Believe it or not, it's true.", lit:"믿기 힘들겠지만 사실이다.", free:"믿기 힘들겠지만 사실이에요."},
+        {en:"Chances are he forgot.", lit:"아마 그가 깜빡했을 거다.", free:"아마 그가 깜빡했을 거예요."},
+        {en:"No wonder you're tired.", lit:"어쩐지 네가 피곤하더라니.", free:"어쩐지 피곤하시더라니요."},
+        {en:"As it turns out, I was right.", lit:"알고 보니 내가 맞았다.", free:"알고 보니 제가 맞았어요."},
+        {en:"Nine times out of ten, he's right.", lit:"십중팔구 그가 맞다.", free:"십중팔구 그가 맞아요."},
+        {en:"Odds are it'll rain.", lit:"비 올 가능성이 높다.", free:"비 올 가능성이 높아요."},
+        {en:"For all I know, she's already left.", lit:"내가 알기론 그녀는 이미 갔다.", free:"제가 알기론 그녀는 이미 갔어요."},
+        {en:"It wouldn't surprise me.", lit:"나는 놀라지도 않을 거다.", free:"그래도 안 놀랄 것 같아요."}
+      ]},
+      { pattern:"오해 방지·솔직 (don't get me wrong)", ko:"오해 말고 / 솔직히 말하면", desc:"오해를 막고 솔직히 말한다.", bank:[
+        {en:"Don't get me wrong.", lit:"오해하지 마라.", free:"오해하지 마세요."},
+        {en:"No offense, but I disagree.", lit:"기분 나빠 말고, 나는 반대다.", free:"기분 나빠 말고 들으세요, 전 반대예요."},
+        {en:"You know what I mean.", lit:"무슨 말인지 알지.", free:"무슨 말인지 아시죠."},
+        {en:"To be honest with you, it's risky.", lit:"솔직히 말하면 위험하다.", free:"솔직히 말하면 위험해요."},
+        {en:"If you ask me, it's too soon.", lit:"내 생각엔 너무 이르다.", free:"제 생각엔 너무 일러요."},
+        {en:"Just so you know, it's not free.", lit:"미리 말하자면 공짜가 아니다.", free:"미리 말하자면 공짜 아니에요."},
+        {en:"Let's be honest.", lit:"솔직해지자.", free:"솔직해집시다."},
+        {en:"I hate to say it, but you're wrong.", lit:"이런 말 하기 싫지만 네가 틀렸다.", free:"이런 말 하기 싫지만 당신이 틀렸어요."}
+      ]},
+      { pattern:"추가·시간 연결 (not to mention / out of the blue)", ko:"게다가 / 그 사이에 / 갑자기", desc:"추가·시점·갑작스러움을 연결한다.", bank:[
+        {en:"Not to mention the cost.", lit:"비용은 말할 것도 없고.", free:"비용은 말할 것도 없고요."},
+        {en:"On top of that, it's late.", lit:"게다가 늦기까지 했다.", free:"게다가 늦기까지 했어요."},
+        {en:"In the meantime, let's wait.", lit:"그동안 기다리자.", free:"그동안 우리 기다리죠."},
+        {en:"Sooner or later, you'll know.", lit:"머지않아 너도 알게 될 거다.", free:"머지않아 알게 될 거예요."},
+        {en:"All of a sudden, it stopped.", lit:"갑자기 그것이 멈췄다.", free:"갑자기 멈췄어요."},
+        {en:"Out of the blue, she called.", lit:"난데없이 그녀가 전화했다.", free:"난데없이 그녀가 전화했어요."},
+        {en:"Once in a while, we meet up.", lit:"가끔 우리는 만난다.", free:"가끔 우리는 만나요."},
+        {en:"From now on, I'll be careful.", lit:"이제부터 나는 조심하겠다.", free:"이제부터 조심할게요."}
       ]}
     ]};
   C[5] = { name:"C1", sub:"고급 · 사교·학술·업무의 정교한 표현", blurb:"사교·학술·전문 상황에서 능숙하게 구사하고 복잡한 대화를 따라갈 수 있어요.", color:"amber",
@@ -4585,7 +4735,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       { pattern:"관용구·구동사 (off the top of my head / get around to)", ko:"원어민식 관용 표현", desc:"자연스러운 구동사·관용구.", bank:[
         {en:"Off the top of my head, I'd say around fifty.", lit:"즉석에서 말하면 한 오십쯤이다.", free:"바로 떠오르는 대로면 한 오십쯤 될 거예요."},
         {en:"I never got around to finishing it.", lit:"나는 끝낼 짬을 끝내 못 냈다.", free:"끝낼 짬이 끝내 안 나더라고요."},
-        {en:"Let's not jump to conclusions.", lit:"성급히 결론 내리지 말자.", free:"성급하게 결론 내리진 말죠."},
+        {en:"Let's get to the bottom of this.", lit:"이 일의 진상을 밝히자.", free:"이 일의 진상을 밝혀보죠."},
         {en:"It slipped my mind completely.", lit:"완전히 깜빡했다.", free:"완전 깜빡했어요."},
         {en:"That's a bit of a stretch, if you ask me.", lit:"내 생각엔 좀 억지스럽다.", free:"제 생각엔 좀 억지스러운데요."},
         {en:"We're on the same page now.", lit:"우리는 이제 같은 생각이다.", free:"이제 우리 생각이 맞네요."},
@@ -4628,7 +4778,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
         {en:"For what it's worth, I'd go for it.", lit:"참고로 말하면 나는 하겠다.", free:"참고로 말하면 저는 할 것 같아요."},
         {en:"It's not ideal, to put it mildly.", lit:"완곡히 말하면 이상적이지 않다.", free:"좋게 말해도 이상적이진 않아요."},
         {en:"That's putting it generously.", lit:"그건 후하게 말한 거다.", free:"그것도 후하게 말한 거예요."},
-        {en:"In a manner of speaking, yes.", lit:"어떤 의미에선 그렇다.", free:"어떤 의미에선 맞아요."},
+        {en:"In a sense, yes.", lit:"어떤 면에서는 그렇다.", free:"어떤 면에선 그래요."},
         {en:"Suffice it to say, it didn't go well.", lit:"잘 안 됐다고만 해 두자.", free:"잘 안 됐다고만 해 둘게요."},
         {en:"Needless to say, we were thrilled.", lit:"말할 것도 없이 우리는 신났다.", free:"말할 것도 없이 우리는 완전 신났죠."}
       ]},
@@ -4761,6 +4911,16 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
         {en:"In a manner of speaking, yes.", lit:"어떤 의미에서는 그렇다.", free:"어떤 의미론 그래요."},
         {en:"More often than not, it works.", lit:"대개는 그것이 잘 된다.", free:"대개는 잘 돼요."},
         {en:"At the risk of repeating myself, be careful.", lit:"반복하는 것 같지만 조심해라.", free:"다시 말하는 것 같지만 조심하세요."}
+      ]},
+      { pattern:"관용 표현 3 (rings a bell / a small world)", ko:"기억날 듯 말 듯 / 세상 참 좁네요", desc:"자연스러운 영어 관용구.", bank:[
+        {en:"That name rings a bell.", lit:"그 이름이 어디서 들어본 듯하다.", free:"그 이름 어디서 들어본 것 같아요."},
+        {en:"It's on the tip of my tongue.", lit:"입에서 맴도는데 생각이 안 난다.", free:"입에서 맴도는데 생각이 안 나요."},
+        {en:"You name it, they have it.", lit:"뭐든 다 있다.", free:"뭐든 다 있어요."},
+        {en:"Don't quote me on this.", lit:"확실친 않으니 흘려들어라.", free:"확실친 않으니 흘려들으세요."},
+        {en:"I could eat a horse.", lit:"나는 너무 배고프다.", free:"너무 배고파요."},
+        {en:"It's a small world.", lit:"세상 참 좁다.", free:"세상 참 좁네요."},
+        {en:"That's the last straw.", lit:"더는 못 참겠다.", free:"이제 더는 못 참겠어요."},
+        {en:"Let's call it a day.", lit:"오늘은 이만 하자.", free:"오늘은 이만 하죠."}
       ]}
     ]};
   window.CEFR_LEVELS = C;
