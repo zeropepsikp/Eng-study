@@ -5821,6 +5821,9 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     if(!Object.keys(show).length){
       for(var z=words.length-1;z>=0;z--){ if(!alwaysBlank(words[z].w)){ show[words[z].i]=true; break; } }
     }
+    // 빈칸이 된 단어들(말하기 채점용) — 보여주는 단어는 제외, 순서 유지
+    var blankWords=[];
+    for(var bw=0;bw<words.length;bw++){ if(!show[words[bw].i]) blankWords.push(words[bw].w); }
     var units=[], target='';
     for(var t=0;t<tokens.length;t++){
       var tk=tokens[t], isWord=/[A-Za-z]/.test(tk), shown = isWord && show[t];
@@ -5831,7 +5834,28 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
         else units.push({t:'ch',ch:ch});
       }
     }
-    return { units:units, target:target };
+    return { units:units, target:target, blankWords:blankWords };
+  }
+  // 말하기(STT) 채점: 빈칸 정답 단어들만 순서대로 나오면 통과.
+  // 보여주는 단어나 앞뒤 군더더기는 무시 (예: 정답 "she wears", 화면 "glasses" → "she wears"만 맞으면 OK)
+  function cefrSttWords(str){
+    var s=(str||'').toLowerCase();
+    CONTRACTIONS.forEach(function(c){ s=s.replace(c[0],c[1]); });
+    s=s.replace(/[^a-z\s]/g,' ');
+    return s.split(/\s+/).filter(Boolean);
+  }
+  function spokenHasAnswer(txt, blankWords){
+    if(!blankWords || !blankWords.length) return false;
+    var said=cefrSttWords(txt), need=cefrSttWords(blankWords.join(' '));
+    if(!need.length) return false;
+    var j=0;
+    for(var i=0;i<said.length && j<need.length;i++){
+      var a=said[i], b=need[j];
+      // 짧은 단어(he/she/we 등)는 정확히, 긴 단어만 오인식 허용
+      var allow = b.length<=4 ? 0 : (b.length<=7 ? 1 : 2);
+      if(a===b || editDistance(a,b) <= allow) j++;
+    }
+    return j>=need.length;
   }
   // host(채점줄)에 빈칸 UI를 그린다. onDone(grade) 호출 시 상위가 기록·다음으로.
   function renderCefrFill(host, en, onDone){
@@ -5922,7 +5946,8 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       micRec=new SR(); micRec.lang='en-US'; micRec.interimResults=false; micRec.continuous=false;
       micRec.onstart=function(){ mic.innerHTML='⏺ 멈추기'; hintEl.textContent='지금 문장을 말하세요'; };
       micRec.onresult=function(e){ var txt=''; for(var i=0;i<e.results.length;i++) txt+=e.results[i][0].transcript;
-        if(isAnswerCorrect(txt, en)){ input.value=fb.target; paint(); }
+        // 빈칸 정답 단어만 맞으면 통과 (보여주는 단어·앞뒤 군더더기 무시)
+        if(spokenHasAnswer(txt, fb.blankWords)){ input.value=fb.target; paint(); }
         else { hintEl.textContent='“'+txt+'” — 다시 시도'; } };
       micRec.onerror=function(ev){ hintEl.textContent=(ev.error==='not-allowed')?'마이크 권한을 허용해 주세요.':'인식 실패, 다시 시도'; };
       micRec.onend=function(){ mic.innerHTML='🎤 말하기'; micRec=null; };
