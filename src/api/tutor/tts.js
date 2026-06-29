@@ -28,22 +28,39 @@ export async function onRequestPost(context) {
     if (!text) return new Response("missing text", { status: 400 });
     if (text.length > MAX_LEN) text = text.slice(0, MAX_LEN);
 
-    // 엣지 캐시 (text 기준) — 같은 문장 재사용으로 호출 절약
+    // 남성 요청이면 Deepgram Aura(남성), 아니면 MeloTTS. voice 값으로 판별.
+    const voice = (data && typeof data.voice === "string") ? data.voice : "";
+    const wantMale = /male|man|guy|aura|orion|brian|matthew/i.test(voice);
+
+    // 엣지 캐시 (text + 남/녀 기준)
     let cache = null, cacheKey = null;
     try {
       cache = caches.default;
-      cacheKey = new Request("https://cf-tts.local/" + encodeURIComponent(text), { method: "GET" });
+      cacheKey = new Request("https://cf-tts.local/" + (wantMale ? "m/" : "f/") + encodeURIComponent(text), { method: "GET" });
       const hit = await cache.match(cacheKey);
       if (hit) return hit;
     } catch (e) { cache = null; }
 
-    let out;
-    try {
-      out = await env.AI.run(MODEL, { prompt: text, lang: "en" });
-    } catch (e) {
-      const msg = String(e && e.message || e);
-      const quota = /quota|limit|exceed|429|capacity/i.test(msg);
-      return jsonErr("workers ai tts failed", quota ? 429 : 502, msg.slice(0, 200));
+    let out = null;
+    if (wantMale) {
+      // Deepgram Aura — 남성 화자(Orion). 모델 미지원/오류면 MeloTTS로 폴백.
+      try { out = await env.AI.run("@cf/deepgram/aura-1", { text: text, speaker: "orion" }); }
+      catch (e) { out = null; }
+    }
+    if (!out) {
+      try {
+        out = await env.AI.run(MODEL, { prompt: text, lang: "en" });
+      } catch (e) {
+        const msg = String(e && e.message || e);
+        const quota = /quota|limit|exceed|429|capacity/i.test(msg);
+        return jsonErr("workers ai tts failed", quota ? 429 : 502, msg.slice(0, 200));
+      }
+    }
+    // 스트림(ReadableStream)으로 오는 경우 그대로 전달
+    if (out && typeof out.getReader === "function") {
+      const resp0 = new Response(out, { headers: { "Content-Type": "audio/mpeg", "Cache-Control": "public, max-age=86400" } });
+      if (cache && cacheKey && context.waitUntil) { try { context.waitUntil(cache.put(cacheKey, resp0.clone())); } catch (e) {} }
+      return resp0;
     }
 
     // MeloTTS 응답: { audio: "<base64 mp3>" }
