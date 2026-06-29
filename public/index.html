@@ -5346,35 +5346,35 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     cloudSpeak(sample, voice, function(){ webSpeak(sample,'en'); });
   }
   // 폰 기본 음성(Web Speech) — 항상 사용 가능한 폴백
-  // 타자 효과음 — 부드러운 키보드 '톡'(필터링된 짧은 노이즈 버스트). 자산 불필요.
-  var _tickCtx=null;
+  // 타자 효과음 — 맑은 '똑/딱'(노이즈 거의 없는 피치 클릭, 두 음정 번갈아). 자산 불필요.
+  var _tickCtx=null, _tickAlt=0;
   function playTick(){
     try{
       var AC=window.AudioContext||window.webkitAudioContext; if(!AC) return;
       if(!_tickCtx) _tickCtx=new AC();
       if(_tickCtx.state==='suspended'){ try{ _tickCtx.resume(); }catch(e){} }
       var ctx=_tickCtx, t=ctx.currentTime;
-      // 기계식/플라스틱 키보드 '클락' = 밝은 클릭 노이즈(메인) + 짧은 플라스틱 바디 공명(살짝)
-      // 1) 클릭(메인): 밝은 광대역 노이즈, 매우 빠른 감쇠
-      var dur=0.028, n=Math.max(1, Math.floor(ctx.sampleRate*dur));
+      _tickAlt ^= 1;
+      var f0 = _tickAlt ? 1760 : 1320;   // 똑 / 딱 — 누를 때마다 번갈아
+      // 1) 맑은 피치 클릭(메인): 사인, 아주 빠른 감쇠
+      var o=ctx.createOscillator(), og=ctx.createGain();
+      o.type='sine'; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f0*0.7, t+0.02);
+      og.gain.setValueAtTime(0.0001, t);
+      og.gain.exponentialRampToValueAtTime(0.34, t+0.002);
+      og.gain.exponentialRampToValueAtTime(0.0001, t+0.04);
+      o.connect(og); og.connect(ctx.destination); o.start(t); o.stop(t+0.05);
+      // 2) 또렷함을 위한 아주 짧은 고역 클릭(소량)
+      var dur=0.006, n=Math.max(1, Math.floor(ctx.sampleRate*dur));
       var buf=ctx.createBuffer(1, n, ctx.sampleRate);
       var data=buf.getChannelData(0);
-      for(var i=0;i<n;i++){ data[i]=(Math.random()*2-1)*Math.pow(1-i/n, 3); }
+      for(var i=0;i<n;i++){ data[i]=(Math.random()*2-1)*Math.pow(1-i/n, 5); }
       var src=ctx.createBufferSource(); src.buffer=buf;
-      var hp=ctx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=1200;
-      var bp=ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=2800; bp.Q.value=0.8;
+      var hp=ctx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=2500;
       var g=ctx.createGain();
-      g.gain.setValueAtTime(0.3, t);
+      g.gain.setValueAtTime(0.1, t);
       g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
-      src.connect(hp); hp.connect(bp); bp.connect(g); g.connect(ctx.destination);
+      src.connect(hp); hp.connect(g); g.connect(ctx.destination);
       src.start(t); src.stop(t+dur+0.01);
-      // 2) 플라스틱 바디 공명(살짝): 중역 사인, 짧은 감쇠 — 저음 울림은 최소화
-      var o=ctx.createOscillator(), og=ctx.createGain();
-      o.type='triangle'; o.frequency.setValueAtTime(440, t); o.frequency.exponentialRampToValueAtTime(330, t+0.04);
-      og.gain.setValueAtTime(0.0001, t);
-      og.gain.exponentialRampToValueAtTime(0.16, t+0.003);
-      og.gain.exponentialRampToValueAtTime(0.0001, t+0.05);
-      o.connect(og); og.connect(ctx.destination); o.start(t); o.stop(t+0.06);
     }catch(e){}
   }
   function webSpeak(text, lang){
