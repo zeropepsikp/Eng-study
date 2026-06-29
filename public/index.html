@@ -888,6 +888,7 @@
         <div class="tutor-status" id="tutor-status"><span class="ts-dot"></span><span id="tutor-status-text">확인 중…</span></div>
       </div>
       <div class="tutor-actions">
+        <button class="tutor-btn" id="tutor-free" title="자유 대화 (상황 없이 그냥 수다)">💬 자유</button>
         <button class="tutor-btn" id="tutor-cc" title="튜터 영어 자막">CC</button>
         <button class="tutor-btn" id="tutor-reset" title="상황 초기화">↻</button>
         <button class="tutor-btn" id="tutor-save" title="대화 저장">💾</button>
@@ -6245,6 +6246,17 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     var DEFAULT_PERSONA='You are Mia, a warm, upbeat English conversation tutor. Keep replies short and natural, react like a friend, then ask a follow-up. The learner is Korean. If their English has a mistake, set correction.has_issues=true with a natural fixed version and a one-line Korean reason; otherwise has_issues=false. reply_en is English only; reply_ko is its Korean translation. Output ONLY the JSON object {correction:{has_issues,fixed,why_ko}, reply_en, reply_ko, hint_ko}.';
     var DEFAULT_SCEN={ id:'daily', title:'친구와 일상 수다', opening:"Hey! It's been a minute — how have you been lately?", difficulty:2,
       body:'Setting: two friends catching up casually. Your role: Mia, a friendly friend. Keep it warm and easy.' };
+    // 자유 대화: 상황 설정 없이 그냥 자연스러운 수다
+    var FREE_SCEN={ id:'free', title:'자유 대화', difficulty:2,
+      body:'Setting: completely free, open-ended casual conversation with NO fixed topic and NO roleplay. Your role: Mia, a warm, curious friend. Just chat naturally about anything — react to whatever the learner says and keep it flowing with easy, friendly follow-up questions. Let the learner lead the topic; never force a scenario.' };
+    var FREE_OPENERS=[
+      "Hey! So... what's on your mind today?",
+      "Oh, hi! What have you been up to lately?",
+      "Hey you! How's your day going so far?",
+      "Hi! Anything fun happen recently?",
+      "Hey! What do you feel like talking about?",
+      "Oh hey! Tell me something good that happened today."
+    ];
 
     function ensureDocs(){
       if(personaText!==null && scenList!==null) return Promise.resolve();
@@ -6383,7 +6395,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     // ---- 렌더링 ----
     function body(){ return $('tutor-body'); }
     function setActionsEnabled(on){
-      ['tutor-cc','tutor-reset','tutor-save'].forEach(function(id){ var b=$(id); if(b) b.style.visibility = on?'visible':'hidden'; });
+      ['tutor-free','tutor-cc','tutor-reset','tutor-save'].forEach(function(id){ var b=$(id); if(b) b.style.visibility = on?'visible':'hidden'; });
     }
 
     function renderSetup(){
@@ -6502,6 +6514,13 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     }
 
     function startNew(){ pickScenario().then(function(sc){ beginScenario(sc); }); }
+    function startFree(){
+      scenCache['free']=FREE_SCEN;
+      var op=FREE_OPENERS[Math.floor(Math.random()*FREE_OPENERS.length)];
+      sess={ scenId:'free', title:'자유 대화', turns:[] };
+      sess.turns.push({ role:'tutor', en:op, ko:'', hint:'' });
+      saveSess(); renderConversation(); speak(op);
+    }
     function beginScenario(sc){
       sess={ scenId:sc.id, title:sc.title||'대화', turns:[] };
       var op=sc.opening||'Hi! Ready to practice some English?';
@@ -6594,7 +6613,11 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     // ---- 상단 버튼 ----
     function wireActions(){
       if(wired) return; wired=true;
-      var cc=$('tutor-cc'), rs=$('tutor-reset'), sv=$('tutor-save');
+      var cc=$('tutor-cc'), rs=$('tutor-reset'), sv=$('tutor-save'), fr=$('tutor-free');
+      if(fr) fr.addEventListener('click', function(){
+        if(sess && sess.turns && sess.turns.length>1 && !confirm('상황 없이 자유 대화를 시작할까요? 현재 대화는 사라져요.')) return;
+        startFree();
+      });
       if(cc) cc.addEventListener('click', function(){ ccOn=!ccOn; cc.classList.toggle('on',ccOn); if(logEl) logEl.classList.toggle('cc',ccOn); });
       if(rs) rs.addEventListener('click', function(){ if(confirm('새로운 상황으로 대화를 다시 시작할까요? 현재 대화는 사라져요.')) startNew(); });
       if(sv) sv.addEventListener('click', function(){ saveToHistory(sv); });
