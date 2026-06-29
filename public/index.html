@@ -5340,6 +5340,23 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     cloudSpeak(sample, voice, function(){ webSpeak(sample,'en'); });
   }
   // 폰 기본 음성(Web Speech) — 항상 사용 가능한 폴백
+  // 타자 효과음 (말하보카 스타일 띡) — Web Audio로 합성, 자산 불필요
+  var _tickCtx=null;
+  function playTick(){
+    try{
+      var AC=window.AudioContext||window.webkitAudioContext; if(!AC) return;
+      if(!_tickCtx) _tickCtx=new AC();
+      if(_tickCtx.state==='suspended'){ try{ _tickCtx.resume(); }catch(e){} }
+      var t=_tickCtx.currentTime;
+      var o=_tickCtx.createOscillator(), g=_tickCtx.createGain();
+      o.type='square'; o.frequency.setValueAtTime(1750, t);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.08, t+0.005);
+      g.gain.exponentialRampToValueAtTime(0.0001, t+0.06);
+      o.connect(g); g.connect(_tickCtx.destination);
+      o.start(t); o.stop(t+0.07);
+    }catch(e){}
+  }
   function webSpeak(text, lang){
     if(!('speechSynthesis' in window)) return;
     try{
@@ -5347,13 +5364,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       var u = new SpeechSynthesisUtterance(text);
       u.lang = lang==='ko' ? 'ko-KR' : 'en-US';
       u.rate = lang==='ko' ? 1.0 : 0.95;
-      // 기본은 음성 미지정 → 폰에서 고른 기본 음성(성별 포함)을 그대로 사용.
-      // 예외: 폰 기본 음성이 영어가 아니어서 영어를 어색하게 읽는 기기에서만 영어 음성으로 보정.
-      if(lang!=='ko'){
-        var dv = (window.speechSynthesis.getVoices()||[]).filter(function(x){return x.default;})[0];
-        var defIsEn = dv && /^en/i.test(dv.lang||'');
-        if(!defIsEn){ var v = pickVoice(lang); if(v) u.voice = v; }
-      }
+      // 음성을 지정하지 않는다 → 폰에서 고른 기본 음성(성별 포함)을 그대로 사용.
       window.speechSynthesis.speak(u);
     }catch(e){}
   }
@@ -5818,21 +5829,23 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     "sometimes never often rarely really very too just also still early late fast hard well here there away back "+
     "around almost maybe perhaps actually honestly probably definitely recently already yet ever once twice").split(/\s+/).forEach(function(x){s[x]=1;}); return s; })();
   function alwaysBlank(w){ w=w.toLowerCase(); return !!(CEFR_FUNC[w] || CEFR_ADV[w]); }
-  function buildFill(en){
+  function buildFill(en, blankAll){
     var tokens = en.match(/[A-Za-z']+|[^A-Za-z']+/g) || [];
     var words=[]; for(var i=0;i<tokens.length;i++){ if(/[A-Za-z]/.test(tokens[i])) words.push({i:i, w:tokens[i]}); }
     var show = {};
-    // 관사/소유격 뒤의 내용어 묶음(명사구)을 보여줌
-    for(var k=0;k<words.length;k++){
-      if(CEFR_ART[words[k].w.toLowerCase()]){
-        var phrase=[], m=k+1;
-        while(m<words.length && !alwaysBlank(words[m].w) && phrase.length<3){ phrase.push(words[m].i); m++; }
-        if(phrase.length){ show[words[k].i]=true; phrase.forEach(function(ti){ show[ti]=true; }); k=m-1; }
+    if(!blankAll){
+      // 관사/소유격 뒤의 내용어 묶음(명사구)을 보여줌
+      for(var k=0;k<words.length;k++){
+        if(CEFR_ART[words[k].w.toLowerCase()]){
+          var phrase=[], m=k+1;
+          while(m<words.length && !alwaysBlank(words[m].w) && phrase.length<3){ phrase.push(words[m].i); m++; }
+          if(phrase.length){ show[words[k].i]=true; phrase.forEach(function(ti){ show[ti]=true; }); k=m-1; }
+        }
       }
-    }
-    // 아무것도 못 찾으면 마지막 내용어 하나라도 보여줌(앵커)
-    if(!Object.keys(show).length){
-      for(var z=words.length-1;z>=0;z--){ if(!alwaysBlank(words[z].w)){ show[words[z].i]=true; break; } }
+      // 아무것도 못 찾으면 마지막 내용어 하나라도 보여줌(앵커)
+      if(!Object.keys(show).length){
+        for(var z=words.length-1;z>=0;z--){ if(!alwaysBlank(words[z].w)){ show[words[z].i]=true; break; } }
+      }
     }
     // 빈칸이 된 단어들(말하기 채점용) — 보여주는 단어는 제외, 순서 유지
     var blankWords=[];
@@ -5871,9 +5884,10 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     return j>=need.length;
   }
   // host(채점줄)에 빈칸 UI를 그린다. onDone(grade) 호출 시 상위가 기록·다음으로.
-  function renderCefrFill(host, en, onDone){
+  function renderCefrFill(host, en, onDone, opts){
+    opts = opts||{};
     host.innerHTML='';
-    var fb = buildFill(en);
+    var fb = buildFill(en, opts.blankAll);
     var card=document.createElement('div'); card.className='fill-wrap';
     var area=document.createElement('div'); area.className='fill-area';
     var slots=document.createElement('div'); slots.className='fill-slots';
@@ -5898,9 +5912,10 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     var hintEl=document.createElement('div'); hintEl.className='fill-hint-line'; card.appendChild(hintEl);
     var btnRow=document.createElement('div'); btnRow.className='fill-btns';
     var mic=document.createElement('button'); mic.className='fill-mic'; mic.innerHTML='🎤 말하기';
-    var hintBtn=document.createElement('button'); hintBtn.className='fill-hintbtn'; hintBtn.textContent='💡 힌트';
+    var hintBtn = opts.noHint ? null : document.createElement('button');
+    if(hintBtn){ hintBtn.className='fill-hintbtn'; hintBtn.textContent='💡 힌트'; }
     var ansBtn=document.createElement('button'); ansBtn.className='fill-ansbtn'; ansBtn.textContent='정답';
-    btnRow.appendChild(mic); btnRow.appendChild(hintBtn); btnRow.appendChild(ansBtn);
+    btnRow.appendChild(mic); if(hintBtn) btnRow.appendChild(hintBtn); btnRow.appendChild(ansBtn);
     card.appendChild(btnRow);
     host.appendChild(card);
 
@@ -5909,7 +5924,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     function focusInput(){ try{ input.focus({preventScroll:true}); }catch(e){ try{input.focus();}catch(_){} } }
     function finish(){
       if(done) return; done=true;
-      mic.disabled=true; hintBtn.disabled=true; ansBtn.disabled=true;
+      mic.disabled=true; if(hintBtn) hintBtn.disabled=true; ansBtn.disabled=true;
       var correct = !usedHelp;
       slots.classList.remove('shake'); slots.classList.add(correct?'ok':'used');
       boxes.forEach(function(b){ b.classList.remove('active'); });
@@ -5931,7 +5946,8 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
         else { slots.classList.remove('shake'); void slots.offsetWidth; slots.classList.add('shake'); }
       }
     }
-    input.addEventListener('input', paint);
+    var prevLen=0;
+    input.addEventListener('input', function(){ var L=letters().length; if(L>prevLen) playTick(); prevLen=L; paint(); });
     input.addEventListener('keydown', function(e){ if(e.key==='Enter') e.preventDefault(); });
     // 영역/칸 탭 → 입력 위치 지정 + 키보드 호출
     area.addEventListener('click', function(){ if(!done) focusInput(); });
@@ -5941,7 +5957,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
         input.value = letters().slice(0, idx); paint(); focusInput();
       });
     });
-    hintBtn.addEventListener('click', function(){
+    if(hintBtn) hintBtn.addEventListener('click', function(){
       if(done) return; usedHelp=true;
       var n=Math.min(fb.target.length, letters().length+1);
       input.value=fb.target.slice(0,n); paint(); focusInput();
@@ -6339,9 +6355,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       var spoken=false;
       function go(){ if(spoken) return; spoken=true;
         try{ var u=new SpeechSynthesisUtterance(text); u.lang='en-US';
-          // 폰 기본 음성을 그대로 사용 (성별 포함). 폰 기본이 영어가 아닐 때만 영어 음성으로 보정.
-          var dv=(window.speechSynthesis.getVoices()||[]).filter(function(x){return x.default;})[0];
-          if(!(dv && /^en/i.test(dv.lang||''))){ var v=pickVoice('en'); if(v) u.voice=v; }
+          // 음성 미지정 → 폰에서 고른 기본 음성(성별 포함) 그대로 사용.
           window.speechSynthesis.cancel(); window.speechSynthesis.speak(u); }catch(e){} }
       try{
         var vs=window.speechSynthesis.getVoices()||[];
@@ -7412,80 +7426,14 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     var skLab=document.createElement('span'); skLab.textContent='streak'; sk.appendChild(skLab);
     for(var s=0;s<CHUNK_STREAK_GOAL;s++){ var dot=document.createElement('span'); dot.className='dot'+(s<streak?' on':''); if(s<streak) dot.style.background=col.fg; sk.appendChild(dot); }
     card.appendChild(tag); card.appendChild(sk);
-    var body=document.createElement('div'); body.style.width='100%'; card.appendChild(body);
-
-    function paint(){
-      body.innerHTML='';
-      if(!item.flipped){
-        var lab=document.createElement('div'); lab.className='chunk-side'; lab.style.color=col.fg; lab.textContent='Korean';
-        var ko=document.createElement('div'); ko.className='chunk-ko'; ko.textContent=ch.ko;
-        body.appendChild(lab); body.appendChild(ko);
-        var fh=document.createElement('div'); fh.className='chunk-fliphint';
-        fh.textContent = item.graded ? 'Tap to see the chunk again' : 'Tap to see the chunk';
-        body.appendChild(fh);
-      } else {
-        var lab2=document.createElement('div'); lab2.className='chunk-side'; lab2.style.color=col.fg; lab2.textContent='English chunk';
-        var enRow=document.createElement('div'); enRow.style.display='flex'; enRow.style.alignItems='center'; enRow.style.justifyContent='center'; enRow.style.gap='8px'; enRow.style.marginBottom='2px';
-        var en=document.createElement('div'); en.className='chunk-en'; en.innerHTML=chunkBlankHtml(ch.en, cat);
-        enRow.appendChild(en); enRow.appendChild(spkBtn(ch.en,'mini'));
-        var cHint=chunkHintBtn(ch.en, cat); if(cHint) enRow.appendChild(cHint);
-        body.appendChild(lab2); body.appendChild(enRow);
-        var pool=chunkExPool(ch);
-        if(pool && pool.length){
-          if(!item.exPick || !item.exPick.length){ item.exPick=pickTwoEx(pool.length, null); }
-          var exBlock=document.createElement('div'); exBlock.className='ex-block'; exBlock.style.display='block'; exBlock.style.marginTop='12px';
-          var exHead=document.createElement('div'); exHead.className='ex-head';
-          var exLab=document.createElement('span'); exLab.className='lab'; exLab.textContent='Examples';
-          var exRf=document.createElement('button'); exRf.className='refresh-ex'; exRf.innerHTML='↻ 다른 예시';
-          exRf.addEventListener('click',function(ev){ ev.stopPropagation(); item.exPick=pickTwoEx(pool.length, item.exPick); paintEx(); });
-          exHead.appendChild(exLab); exHead.appendChild(exRf); exBlock.appendChild(exHead);
-          var exList=document.createElement('div'); exList.className='ex-list'; exBlock.appendChild(exList);
-          function paintEx(){
-            exList.innerHTML='';
-            item.exPick.forEach(function(idx){
-              var e=pool[idx]; if(!e) return;
-              var row=document.createElement('div'); row.className='ex-item';
-              var txt=document.createElement('div'); txt.style.flex='1';
-              var enL=document.createElement('div'); enL.className='ex-en'; enL.textContent=e.en;
-              var koL=document.createElement('div'); koL.className='ex-ko'; koL.textContent=e.ko;
-              txt.appendChild(enL); txt.appendChild(koL);
-              row.appendChild(txt); row.appendChild(spkBtn(e.en,'small'));
-              exList.appendChild(row);
-            });
-          }
-          paintEx(); body.appendChild(exBlock);
-        }
-        var fh2=document.createElement('div'); fh2.className='chunk-fliphint'; fh2.textContent='Tap for Korean';
-        body.appendChild(fh2);
-      }
-    }
-    paint();
-    card.addEventListener('click',function(ev){ if(ev.target.closest('button')) return; if(!item.graded) return; item.flipped=!item.flipped; paint(); if(item.flipped) speak(ch.en,'en'); });
+    var body=document.createElement('div'); body.style.width='100%';
+    var clab=document.createElement('div'); clab.className='chunk-side'; clab.style.color=col.fg; clab.textContent='Korean';
+    var cko=document.createElement('div'); cko.className='chunk-ko'; cko.textContent=ch.ko;
+    body.appendChild(clab); body.appendChild(cko);
+    card.appendChild(body);
     wrap.appendChild(card);
 
-    var gr=document.createElement('div'); gr.className='grade-row'; gr.style.marginTop='14px';
-    if(speakMode){
-      renderSpeakRow(gr, ch.en, function(grade, val){
-        if(item.graded!=null) return;
-        applyTodayChunkGrade(item, ch, grade);
-        item.input=val||''; item.result=grade; item.flipped=true;
-        renderTodayChunk(); speak(ch.en,'en');
-      }, item.graded!=null, item.result, item.input);
-    } else {
-      [['ok','✓ Instantly','grade-ok'],['meh','△ Slowly','grade-meh'],['no','✕ No idea','grade-no']].forEach(function(g){
-        var b=document.createElement('button');
-        b.className='grade-btn '+g[2]+(item.result===g[0]?' picked':'');
-        if(item.graded!=null && item.result!==g[0]) b.classList.add('dim');
-        b.textContent=g[1];
-        b.addEventListener('click',function(){
-          if(item.graded!=null) return;
-          applyTodayChunkGrade(item, ch, g[0]);
-          item.result=g[0]; item.flipped=true;
-          renderTodayChunk(); speak(ch.en,'en');
-        });
-        gr.appendChild(b);
-      });
-    }
+    var gr=document.createElement('div'); gr.className='grade-row'; gr.style.marginTop='14px'; gr.style.display='block';
     wrap.appendChild(gr);
 
     var nav=document.createElement('div'); nav.className='nav';
@@ -7493,11 +7441,8 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     pv.disabled=(todayChunkDeckPos<=0);
     pv.addEventListener('click',function(){ if(todayChunkDeckPos>0){ todayChunkDeckPos--; renderTodayChunk(); } });
     var nx=document.createElement('button'); nx.className='listen';
-    var speakPending=(speakMode && item.graded==null);
-    if(speakPending){ nx.textContent='Submit'; nx.disabled=false; }
-    else { nx.textContent='Next →'; nx.disabled=(item.graded==null); }
+    nx.textContent='Next →'; nx.disabled=(item.graded==null);
     nx.addEventListener('click',function(){
-      if(speakMode && item.graded==null){ if(speakSubmitFn) speakSubmitFn(); return; }
       if(item.graded==null) return;
       if(todayChunkDeckPos >= todayChunkDeck.length-1){
         todayChunkPos++;
@@ -7508,6 +7453,13 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       renderTodayChunk();
     });
     nav.appendChild(pv); nav.appendChild(nx); wrap.appendChild(nav);
+
+    chunkFillInto(gr, ch, cat, item, function(grade){
+      if(item.graded!=null) return;
+      applyTodayChunkGrade(item, ch, grade); item.result=grade;
+      nx.disabled=false;
+      speak(ch.en,'en');
+    });
   }
 
   function renderTodayHeader(){
@@ -8126,7 +8078,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   //  · 맞히면(streak 미달) 5문제 내 재등장. 졸업하면 큐에서 빠짐.
   //  · localStorage에 카테고리별 진행(streak) 저장.
   // ============================================================
-  var CHUNK_STREAK_GOAL = 4;            // 연속 N회 즉답 → 졸업
+  var CHUNK_STREAK_GOAL = 3;            // 연속 N회 즉답 → 졸업
   var CHUNK_PROG_KEY = 'eng_chunks_progress_v1';
   var curChunkCat = 1;
   var chunkProgress = (function(){      // { catId: { idx: streak } }
@@ -9433,6 +9385,40 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     return [a,b];
   }
 
+  // 청크 예시 블록을 host 아래에 붙임 (정답 후 노출)
+  function chunkExamplesInto(host, ch, item){
+    var pool=chunkExPool(ch); if(!(pool && pool.length)) return;
+    if(!item.exPick || !item.exPick.length){ item.exPick=pickTwoEx(pool.length, null); }
+    var exBlock=document.createElement('div'); exBlock.className='ex-block'; exBlock.style.display='block'; exBlock.style.marginTop='12px';
+    var exHead=document.createElement('div'); exHead.className='ex-head';
+    var exLab=document.createElement('span'); exLab.className='lab'; exLab.textContent='Examples';
+    var exRf=document.createElement('button'); exRf.className='refresh-ex'; exRf.innerHTML='↻ 다른 예시';
+    var exList=document.createElement('div'); exList.className='ex-list';
+    function paintEx(){ exList.innerHTML=''; item.exPick.forEach(function(idx){ var e=pool[idx]; if(!e) return;
+      var row=document.createElement('div'); row.className='ex-item'; var txt=document.createElement('div'); txt.style.flex='1';
+      var enL=document.createElement('div'); enL.className='ex-en'; enL.textContent=e.en; var koL=document.createElement('div'); koL.className='ex-ko'; koL.textContent=e.ko;
+      txt.appendChild(enL); txt.appendChild(koL); row.appendChild(txt); row.appendChild(spkBtn(e.en,'small')); exList.appendChild(row); }); }
+    exRf.addEventListener('click',function(ev){ ev.stopPropagation(); item.exPick=pickTwoEx(pool.length, item.exPick); paintEx(); });
+    exHead.appendChild(exLab); exHead.appendChild(exRf); exBlock.appendChild(exHead); exBlock.appendChild(exList); paintEx();
+    host.appendChild(exBlock);
+  }
+  // 청크 빈칸 채우기(CEFR와 동일, 단 힌트 없음·전부 빈칸). graded면 정답+예시 표시.
+  function chunkFillInto(area, ch, cat, item, onGraded){
+    area.innerHTML='';
+    if(item.graded==null){
+      renderCefrFill(area, ch.en, function(grade){
+        onGraded(grade);
+        chunkExamplesInto(area, ch, item);   // 정답 직후 예시 노출
+      }, {noHint:true, blankAll:true});
+    } else {
+      var enRow=document.createElement('div'); enRow.style.display='flex'; enRow.style.alignItems='center'; enRow.style.justifyContent='center'; enRow.style.gap='8px';
+      var en=document.createElement('div'); en.className='chunk-en'; en.textContent=ch.en;
+      en.style.color = (item.result==='ok') ? 'var(--green)' : 'var(--coral)';
+      enRow.appendChild(en); enRow.appendChild(spkBtn(ch.en,'mini'));
+      area.appendChild(enRow);
+      chunkExamplesInto(area, ch, item);
+    }
+  }
   function renderChunk(){
     var wrap=$('chunk-card-wrap'); if(!wrap) return;
     var cat=curChunkCat, d=CHUNK_DATA[cat];
@@ -9478,111 +9464,39 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     card.appendChild(tag); card.appendChild(sk);
 
     var body=document.createElement('div'); body.style.width='100%';
+    var clab=document.createElement('div'); clab.className='chunk-side'; clab.style.color=col.fg; clab.textContent='Korean';
+    var cko=document.createElement('div'); cko.className='chunk-ko'; cko.textContent=ch.ko;
+    body.appendChild(clab); body.appendChild(cko);
     card.appendChild(body);
-
-    function paint(){
-      body.innerHTML='';
-      if(!item.flipped){
-        var lab=document.createElement('div'); lab.className='chunk-side'; lab.style.color=col.fg; lab.textContent='Korean';
-        var ko=document.createElement('div'); ko.className='chunk-ko'; ko.textContent=ch.ko;
-        body.appendChild(lab); body.appendChild(ko);
-        var fh=document.createElement('div'); fh.className='chunk-fliphint';
-        fh.textContent = item.graded ? 'Tap to see the chunk again' : 'Tap to see the chunk';
-        body.appendChild(fh);
-      } else {
-        var lab2=document.createElement('div'); lab2.className='chunk-side'; lab2.style.color=col.fg; lab2.textContent='English chunk';
-        var enRow=document.createElement('div'); enRow.style.display='flex'; enRow.style.alignItems='center'; enRow.style.justifyContent='center'; enRow.style.gap='8px'; enRow.style.marginBottom='2px';
-        var en=document.createElement('div'); en.className='chunk-en'; en.innerHTML=chunkBlankHtml(ch.en, cat);
-        enRow.appendChild(en); enRow.appendChild(spkBtn(ch.en,'mini'));
-        var cHint=chunkHintBtn(ch.en, cat); if(cHint) enRow.appendChild(cHint);
-        body.appendChild(lab2); body.appendChild(enRow);
-        // 예시: 표현당 최대 10개 풀에서 항상 2개를 무작위 노출 + '다른 예시' 버튼 (오늘의 학습 정답카드와 통일)
-        var pool=chunkExPool(ch);
-        if(pool && pool.length){
-          if(!item.exPick || !item.exPick.length){ item.exPick=pickTwoEx(pool.length, null); }
-          var exBlock=document.createElement('div'); exBlock.className='ex-block'; exBlock.style.display='block'; exBlock.style.marginTop='12px';
-          var exHead=document.createElement('div'); exHead.className='ex-head';
-          var exLab=document.createElement('span'); exLab.className='lab'; exLab.textContent='Examples';
-          var exRf=document.createElement('button'); exRf.className='refresh-ex'; exRf.innerHTML='↻ 다른 예시';
-          exRf.addEventListener('click',function(ev){ ev.stopPropagation(); item.exPick=pickTwoEx(pool.length, item.exPick); paintChunkEx(); });
-          exHead.appendChild(exLab); exHead.appendChild(exRf);
-          exBlock.appendChild(exHead);
-          var exList=document.createElement('div'); exList.className='ex-list';
-          exBlock.appendChild(exList);
-          function paintChunkEx(){
-            exList.innerHTML='';
-            item.exPick.forEach(function(idx){
-              var e=pool[idx]; if(!e) return;
-              var row=document.createElement('div'); row.className='ex-item';
-              var txt=document.createElement('div'); txt.style.flex='1';
-              var enL=document.createElement('div'); enL.className='ex-en'; enL.textContent=e.en;
-              var koL=document.createElement('div'); koL.className='ex-ko'; koL.textContent=e.ko;
-              txt.appendChild(enL); txt.appendChild(koL);
-              row.appendChild(txt); row.appendChild(spkBtn(e.en,'small'));
-              exList.appendChild(row);
-            });
-          }
-          paintChunkEx();
-          body.appendChild(exBlock);
-        }
-        var fh2=document.createElement('div'); fh2.className='chunk-fliphint'; fh2.textContent='Tap for Korean';
-        body.appendChild(fh2);
-      }
-    }
-    paint();
-    card.addEventListener('click',function(ev){ if(ev.target.closest('button')) return; if(!item.graded) return; item.flipped=!item.flipped; paint(); if(item.flipped) speak(ch.en,'en'); });
     wrap.appendChild(card);
 
-    // 채점 행
-    var gr=document.createElement('div'); gr.className='grade-row'; gr.style.marginTop='14px';
-    if(speakMode){
-      renderSpeakRow(gr, ch.en, function(grade, val){
-        if(item.graded) return;
-        applyChunkGrade(item, ch, grade);
-        item.input=val||''; item.result=grade; item.flipped=true;
-        renderChunk(); speak(ch.en,'en');
-      }, item.graded!=null, item.result, item.input);
-    } else {
-      [['ok','✓ Instantly','grade-ok'],['meh','△ Slowly','grade-meh'],['no','✕ No idea','grade-no']].forEach(function(g){
-        var b=document.createElement('button');
-        b.className='grade-btn '+g[2]+(item.result===g[0]?' picked':'');
-        if(item.graded!=null && item.result!==g[0]) b.classList.add('dim');
-        b.textContent=g[1];
-        b.addEventListener('click',function(){
-          if(item.graded!=null) return;
-          applyChunkGrade(item, ch, g[0]);
-          item.result=g[0]; item.flipped=true;
-          renderChunk(); speak(ch.en,'en');
-        });
-        gr.appendChild(b);
-      });
-    }
+    var gr=document.createElement('div'); gr.className='grade-row'; gr.style.marginTop='14px'; gr.style.display='block';
     wrap.appendChild(gr);
 
-    // 이전/다음(섭밋) — 오늘의 학습과 동일한 구조
     var nav=document.createElement('div'); nav.className='nav';
     var pv=document.createElement('button'); pv.textContent='← Prev';
     pv.disabled = (chunkDeckPos<=0);
     pv.addEventListener('click',function(){ if(chunkDeckPos>0){ chunkDeckPos--; renderChunk(); } });
     var nx=document.createElement('button'); nx.className='listen';
-    var speakPending = (speakMode && item.graded==null);
-    if(speakPending){ nx.textContent='Submit'; nx.disabled=false; }
-    else { nx.textContent='Next →'; nx.disabled = (item.graded==null); }
+    nx.textContent='Next →'; nx.disabled = (item.graded==null);
     nx.addEventListener('click',function(){
-      if(speakMode && item.graded==null){ if(speakSubmitFn) speakSubmitFn(); return; }
       if(item.graded==null){ return; }
-      // 히스토리 끝이면 새 카드를 뽑아 덱에 추가, 아니면 다음 카드로
       if(chunkDeckPos >= chunkDeck.length-1){
         chunkPos++;
         var nextItem = pullNextChunk();
         if(nextItem){ chunkDeck.push(nextItem); chunkDeckPos++; }
-        else { chunkDeckPos = chunkDeck.length; }  // 끝 → All mastered 화면
-      } else {
-        chunkDeckPos++;
-      }
+        else { chunkDeckPos = chunkDeck.length; }
+      } else { chunkDeckPos++; }
       renderChunk();
     });
     nav.appendChild(pv); nav.appendChild(nx); wrap.appendChild(nav);
+
+    chunkFillInto(gr, ch, cat, item, function(grade){
+      if(item.graded!=null) return;
+      applyChunkGrade(item, ch, grade); item.result=grade;
+      nx.disabled=false;
+      speak(ch.en,'en');
+    });
   }
 
   function applyChunkGrade(item, ch, grade){
