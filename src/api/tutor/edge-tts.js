@@ -59,8 +59,18 @@ export async function onRequestPost(context) {
     const gec = await secMsGec();
     // Workers의 outbound WebSocket 은 https:// 스킴 + Upgrade 헤더로 연결한다.
     const url = WSS.replace("wss://", "https://") + "?TrustedClientToken=" + TOKEN + "&Sec-MS-GEC=" + gec + "&Sec-MS-GEC-Version=" + GEC_VERSION;
+    // Microsoft가 요구하는 헤더(Origin=Edge 읽어주기 확장 ID, User-Agent 등). 없으면 403.
+    const WS_HEADERS = {
+      "Upgrade": "websocket",
+      "Origin": "chrome-extension://jdiccldimpdaibmpdkjnbmckianbfold",
+      "Pragma": "no-cache",
+      "Cache-Control": "no-cache",
+      "Accept-Encoding": "gzip, deflate, br",
+      "Accept-Language": "en-US,en;q=0.9",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 Edg/130.0.0.0"
+    };
     let upstream;
-    try { upstream = await fetch(url, { headers: { "Upgrade": "websocket" } }); }
+    try { upstream = await fetch(url, { headers: WS_HEADERS }); }
     catch (e) { return jsonErr("edge connect failed", 502, String(e && e.message || e)); }
     const ws = upstream.webSocket;
     if (!ws) return jsonErr("edge ws upgrade failed", 502, "status " + upstream.status);
