@@ -5289,7 +5289,16 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     {id:'edge:en-GB-RyanNeural',        label:'Ryan · 영국 남성',         grp:'edge'},
     {id:'cf',                           label:'Cloudflare 음성',          grp:'cf'}
   ];
-  var TTS_DEFAULT_VOICE = 'edge:en-US-AriaNeural';
+  var TTS_DEFAULT_VOICE = TTS_FREE;   // 기본: 폰 내장 음성(폰 설정 따라감)
+  // 한 번만: 기존에 저장된 서버 음성 선택을 폰 음성으로 초기화 (서버 음성이 폰 설정을 못 따라가서)
+  (function migratePhoneVoice(){
+    try{
+      if(localStorage.getItem('eng_voice_phone_v1')) return;
+      localStorage.setItem('eng_voice_phone_v1','1');
+      var pv=localStorage.getItem('ttsVoice'); if(pv && pv!==TTS_FREE) localStorage.setItem('ttsVoice', TTS_FREE);
+      var tv=localStorage.getItem('eng_tutor_voice'); if(tv && tv!=='__free__') localStorage.setItem('eng_tutor_voice','__free__');
+    }catch(e){}
+  })();
   function ttsEndpointFor(voice){ return (voice && voice.indexOf('edge:')===0) ? '/api/tutor/edge-tts' : '/api/tutor/tts'; }
   function ttsVoice(){
     try{ var v = localStorage.getItem('ttsVoice');
@@ -6252,7 +6261,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     function ls(k,v){ try{ if(v===undefined) return localStorage.getItem(k); localStorage.setItem(k,v); }catch(e){ return null; } }
     function getImg(){ return ls(LS_IMG)||''; }
     function getVideo(){ return ls(LS_VIDEO)||''; }
-    function getVoice(){ return ls(LS_VOICE)||'edge:en-US-AriaNeural'; }
+    function getVoice(){ return ls(LS_VOICE)||'__free__'; }   // 기본: 폰 내장 음성
     function setVoice(v){ ls(LS_VOICE,v); }
     function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
