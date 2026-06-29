@@ -5276,7 +5276,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   }
   // 기기에 설치된 영어 음성 목록 (사용자가 직접 골라 듣고 선택)
   function deviceEnVoices(){
-    try{ return (window.speechSynthesis.getVoices()||[]).filter(function(v){ return /^en/i.test(v.lang) && !NOVELTY.test(v.name); }); }
+    try{ return (window.speechSynthesis.getVoices()||[]).filter(function(v){ return /^en/i.test(v.lang); }); }  // 모든 영어 음성(중복·전부 표시)
     catch(e){ return []; }
   }
   function findDeviceVoice(key){
@@ -5292,11 +5292,12 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       return en.filter(function(v){return v.default;})[0] || en[0] || null;
     }catch(e){ return null; }
   }
-  // 음성 id를 실제 voice 객체로 해석 ('phone'=시스템 기본, 'dev:<uri>'=특정 음성)
+  // 음성 id를 실제 voice 객체로 해석.
+  // 'phone' = 음성을 지정하지 않음(null) → 브라우저가 폰 시스템 TTS 음성(설정의 남/여)을 그대로 사용.
+  // 'dev:<uri>' = 목록에서 고른 특정 음성.
   function resolveVoice(id){
-    if(id==='phone') return pickDefaultVoice();
     if(id && id.indexOf('dev:')===0) return findDeviceVoice(id.slice(4));
-    return null;
+    return null;   // 'phone' 포함 → 강제 지정 없음
   }
   // ===== 발음 TTS — 폰 내장(남/여) / Cloudflare =====
   var TTS_FREE = '__free__';                 // '기본 음성'(Web Speech) 선택값
@@ -6378,7 +6379,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       function go(){ if(spoken) return; spoken=true;
         try{ var u=new SpeechSynthesisUtterance(text); u.lang='en-US';
           // 선택한 음성. voice의 lang과 u.lang이 일치해야 적용됨.
-          if(voiceKey){ var gv = voiceKey==='phone' ? pickDefaultVoice() : findDeviceVoice(voiceKey); if(gv){ u.voice=gv; if(gv.lang) u.lang=gv.lang; } }
+          if(voiceKey && voiceKey!=='phone'){ var gv=findDeviceVoice(voiceKey); if(gv){ u.voice=gv; if(gv.lang) u.lang=gv.lang; } }
           window.speechSynthesis.cancel(); window.speechSynthesis.speak(u); }catch(e){} }
       try{
         var vs=window.speechSynthesis.getVoices()||[];
@@ -7843,15 +7844,14 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     var row=document.createElement('div'); row.className='opt-row'; row.style.display='block';
     var t=document.createElement('div'); t.className='opt-title'; t.textContent='AI 튜터 음성 (Mia)';
     var d=document.createElement('div'); d.className='opt-desc';
-    d.textContent='Tutor 회화 목소리예요. 폰에 설치된 음성 목록에서 눌러 들어보고 마음에 드는(남/여) 음성을 고르세요.';
+    d.textContent='Tutor 목소리예요. “폰 기본 음성”이 폰 설정의 음성(남성으로 바꾼 것)을 그대로 써요. 특정 발음을 원할 때만 아래 음성을 고르세요.';
     row.appendChild(t); row.appendChild(d);
     var grid=document.createElement('div'); grid.style.display='flex'; grid.style.flexWrap='wrap'; grid.style.gap='8px'; grid.style.marginTop='10px';
     var fb=document.createElement('div'); fb.className='opt-desc'; fb.style.marginTop='8px';
     var cur=TUTOR.getVoice();
     var dev=deviceEnVoices();
-    var voiceList=[['phone','📱 폰 기본 음성'],['edge:en-US-GuyNeural','🧑 남성 (서버)']];
-    dev.forEach(function(v){ voiceList.push(['dev:'+v.voiceURI, '📱 '+v.name+' ('+v.lang+')']); });
-    voiceList.push(['cf','Cloudflare 음성']);
+    var voiceList=[['phone','📱 폰 기본 음성']];
+    dev.forEach(function(v,i){ voiceList.push(['dev:'+v.voiceURI, (i+1)+'. '+v.name+' ('+v.lang+')']); });
     if(!dev.length){
       try{ window.speechSynthesis.onvoiceschanged=function(){ if(activePanel==='options'){ try{ renderOptions(); }catch(e){} } }; window.speechSynthesis.getVoices(); }catch(e){}
     }
@@ -7998,7 +7998,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     var head=document.createElement('div'); head.className='opt-text';
     var t=document.createElement('div'); t.className='opt-title'; t.textContent='🔊 영어 발음 음성';
     var d=document.createElement('div'); d.className='opt-desc';
-    d.textContent='문장 듣기에 쓸 영어 음성이에요. 폰 내장 음성(남/여)을 고르면 폰에 설치된 음성을 사용하고, Cloudflare 음성도 선택할 수 있어요.';
+    d.textContent='“폰 기본 음성”을 고르면 폰 설정의 TTS 음성(남성으로 바꾼 것)을 그대로 사용해요. 특정 발음(영국·호주 등)을 원할 때만 아래 목록에서 고르세요. (아래 기기 음성들은 성별을 못 바꿔요.)';
     head.appendChild(t); head.appendChild(d); sec.appendChild(head);
 
     var list=document.createElement('div'); list.style.marginTop='10px'; list.style.display='flex'; list.style.flexDirection='column'; list.style.gap='6px';
@@ -8035,11 +8035,10 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       var sub=document.createElement('div'); sub.style.margin='12px 2px 2px'; sub.style.fontSize='12px'; sub.style.fontWeight='600'; sub.style.color='var(--text3)';
       sub.textContent=txt; list.appendChild(sub);
     }
-    // 0) 폰 시스템 기본 음성
-    subHead('폰 기본 음성');
+    // 폰 시스템 기본 + 폰에 설치된 모든 영어 음성(번호 매김 — ▶로 들어보고 남성 찾기)
+    subHead('폰 기본 음성 ★ 폰 설정의 남/여를 그대로 사용');
     list.appendChild(makeItem('phone', '📱 폰 기본 음성 (시스템 설정 따름)', true));
-    // 1) 폰에 설치된 음성 (직접 듣고 선택 — 남/여는 ▶로 들어보고 고르세요)
-    subHead('폰에 설치된 음성 (▶ 들어보고 선택)');
+    subHead('특정 발음으로 듣기 (아래는 기기 제공 음성)');
     var dev=deviceEnVoices();
     if(!dev.length){
       var nv=document.createElement('div'); nv.className='opt-desc'; nv.style.padding='4px 2px';
@@ -8048,11 +8047,8 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       try{ window.speechSynthesis.onvoiceschanged=function(){ if(activePanel==='options'){ try{ renderOptions(); }catch(e){} } }; }catch(e){}
       try{ window.speechSynthesis.getVoices(); }catch(e){}
     } else {
-      dev.forEach(function(v){ list.appendChild(makeItem('dev:'+v.voiceURI, v.name+' ('+v.lang+')', true)); });
+      dev.forEach(function(v,i){ list.appendChild(makeItem('dev:'+v.voiceURI, (i+1)+'. '+v.name+' ('+v.lang+')', true)); });
     }
-    // 2) 서버 음성 (남성 Edge / Cloudflare)
-    subHead('서버 음성 (남성 가능)');
-    TTS_VOICES.filter(function(v){ return v.grp==='server'; }).forEach(function(v){ list.appendChild(makeItem(v.id, v.label, true)); });
 
     sec.appendChild(list);
     wrap.appendChild(sec);
