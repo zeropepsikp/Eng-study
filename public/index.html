@@ -5346,16 +5346,15 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     cloudSpeak(sample, voice, function(){ webSpeak(sample,'en'); });
   }
   // 폰 기본 음성(Web Speech) — 항상 사용 가능한 폴백
-  // 타자 효과음 — 맑은 '똑/딱'(노이즈 거의 없는 피치 클릭, 두 음정 번갈아). 자산 불필요.
-  var _tickCtx=null, _tickAlt=0;
-  function playTick(){
+  // 타자 효과음 — 맑은 클릭. 입력=높은 '똑', 삭제=낮은 '딱'. 자산 불필요.
+  var _tickCtx=null;
+  function playTick(isDelete){
     try{
       var AC=window.AudioContext||window.webkitAudioContext; if(!AC) return;
       if(!_tickCtx) _tickCtx=new AC();
       if(_tickCtx.state==='suspended'){ try{ _tickCtx.resume(); }catch(e){} }
       var ctx=_tickCtx, t=ctx.currentTime;
-      _tickAlt ^= 1;
-      var f0 = _tickAlt ? 1760 : 1320;   // 똑 / 딱 — 누를 때마다 번갈아
+      var f0 = isDelete ? 1100 : 1760;   // 딱(삭제) / 똑(입력)
       // 1) 맑은 피치 클릭(메인): 사인, 아주 빠른 감쇠
       var o=ctx.createOscillator(), og=ctx.createGain();
       o.type='sine'; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f0*0.7, t+0.02);
@@ -5967,7 +5966,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       }
     }
     var prevLen=0;
-    input.addEventListener('input', function(){ var L=letters().length; if(L!==prevLen) playTick(); prevLen=L; paint(); });  // 입력·삭제 모두 소리
+    input.addEventListener('input', function(){ var L=letters().length; if(L>prevLen) playTick(false); else if(L<prevLen) playTick(true); prevLen=L; paint(); });  // 입력=똑 / 삭제=딱
     input.addEventListener('keydown', function(e){ if(e.key==='Enter') e.preventDefault(); });
     // 영역/칸 탭 → 입력 위치 지정 + 키보드 호출
     area.addEventListener('click', function(){ if(!done) focusInput(); });
