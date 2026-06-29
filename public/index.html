@@ -5372,8 +5372,8 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       var u = new SpeechSynthesisUtterance(text);
       u.lang = lang==='ko' ? 'ko-KR' : 'en-US';
       u.rate = lang==='ko' ? 1.0 : 0.95;
-      // 선택한 기기 음성이 있으면 그것으로, 없으면 폰 기본.
-      if(vobj && lang!=='ko'){ u.voice=vobj; }
+      // 선택한 기기 음성이 있으면 그것으로. iOS는 voice의 lang과 u.lang이 일치해야 적용됨.
+      if(vobj && lang!=='ko'){ u.voice=vobj; if(vobj.lang) u.lang=vobj.lang; }
       window.speechSynthesis.speak(u);
     }catch(e){}
   }
@@ -6361,8 +6361,8 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       var spoken=false;
       function go(){ if(spoken) return; spoken=true;
         try{ var u=new SpeechSynthesisUtterance(text); u.lang='en-US';
-          // 선택한 기기 음성이 있으면 사용(음성 로딩 후 시점에 해석), 없으면 폰 기본.
-          if(voiceKey){ var gv=findDeviceVoice(voiceKey); if(gv) u.voice=gv; }
+          // 선택한 기기 음성. iOS는 voice의 lang과 u.lang이 일치해야 적용됨.
+          if(voiceKey){ var gv=findDeviceVoice(voiceKey); if(gv){ u.voice=gv; if(gv.lang) u.lang=gv.lang; } }
           window.speechSynthesis.cancel(); window.speechSynthesis.speak(u); }catch(e){} }
       try{
         var vs=window.speechSynthesis.getVoices()||[];
@@ -7831,7 +7831,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     var fb=document.createElement('div'); fb.className='opt-desc'; fb.style.marginTop='8px';
     var cur=TUTOR.getVoice();
     var dev=deviceEnVoices();
-    var voiceList=dev.map(function(v){ return ['dev:'+v.voiceURI, '📱 '+v.name]; });
+    var voiceList=dev.map(function(v){ return ['dev:'+v.voiceURI, '📱 '+v.name+' ('+v.lang+')']; });
     voiceList.push(['cf','Cloudflare 음성']);
     if(!dev.length){
       try{ window.speechSynthesis.onvoiceschanged=function(){ if(activePanel==='options'){ try{ renderOptions(); }catch(e){} } }; window.speechSynthesis.getVoices(); }catch(e){}
@@ -8026,7 +8026,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       try{ window.speechSynthesis.onvoiceschanged=function(){ if(activePanel==='options'){ try{ renderOptions(); }catch(e){} } }; }catch(e){}
       try{ window.speechSynthesis.getVoices(); }catch(e){}
     } else {
-      dev.forEach(function(v){ list.appendChild(makeItem('dev:'+v.voiceURI, v.name, true)); });
+      dev.forEach(function(v){ list.appendChild(makeItem('dev:'+v.voiceURI, v.name+' ('+v.lang+')', true)); });
     }
     // 2) Cloudflare 음성
     subHead('Cloudflare 음성 (Workers AI)');
