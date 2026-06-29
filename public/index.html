@@ -5274,47 +5274,49 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       return ko.find(function(v){return v.default;}) || ko[0] || null;
     }
   }
-  // ===== 발음 TTS — Edge(기본) → Cloudflare(MeloTTS) → 기본음성 순 폴백 =====
+  // 폰 내장 음성 중 성별로 강제 선택 (이름 휴리스틱). gender: 'male' | 'female'
+  function pickGenderVoice(gender){
+    try{
+      var vs=window.speechSynthesis.getVoices()||[];
+      var en=vs.filter(function(v){ return /^en/i.test(v.lang) && !NOVELTY.test(v.name); });
+      var pool=en.length?en:vs;
+      var female=/(female|woman|samantha|victoria|karen|moira|tessa|fiona|serena|zira|aria|jenny|michelle|nicky|allison|ava|susan|catherine|sonia|joanna|salli|kendra|kimberly|google us english$|google uk english female|#female|-f$)/i;
+      var male=/(male|guy|david|mark|alex|daniel|arthur|oliver|rishi|aaron|christopher|eric|ryan|george|james|matthew|fred|google uk english male|#male|-m$)/i;
+      var want = gender==='male' ? male : female;
+      var avoid = gender==='male' ? female : male;
+      var i;
+      for(i=0;i<pool.length;i++){ if(want.test(pool[i].name)) return pool[i]; }      // 원하는 성별
+      for(i=0;i<pool.length;i++){ if(!avoid.test(pool[i].name)) return pool[i]; }     // 반대 성별이 아닌 것
+      return pool[0]||null;
+    }catch(e){ return null; }
+  }
+  // ===== 발음 TTS — 폰 내장(남/여) / Cloudflare =====
   var TTS_FREE = '__free__';                 // '기본 음성'(Web Speech) 선택값
   var TTS_CONFIG = { cloudOk:null, rate:0.96 };
   var lastTtsEngine = null;                  // 'edge' | 'cf' | 'free'
-  // 선택 가능한 음성: Edge(여러 종) + Cloudflare(1종). 기본 = Edge Aria.
+  // 선택 가능한 음성: 폰 내장(남/여 강제) + Cloudflare. Edge 제거.
   var TTS_VOICES = [
-    {id:'edge:en-US-AriaNeural',        label:'Aria · 미국 여성 (기본)',  grp:'edge'},
-    {id:'edge:en-US-JennyNeural',       label:'Jenny · 미국 여성',        grp:'edge'},
-    {id:'edge:en-US-MichelleNeural',    label:'Michelle · 미국 여성',     grp:'edge'},
-    {id:'edge:en-US-GuyNeural',         label:'Guy · 미국 남성',          grp:'edge'},
-    {id:'edge:en-US-ChristopherNeural', label:'Christopher · 미국 남성',  grp:'edge'},
-    {id:'edge:en-GB-SoniaNeural',       label:'Sonia · 영국 여성',        grp:'edge'},
-    {id:'edge:en-GB-RyanNeural',        label:'Ryan · 영국 남성',         grp:'edge'},
-    {id:'cf',                           label:'Cloudflare 음성',          grp:'cf'}
+    {id:'phone:male',   label:'📱 폰 음성 · 남성', grp:'phone'},
+    {id:'phone:female', label:'📱 폰 음성 · 여성', grp:'phone'},
+    {id:'cf',           label:'Cloudflare 음성',   grp:'cf'}
   ];
-  var TTS_DEFAULT_VOICE = TTS_FREE;   // 기본: 폰 내장 음성(폰 설정 따라감)
-  // 한 번만: 기존에 저장된 서버 음성 선택을 폰 음성으로 초기화 (서버 음성이 폰 설정을 못 따라가서)
-  (function migratePhoneVoice(){
-    try{
-      if(localStorage.getItem('eng_voice_phone_v1')) return;
-      localStorage.setItem('eng_voice_phone_v1','1');
-      var pv=localStorage.getItem('ttsVoice'); if(pv && pv!==TTS_FREE) localStorage.setItem('ttsVoice', TTS_FREE);
-      var tv=localStorage.getItem('eng_tutor_voice'); if(tv && tv!=='__free__') localStorage.setItem('eng_tutor_voice','__free__');
-    }catch(e){}
-  })();
-  function ttsEndpointFor(voice){ return (voice && voice.indexOf('edge:')===0) ? '/api/tutor/edge-tts' : '/api/tutor/tts'; }
+  var TTS_DEFAULT_VOICE = 'phone:male';   // 기본: 폰 음성(남성)
+  function ttsEndpointFor(voice){ return '/api/tutor/tts'; }   // Cloudflare(MeloTTS)
   function ttsVoice(){
     try{ var v = localStorage.getItem('ttsVoice');
-      if(v === TTS_FREE) return TTS_FREE;
       if(v && TTS_VOICES.some(function(x){ return x.id===v; })) return v;
     }catch(e){}
-    return TTS_DEFAULT_VOICE;
+    return TTS_DEFAULT_VOICE;   // 옛 Edge/free 선택값은 자동으로 기본(폰 남성)으로 폴백
   }
   function setTtsVoice(v){ try{ localStorage.setItem('ttsVoice', v); }catch(e){} }
   // 현재 발음 음성 상태 (배지용)
   function ttsStatusInfo(){
-    if(ttsVoice()===TTS_FREE) return { t:'기본 음성', cls:'free' };
-    if(lastTtsEngine==='edge') return { t:'Edge 음성', cls:'ok' };
+    var v=ttsVoice();
+    if(v==='phone:male') return { t:'폰 음성 · 남성', cls:'free' };
+    if(v==='phone:female') return { t:'폰 음성 · 여성', cls:'free' };
     if(lastTtsEngine==='cf') return { t:'Cloudflare 음성', cls:'ok' };
-    if(lastTtsEngine==='free') return { t:'기본 음성 (한도/오류)', cls:'fallback' };
-    return { t:(ttsVoice().indexOf('edge:')===0?'Edge 음성':'Cloudflare 음성'), cls:'ok' };
+    if(lastTtsEngine==='free') return { t:'폰 음성 (폴백)', cls:'fallback' };
+    return { t:'Cloudflare 음성', cls:'ok' };
   }
   function updateTtsBadges(){
     var info=ttsStatusInfo();
@@ -5329,9 +5331,8 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   var ttsAudio = null;    // 현재 재생 중인 Audio
   // 선택 음성에 따른 폴백 체인: edge → cf, 또는 cf 단독. 모두 실패하면 onErr(폰 기본음성).
   function cloudSpeak(text, voice, onErr){
-    voice = voice || ttsVoice();
-    if(voice === TTS_FREE){ onErr(); return; }
-    var chain = (voice.indexOf('edge:')===0) ? [voice, 'cf'] : [voice];
+    voice = 'cf';
+    var chain = ['cf'];
     function play(u){ try{ if(ttsAudio){ ttsAudio.pause(); } }catch(e){} ttsAudio = new Audio(u); ttsAudio.play().catch(function(){ onErr(); }); }
     function tryAt(i){
       if(i >= chain.length){ TTS_CONFIG.cloudOk=false; lastTtsEngine='free'; updateTtsBadges(); onErr(); return; }
@@ -5351,8 +5352,9 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   // 옵션 메뉴 미리듣기: 특정 음성으로 샘플 문장 재생
   function previewVoice(voice){
     var sample = "Hi! This is how I sound. Let's practice English together.";
-    if(voice === TTS_FREE){ webSpeak(sample,'en'); return; }
-    cloudSpeak(sample, voice, function(){ webSpeak(sample,'en'); });
+    if(voice === 'cf'){ cloudSpeak(sample, 'cf', function(){ webSpeak(sample,'en'); }); return; }
+    var gender = voice==='phone:male'?'male':(voice==='phone:female'?'female':null);
+    webSpeak(sample, 'en', gender);
   }
   // 폰 기본 음성(Web Speech) — 항상 사용 가능한 폴백
   // 타자 효과음 — 맑은 클릭. 입력=높은 '똑', 삭제=낮은 '딱'. 자산 불필요.
@@ -5373,26 +5375,29 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       o.connect(og); og.connect(ctx.destination); o.start(t); o.stop(t+0.045);
     }catch(e){}
   }
-  function webSpeak(text, lang){
+  function webSpeak(text, lang, gender){
     if(!('speechSynthesis' in window)) return;
     try{
       window.speechSynthesis.cancel();
       var u = new SpeechSynthesisUtterance(text);
       u.lang = lang==='ko' ? 'ko-KR' : 'en-US';
       u.rate = lang==='ko' ? 1.0 : 0.95;
-      // 음성을 지정하지 않는다 → 폰에서 고른 기본 음성(성별 포함)을 그대로 사용.
+      // 성별 지정이 있으면 폰 음성 중 해당 성별을 강제 선택, 없으면 폰 기본 음성.
+      if(gender && lang!=='ko'){ var gv=pickGenderVoice(gender); if(gv) u.voice=gv; }
       window.speechSynthesis.speak(u);
     }catch(e){}
   }
   function speak(text, lang){
-    // '무료 기본 음성' 선택 또는 한국어 또는 클라우드 불가 → 폰 기본 음성. 그 외 → 클라우드(실패 시 폴백).
     var v = ttsVoice();
-    if(lang !== 'ko' && v !== TTS_FREE && ttsAvailable()){
+    // Cloudflare 선택 + 영어 → 서버 음성(실패 시 폰 음성 폴백)
+    if(lang !== 'ko' && v === 'cf' && ttsAvailable()){
       try{ if('speechSynthesis' in window) window.speechSynthesis.cancel(); }catch(e){}
-      cloudSpeak(text, v, function(){ webSpeak(text, lang); });
+      cloudSpeak(text, 'cf', function(){ webSpeak(text, lang); });
       return;
     }
-    webSpeak(text, lang);
+    // 폰 음성(남/여) 또는 한국어
+    var gender = v==='phone:male' ? 'male' : (v==='phone:female' ? 'female' : null);
+    webSpeak(text, lang, gender);
   }
   var SPK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a9 9 0 0 1 0 14"/></svg>';
   function spkBtn(text, cls){
@@ -6246,14 +6251,9 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     var LS_IMG='eng_tutor_img', LS_VOICE='eng_tutor_voice', LS_SESS='eng_tutor_sess', LS_HIST='eng_tutor_hist', LS_VIDEO='eng_tutor_video';
     // Edge(기본) + Cloudflare 음성
     var VOICES=[
-      ['edge:en-US-AriaNeural','Aria · 미국 여성 (기본)'],
-      ['edge:en-US-JennyNeural','Jenny · 미국 여성'],
-      ['edge:en-US-MichelleNeural','Michelle · 미국 여성'],
-      ['edge:en-US-GuyNeural','Guy · 미국 남성'],
-      ['edge:en-GB-SoniaNeural','Sonia · 영국 여성'],
-      ['edge:en-GB-RyanNeural','Ryan · 영국 남성'],
-      ['cf','Cloudflare 음성'],
-      ['__free__','📱 폰 기본 음성 (성별 폰 설정)']
+      ['phone:male','📱 폰 음성 · 남성'],
+      ['phone:female','📱 폰 음성 · 여성'],
+      ['cf','Cloudflare 음성']
     ];
     var personaText=null, learnerText=null, scenList=null, scenCache={};
     var sess=null, ccOn=false, busy=false, audio=null, logEl=null, wired=false, videoAborted=false, healthChecked=false, onVideoProgress=null;
@@ -6261,7 +6261,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     function ls(k,v){ try{ if(v===undefined) return localStorage.getItem(k); localStorage.setItem(k,v); }catch(e){ return null; } }
     function getImg(){ return ls(LS_IMG)||''; }
     function getVideo(){ return ls(LS_VIDEO)||''; }
-    function getVoice(){ return ls(LS_VOICE)||'__free__'; }   // 기본: 폰 내장 음성
+    function getVoice(){ var v=ls(LS_VOICE); return (v==='phone:male'||v==='phone:female'||v==='cf')?v:'phone:male'; }   // 기본: 폰 음성(남성), 옛 값은 폴백
     function setVoice(v){ ls(LS_VOICE,v); }
     function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
@@ -6367,11 +6367,12 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
         return pool[0]||null;
       }catch(e){ return null; }
     }
-    function browserSpeak(text){
+    function browserSpeak(text, gender){
       var spoken=false;
       function go(){ if(spoken) return; spoken=true;
         try{ var u=new SpeechSynthesisUtterance(text); u.lang='en-US';
-          // 음성 미지정 → 폰에서 고른 기본 음성(성별 포함) 그대로 사용.
+          // 성별 지정 시 폰 음성 중 해당 성별 강제 선택, 없으면 폰 기본.
+          if(gender){ var gv=pickGenderVoice(gender); if(gv) u.voice=gv; }
           window.speechSynthesis.cancel(); window.speechSynthesis.speak(u); }catch(e){} }
       try{
         var vs=window.speechSynthesis.getVoices()||[];
@@ -6396,15 +6397,16 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
         })(0);
       });
     }
-    // Edge → Cloudflare → 폰 기본 음성
+    // 폰 음성(남/여) 또는 Cloudflare
     function speak(text){
       if(!text) return;
       try{ if(audio){ audio.pause(); audio=null; } }catch(e){}
       playStageVideo();
-      if(getVoice()==='__free__'){ setStatus('ok','폰 기본 음성'); browserSpeak(text); return; }
-      ttsChainFor(getVoice(), text)
-        .then(function(res){ setStatus('ok', res.engine==='edge'?'Edge 음성':'Cloudflare 음성'); playBlob(res.blob); })
-        .catch(function(){ setStatus('warn','음성 한도/오류 — 기본 음성으로 재생 중'); browserSpeak(text); });
+      var vv=getVoice();
+      if(vv==='phone:male' || vv==='phone:female'){ setStatus('ok','폰 음성'); browserSpeak(text, vv==='phone:male'?'male':'female'); return; }
+      ttsChainFor('cf', text)
+        .then(function(res){ setStatus('ok','Cloudflare 음성'); playBlob(res.blob); })
+        .catch(function(){ setStatus('warn','음성 오류 — 폰 음성으로 재생 중'); browserSpeak(text); });
     }
     function playStageVideo(){
       var v=$('tutor-video'); if(!v) return;
@@ -6414,8 +6416,8 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     function previewVoice(voice, cb){
       try{ if(audio){ audio.pause(); audio=null; } }catch(e){}
       var sample="Hi, I'm Mia. Let's practice English together!";
-      if(voice==='__free__'){ browserSpeak(sample); if(cb) cb(true,'폰 기본'); return; }
-      ttsChainFor(voice, sample)
+      if(voice==='phone:male' || voice==='phone:female'){ browserSpeak(sample, voice==='phone:male'?'male':'female'); if(cb) cb(true,'폰 음성'); return; }
+      ttsChainFor('cf', sample)
         .then(function(res){ playBlob(res.blob); if(cb) cb(true, res.engine==='edge'?'Edge':'Cloudflare'); })
         .catch(function(){ browserSpeak("Hi, I'm Mia."); if(cb) cb(false, '한도/오류 — 기본 음성'); });
     }
@@ -7981,7 +7983,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     var head=document.createElement('div'); head.className='opt-text';
     var t=document.createElement('div'); t.className='opt-title'; t.textContent='🔊 영어 발음 음성';
     var d=document.createElement('div'); d.className='opt-desc';
-    d.textContent='문장 듣기에 쓸 영어 음성이에요. 기본은 Microsoft Edge 음성(무료)이고, 문제가 생기면 Cloudflare → 폰 기본 음성 순으로 자동 전환됩니다.';
+    d.textContent='문장 듣기에 쓸 영어 음성이에요. 폰 내장 음성(남/여)을 고르면 폰에 설치된 음성을 사용하고, Cloudflare 음성도 선택할 수 있어요.';
     head.appendChild(t); head.appendChild(d); sec.appendChild(head);
 
     var list=document.createElement('div'); list.style.marginTop='10px'; list.style.display='flex'; list.style.flexDirection='column'; list.style.gap='6px';
@@ -8018,15 +8020,12 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       var sub=document.createElement('div'); sub.style.margin='12px 2px 2px'; sub.style.fontSize='12px'; sub.style.fontWeight='600'; sub.style.color='var(--text3)';
       sub.textContent=txt; list.appendChild(sub);
     }
-    // 1) Microsoft Edge 음성 (최상위 · 기본)
-    subHead('Microsoft Edge 음성 (기본 · 무료)');
-    TTS_VOICES.filter(function(v){ return v.grp==='edge'; }).forEach(function(v){ list.appendChild(makeItem(v.id, v.label, true)); });
+    // 1) 폰 내장 음성 (성별 강제)
+    subHead('폰 내장 음성 (성별 선택)');
+    TTS_VOICES.filter(function(v){ return v.grp==='phone'; }).forEach(function(v){ list.appendChild(makeItem(v.id, v.label, true)); });
     // 2) Cloudflare 음성
     subHead('Cloudflare 음성 (Workers AI)');
     TTS_VOICES.filter(function(v){ return v.grp==='cf'; }).forEach(function(v){ list.appendChild(makeItem(v.id, v.label, true)); });
-    // 3) 기본(폰) 음성
-    subHead('기본 음성');
-    list.appendChild(makeItem(TTS_FREE, '기본 음성 (폰 내장)', true));
 
     sec.appendChild(list);
     wrap.appendChild(sec);
