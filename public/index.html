@@ -5354,7 +5354,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       if(!_tickCtx) _tickCtx=new AC();
       if(_tickCtx.state==='suspended'){ try{ _tickCtx.resume(); }catch(e){} }
       var ctx=_tickCtx, t=ctx.currentTime;
-      var f0 = isDelete ? 1100 : 1600;   // 딱(삭제) / 똑(입력)
+      var f0 = isDelete ? 1100 : 1500;   // 딱(삭제) / 똑(입력)
       // 깔끔한 단일 음: 피치 글라이드·노이즈 없이 사인 하나만, 빠른 감쇠
       var o=ctx.createOscillator(), og=ctx.createGain();
       o.type='sine'; o.frequency.setValueAtTime(f0, t);
