@@ -5347,8 +5347,13 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       var u = new SpeechSynthesisUtterance(text);
       u.lang = lang==='ko' ? 'ko-KR' : 'en-US';
       u.rate = lang==='ko' ? 1.0 : 0.95;
-      // iOS면 voice 미지정(폰 기본). 그 외 기기는 기본/일반 음성을 골라줌.
-      var v = pickVoice(lang); if(v) u.voice = v;
+      // 기본은 음성 미지정 → 폰에서 고른 기본 음성(성별 포함)을 그대로 사용.
+      // 예외: 폰 기본 음성이 영어가 아니어서 영어를 어색하게 읽는 기기에서만 영어 음성으로 보정.
+      if(lang!=='ko'){
+        var dv = (window.speechSynthesis.getVoices()||[]).filter(function(x){return x.default;})[0];
+        var defIsEn = dv && /^en/i.test(dv.lang||'');
+        if(!defIsEn){ var v = pickVoice(lang); if(v) u.voice = v; }
+      }
       window.speechSynthesis.speak(u);
     }catch(e){}
   }
@@ -6215,7 +6220,8 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       ['edge:en-US-GuyNeural','Guy · 미국 남성'],
       ['edge:en-GB-SoniaNeural','Sonia · 영국 여성'],
       ['edge:en-GB-RyanNeural','Ryan · 영국 남성'],
-      ['cf','Cloudflare 음성']
+      ['cf','Cloudflare 음성'],
+      ['__free__','📱 폰 기본 음성 (성별 폰 설정)']
     ];
     var personaText=null, learnerText=null, scenList=null, scenCache={};
     var sess=null, ccOn=false, busy=false, audio=null, logEl=null, wired=false, videoAborted=false, healthChecked=false, onVideoProgress=null;
@@ -6333,8 +6339,9 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       var spoken=false;
       function go(){ if(spoken) return; spoken=true;
         try{ var u=new SpeechSynthesisUtterance(text); u.lang='en-US';
-          // 폰 기본 음성을 그대로 사용 (사용자가 폰에서 고른 음성/성별 존중). iOS는 미지정.
-          var v=pickVoice('en'); if(v) u.voice=v;
+          // 폰 기본 음성을 그대로 사용 (성별 포함). 폰 기본이 영어가 아닐 때만 영어 음성으로 보정.
+          var dv=(window.speechSynthesis.getVoices()||[]).filter(function(x){return x.default;})[0];
+          if(!(dv && /^en/i.test(dv.lang||''))){ var v=pickVoice('en'); if(v) u.voice=v; }
           window.speechSynthesis.cancel(); window.speechSynthesis.speak(u); }catch(e){} }
       try{
         var vs=window.speechSynthesis.getVoices()||[];
@@ -6364,6 +6371,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       if(!text) return;
       try{ if(audio){ audio.pause(); audio=null; } }catch(e){}
       playStageVideo();
+      if(getVoice()==='__free__'){ setStatus('ok','폰 기본 음성'); browserSpeak(text); return; }
       ttsChainFor(getVoice(), text)
         .then(function(res){ setStatus('ok', res.engine==='edge'?'Edge 음성':'Cloudflare 음성'); playBlob(res.blob); })
         .catch(function(){ setStatus('warn','음성 한도/오류 — 기본 음성으로 재생 중'); browserSpeak(text); });
@@ -6376,6 +6384,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     function previewVoice(voice, cb){
       try{ if(audio){ audio.pause(); audio=null; } }catch(e){}
       var sample="Hi, I'm Mia. Let's practice English together!";
+      if(voice==='__free__'){ browserSpeak(sample); if(cb) cb(true,'폰 기본'); return; }
       ttsChainFor(voice, sample)
         .then(function(res){ playBlob(res.blob); if(cb) cb(true, res.engine==='edge'?'Edge':'Cloudflare'); })
         .catch(function(){ browserSpeak("Hi, I'm Mia."); if(cb) cb(false, '한도/오류 — 기본 음성'); });
