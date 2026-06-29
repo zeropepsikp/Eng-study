@@ -6332,7 +6332,9 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     function browserSpeak(text){
       var spoken=false;
       function go(){ if(spoken) return; spoken=true;
-        try{ var u=new SpeechSynthesisUtterance(text); u.lang='en-US'; var fv=pickFemaleVoice(); if(fv) u.voice=fv;
+        try{ var u=new SpeechSynthesisUtterance(text); u.lang='en-US';
+          // 폰 기본 음성을 그대로 사용 (사용자가 폰에서 고른 음성/성별 존중). iOS는 미지정.
+          var v=pickVoice('en'); if(v) u.voice=v;
           window.speechSynthesis.cancel(); window.speechSynthesis.speak(u); }catch(e){} }
       try{
         var vs=window.speechSynthesis.getVoices()||[];
