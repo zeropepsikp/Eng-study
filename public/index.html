@@ -585,8 +585,14 @@
   .chunk-fill{height:100%;width:0;border-radius:999px;transition:width .25s;background:var(--indigo);}
   .chunk-prog-label{font-size:11.5px;color:var(--text3);margin-top:5px;}
   .chunk-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg);
-    padding:30px 18px 26px;min-height:340px;display:flex;flex-direction:column;align-items:center;
+    padding:30px 18px 18px;min-height:96px;display:flex;flex-direction:column;align-items:center;
     justify-content:center;text-align:center;cursor:pointer;position:relative;}
+  /* 정답 후 카드 안에 들어가는 예시 — 더 작게 */
+  .chunk-card .ex-block{margin-top:12px;padding-top:10px;width:100%;}
+  .chunk-card .ex-head .lab{font-size:11px;}
+  .chunk-card .ex-item{margin:5px 0;}
+  .chunk-card .ex-item .ex-en{font-size:12.5px;font-weight:600;}
+  .chunk-card .ex-item .ex-ko{font-size:11.5px;}
   .chunk-tag{position:absolute;top:12px;left:14px;font-size:11px;font-weight:700;
     text-transform:uppercase;letter-spacing:.04em;opacity:.8;}
   .chunk-streak{position:absolute;top:11px;right:14px;font-size:11px;font-weight:700;color:var(--text3);}
@@ -7459,7 +7465,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       applyTodayChunkGrade(item, ch, grade); item.result=grade;
       nx.disabled=false;
       speak(ch.en,'en');
-    });
+    }, body);
   }
 
   function renderTodayHeader(){
@@ -9403,12 +9409,13 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     host.appendChild(exBlock);
   }
   // 청크 빈칸 채우기(CEFR와 동일, 단 힌트 없음·전부 빈칸). graded면 정답+예시 표시.
-  function chunkFillInto(area, ch, cat, item, onGraded){
+  function chunkFillInto(area, ch, cat, item, onGraded, exHost){
     area.innerHTML='';
+    var exTarget = exHost || area;   // 예시는 문제카드 안(exHost)에 작게
     if(item.graded==null){
       renderCefrFill(area, ch.en, function(grade){
         onGraded(grade);
-        chunkExamplesInto(area, ch, item);   // 정답 직후 예시 노출
+        chunkExamplesInto(exTarget, ch, item);   // 정답 직후 카드 안에 예시 노출
       }, {noHint:true, blankAll:true});
     } else {
       var enRow=document.createElement('div'); enRow.style.display='flex'; enRow.style.alignItems='center'; enRow.style.justifyContent='center'; enRow.style.gap='8px';
@@ -9416,7 +9423,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       en.style.color = (item.result==='ok') ? 'var(--green)' : 'var(--coral)';
       enRow.appendChild(en); enRow.appendChild(spkBtn(ch.en,'mini'));
       area.appendChild(enRow);
-      chunkExamplesInto(area, ch, item);
+      chunkExamplesInto(exTarget, ch, item);
     }
   }
   function renderChunk(){
@@ -9496,7 +9503,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       applyChunkGrade(item, ch, grade); item.result=grade;
       nx.disabled=false;
       speak(ch.en,'en');
-    });
+    }, body);
   }
 
   function applyChunkGrade(item, ch, grade){
