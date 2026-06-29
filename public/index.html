@@ -5230,8 +5230,9 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   // 레벨 세트: 'classic'(기존) | 'cefr'(CEFR A1~C2). 옵션 스위치로 전환.
   var LEVEL_SET_KEY = 'eng_level_set';
   var LEVEL_SETS = { classic: window.LEVEL_DATA, cefr: window.CEFR_LEVELS || {} };
-  var levelSet = (function(){ try{ return localStorage.getItem(LEVEL_SET_KEY)==='cefr' ? 'cefr' : 'classic'; }catch(e){ return 'classic'; } })();
-  var LEVEL_DATA = LEVEL_SETS[levelSet] || window.LEVEL_DATA;
+  var levelSet = 'cefr';   // CEFR 전용 (기존 레벨 학습 제거)
+  try{ localStorage.setItem(LEVEL_SET_KEY, 'cefr'); }catch(e){}
+  var LEVEL_DATA = LEVEL_SETS.cefr || window.LEVEL_DATA;
   // CEFR 직역 표시 여부 (기본 켜짐)
   var CEFR_LIT_KEY = 'eng_cefr_lit';
   var cefrLitOn = (function(){ try{ return localStorage.getItem(CEFR_LIT_KEY)!=='0'; }catch(e){ return true; } })();
@@ -7768,10 +7769,9 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     blurb.textContent='출제에 포함할 항목을 켜고 끌 수 있어요.';
     wrap.appendChild(blurb);
 
-    // ===== 레벨 세트 선택 (기존 / CEFR) =====
-    renderLevelSetOption(wrap);
+    // (레벨 세트 선택 제거 — CEFR 전용)
 
-    // ===== CEFR 직역 표시 (CEFR 모드에서만) =====
+    // ===== CEFR 직역 표시 =====
     if(levelSet==='cefr'){
       var lrow=document.createElement('div'); lrow.className='opt-row';
       var ltxt=document.createElement('div'); ltxt.className='opt-text';
