@@ -145,6 +145,8 @@
   .en-a{font-size:23px;font-weight:600;line-height:1.4;margin-bottom:4px;}
   .lit{font-size:14px;color:var(--text2);margin-top:12px;line-height:1.5;}
   .lit b{color:var(--text);font-weight:600;}
+  .cefr-lit{font-size:15px;color:var(--text3);margin-top:7px;line-height:1.5;}
+  .cefr-lit b{color:var(--text2);font-weight:600;}
   .free{font-size:14px;color:var(--text2);margin-top:4px;line-height:1.5;}
   .free b{color:var(--text);font-weight:600;}
   /* 형광펜 강조 */
@@ -3469,7 +3471,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       ]},
       { pattern:"아픔·건강 기초", ko:"아파요 / 어디가 안 좋아요", desc:"몸 상태와 증상을 말한다.", bank:[
         {en:"I have a headache.", lit:"나는 두통이 있다.", free:"머리가 아파요."},
-        {en:"I feel sick.", lit:"나는 속이 안 좋다.", free:"속이 안 좋아요."},
+        {en:"I feel sick.", lit:"나는 몸이 안 좋다.", free:"몸이 안 좋아요."},
         {en:"I have a cold.", lit:"나는 감기에 걸렸다.", free:"감기 걸렸어요."},
         {en:"My stomach hurts.", lit:"내 배가 아프다.", free:"배가 아파요."},
         {en:"I need to see a doctor.", lit:"나는 의사를 봐야 한다.", free:"병원에 가야 해요."},
@@ -3687,7 +3689,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
         {en:"Does Friday work?", lit:"금요일 괜찮니?", free:"금요일 괜찮아요?"},
         {en:"How about around seven?", lit:"일곱 시쯤 어때?", free:"일곱 시쯤 어때요?"},
         {en:"I'll text you the address.", lit:"주소를 문자로 보내겠다.", free:"주소 문자로 보낼게요."},
-        {en:"Let's grab lunch sometime.", lit:"언제 점심 같이 먹자.", free:"언제 점심 같이 먹어요."},
+        {en:"Let's grab lunch sometime.", lit:"언제 점심 같이 먹자.", free:"언젠가 점심 같이 먹어요."},
         {en:"Can we make it a bit later?", lit:"조금 늦출 수 있을까?", free:"우리 조금 늦게 해도 될까요?"}
       ]},
       { pattern:"경험·빈도 묻기 (Have you ever / How often)", ko:"~해 본 적 있어? / 얼마나 자주", desc:"경험과 빈도.", bank:[
@@ -3935,7 +3937,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       ]},
       { pattern:"계획·바람 (planning to / hoping to / thinking of)", ko:"~할 계획이야 / ~하길 바라", desc:"미래 계획과 바람.", bank:[
         {en:"I'm planning to travel next month.", lit:"다음 달에 여행할 계획이다.", free:"다음 달에 여행 갈 계획이에요."},
-        {en:"I'm hoping to get a promotion.", lit:"승진하길 바라고 있다.", free:"승진했으면 하고 있어요."},
+        {en:"I'm hoping to get a promotion.", lit:"승진하길 바라고 있다.", free:"승진하면 좋겠어요."},
         {en:"I'm thinking of changing careers.", lit:"이직을 생각 중이다.", free:"커리어를 바꿀까 생각 중이에요."},
         {en:"We're planning to move soon.", lit:"우리는 곧 이사할 계획이다.", free:"우리 곧 이사할 계획이에요."},
         {en:"I'm hoping it works out.", lit:"잘 풀리길 바란다.", free:"잘 풀렸으면 좋겠어요."},
@@ -3970,7 +3972,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
         {en:"I'm relieved it's over.", lit:"끝나서 안심이다.", free:"끝나서 다행이에요."},
         {en:"I feel bad about what happened.", lit:"일어난 일에 대해 미안하다.", free:"그 일은 좀 미안해요."},
         {en:"I'm proud of how far you've come.", lit:"네가 여기까지 온 게 자랑스럽다.", free:"당신이 여기까지 온 거 자랑스러워요."},
-        {en:"I'm not sure how I feel about it.", lit:"그것에 대해 어떻게 느끼는지 모르겠다.", free:"이거에 대해 기분이 좀 복잡해요."},
+        {en:"I'm not sure how I feel about it.", lit:"그것에 대해 어떻게 느끼는지 모르겠다.", free:"이거에 대해 제 기분이 어떤지 잘 모르겠어요."},
         {en:"It means a lot to me.", lit:"그것은 나에게 큰 의미가 있다.", free:"저한텐 의미가 커요."}
       ]},
       { pattern:"의견 교환 (In my opinion / It seems / I'd say)", ko:"내 생각엔 / ~인 것 같아", desc:"의견을 주고받기.", bank:[
@@ -4330,7 +4332,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
         {en:"I wish I could come.", lit:"내가 갈 수 있으면 좋겠다.", free:"갈 수 있으면 좋을 텐데요."},
         {en:"I wish I had more time.", lit:"나는 시간이 더 있으면 좋겠다.", free:"시간이 더 있으면 좋겠어요."},
         {en:"I wish I had studied harder.", lit:"더 열심히 공부했더라면 좋았을 텐데.", free:"더 열심히 공부했더라면 좋았을 텐데요."},
-        {en:"She wishes she could speak French.", lit:"그녀는 프랑스어를 할 수 있으면 한다.", free:"그녀는 프랑스어를 할 수 있으면 해요."},
+        {en:"She wishes she could speak French.", lit:"그녀는 프랑스어를 할 수 있으면 좋겠다고 한다.", free:"그녀는 프랑스어를 할 수 있으면 좋겠대요."},
         {en:"I wish you had told me earlier.", lit:"네가 더 일찍 말해줬더라면.", free:"진작 말해주지 그랬어요."},
         {en:"If only it were that simple.", lit:"그게 그렇게 간단하기만 하다면.", free:"그렇게 간단하면 좋을 텐데요."},
         {en:"I wish things were different.", lit:"상황이 달랐으면 좋겠다.", free:"상황이 달랐으면 좋겠어요."},
@@ -4458,7 +4460,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       ]},
       { pattern:"화제 전환·회상 (come to think of it)", ko:"생각해 보니 / 말 나온 김에", desc:"문득 떠오르거나 화제를 돌린다.", bank:[
         {en:"Come to think of it, you're right.", lit:"생각해 보니 네 말이 맞다.", free:"생각해 보니 당신 말이 맞아요."},
-        {en:"Now that you mention it, I remember.", lit:"말 나온 김에 보니 기억난다.", free:"말 나온 김에 보니 기억나요."},
+        {en:"Now that you mention it, I remember.", lit:"말이 나와서 말인데, 기억난다.", free:"그러고 보니 기억나요."},
         {en:"That reminds me of something.", lit:"그러고 보니 생각났다.", free:"그러고 보니 생각났어요."},
         {en:"On second thought, let's wait.", lit:"다시 생각해 보니 기다리자.", free:"다시 생각해 보니 우리 기다리죠."},
         {en:"Speaking of which, did you call?", lit:"말 나온 김에, 전화했니?", free:"말 나온 김에, 전화했어요?"},
@@ -4474,7 +4476,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
         {en:"Nine times out of ten, he's right.", lit:"십중팔구 그가 맞다.", free:"십중팔구 그가 맞아요."},
         {en:"Odds are it'll rain.", lit:"비 올 가능성이 높다.", free:"비 올 가능성이 높아요."},
         {en:"For all I know, she's already left.", lit:"내가 알기론 그녀는 이미 갔다.", free:"제가 알기론 그녀는 이미 갔어요."},
-        {en:"It wouldn't surprise me.", lit:"나는 놀라지도 않을 거다.", free:"그래도 안 놀랄 것 같아요."}
+        {en:"It wouldn't surprise me.", lit:"나는 놀라지도 않을 거다.", free:"별로 안 놀랄 것 같아요."}
       ]},
       { pattern:"오해 방지·솔직 (don't get me wrong)", ko:"오해 말고 / 솔직히 말하면", desc:"오해를 막고 솔직히 말한다.", bank:[
         {en:"Don't get me wrong.", lit:"오해하지 마라.", free:"오해하지 마세요."},
@@ -4685,7 +4687,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
         {en:"Could we find a middle ground?", lit:"절충안을 찾을 수 있을까?", free:"절충안을 찾아볼까요?"},
         {en:"That works for me.", lit:"그것은 나에게 괜찮다.", free:"저는 그걸로 괜찮아요."},
         {en:"Let's see where we stand.", lit:"우리 입장을 한번 보자.", free:"입장을 한번 정리해 봐요."},
-        {en:"I'd be open to that.", lit:"나는 그것에 열려 있다.", free:"그건 열려 있어요."},
+        {en:"I'd be open to that.", lit:"나는 그것에 열려 있다.", free:"저는 그것도 괜찮아요."},
         {en:"On one condition.", lit:"한 가지 조건이 있다.", free:"한 가지 조건이 있어요."},
         {en:"Let's call it a deal.", lit:"그것으로 합의하자.", free:"그걸로 합의하죠."}
       ]},
@@ -5967,6 +5969,8 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     var miniSpk=spkBtn(q.en,'mini'); miniSpk.title='정답 영어 발음 듣기';
     koRow.appendChild(ko); koRow.appendChild(miniSpk);
     cardBody.appendChild(lab); cardBody.appendChild(koRow);
+    var litLine=document.createElement('div'); litLine.className='cefr-lit'; litLine.innerHTML='<b>직역:</b> '+escHtml(q.lit);
+    cardBody.appendChild(litLine);
     flipHint.textContent = '';
 
     renderCefrFill(gradeRow, q.en, function(grade){
@@ -7514,6 +7518,8 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     var ko=document.createElement('div'); ko.className='ko-q'; ko.textContent=q.free;
     koRow.appendChild(ko); koRow.appendChild(spkBtn(q.en,'mini'));
     body.appendChild(lab); body.appendChild(koRow);
+    var litLine=document.createElement('div'); litLine.className='cefr-lit'; litLine.innerHTML='<b>직역:</b> '+escHtml(q.lit);
+    body.appendChild(litLine);
     card.appendChild(tag); card.appendChild(body); wrap.appendChild(card);
 
     var gr=document.createElement('div'); gr.className='grade-row'; wrap.appendChild(gr);
