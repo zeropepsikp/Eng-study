@@ -5353,19 +5353,26 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       var AC=window.AudioContext||window.webkitAudioContext; if(!AC) return;
       if(!_tickCtx) _tickCtx=new AC();
       if(_tickCtx.state==='suspended'){ try{ _tickCtx.resume(); }catch(e){} }
-      var ctx=_tickCtx, t=ctx.currentTime, dur=0.055;
-      // 또렷하지만 부드러운 타건음: 노이즈 → 하이패스(저음 정리) + 로우패스(중역, 날카로움 제거)
-      var n=Math.max(1, Math.floor(ctx.sampleRate*dur));
+      var ctx=_tickCtx, t=ctx.currentTime;
+      // 나무 판자 두드리는 느낌 = 낮은 공명음(톡 울림) + 짧은 어택 노이즈
+      // 1) 공명 바디: 낮은 사인, 빠른 감쇠 (묵직함은 이 주파수가 결정 — 낮을수록 묵직)
+      var o=ctx.createOscillator(), og=ctx.createGain();
+      o.type='sine'; o.frequency.setValueAtTime(220, t); o.frequency.exponentialRampToValueAtTime(140, t+0.07);
+      og.gain.setValueAtTime(0.0001, t);
+      og.gain.exponentialRampToValueAtTime(0.5, t+0.004);
+      og.gain.exponentialRampToValueAtTime(0.0001, t+0.13);
+      o.connect(og); og.connect(ctx.destination); o.start(t); o.stop(t+0.15);
+      // 2) 두드리는 순간의 짧은 '탁' (밴드패스 노이즈)
+      var dur=0.02, n=Math.max(1, Math.floor(ctx.sampleRate*dur));
       var buf=ctx.createBuffer(1, n, ctx.sampleRate);
       var data=buf.getChannelData(0);
-      for(var i=0;i<n;i++){ data[i]=(Math.random()*2-1)*Math.pow(1-i/n, 3); }
+      for(var i=0;i<n;i++){ data[i]=(Math.random()*2-1)*Math.pow(1-i/n, 4); }
       var src=ctx.createBufferSource(); src.buffer=buf;
-      var hp=ctx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=700;
-      var lp=ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=3000; lp.Q.value=0.6;
+      var bp=ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=1500; bp.Q.value=1.0;
       var g=ctx.createGain();
-      g.gain.setValueAtTime(0.22, t);
+      g.gain.setValueAtTime(0.18, t);
       g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
-      src.connect(hp); hp.connect(lp); lp.connect(g); g.connect(ctx.destination);
+      src.connect(bp); bp.connect(g); g.connect(ctx.destination);
       src.start(t); src.stop(t+dur+0.01);
     }catch(e){}
   }
