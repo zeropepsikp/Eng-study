@@ -5303,16 +5303,27 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   var TTS_FREE = '__free__';                 // '기본 음성'(Web Speech) 선택값
   var TTS_CONFIG = { cloudOk:null, rate:0.96 };
   var lastTtsEngine = null;                  // 'edge' | 'cf' | 'free'
-  // 서버 음성(Cloudflare AI): 남성 Aura / 여성 MeloTTS. 폰 내장 음성은 기기 목록에서 동적 추가.
+  // 서버 음성(Cloudflare Deepgram Aura). 폰 내장 음성은 기기 목록에서 동적 추가.
   var TTS_VOICES = [
-    {id:'cf-male', label:'🧑 남성 (Cloudflare)', grp:'server'},
-    {id:'cf',      label:'👩 여성 (Cloudflare)', grp:'server'}
+    {id:'aura:orion',   label:'🧑 남성 · Orion (미국)',     grp:'male'},
+    {id:'aura:arcas',   label:'🧑 남성 · Arcas (미국)',     grp:'male'},
+    {id:'aura:perseus', label:'🧑 남성 · Perseus (미국)',   grp:'male'},
+    {id:'aura:zeus',    label:'🧑 남성 · Zeus (미국·저음)', grp:'male'},
+    {id:'aura:orpheus', label:'🧑 남성 · Orpheus (미국)',   grp:'male'},
+    {id:'aura:helios',  label:'🧑 남성 · Helios (영국)',    grp:'male'},
+    {id:'aura:angus',   label:'🧑 남성 · Angus (아일랜드)', grp:'male'},
+    {id:'aura:asteria', label:'👩 여성 · Asteria (미국)',   grp:'female'},
+    {id:'aura:luna',    label:'👩 여성 · Luna (미국)',      grp:'female'},
+    {id:'aura:stella',  label:'👩 여성 · Stella (미국)',    grp:'female'},
+    {id:'aura:athena',  label:'👩 여성 · Athena (영국)',    grp:'female'},
+    {id:'aura:hera',    label:'👩 여성 · Hera (미국)',      grp:'female'}
   ];
-  var TTS_DEFAULT_VOICE = 'cf-male';   // 기본: Cloudflare 남성(Aura)
+  var TTS_DEFAULT_VOICE = 'aura:orion';   // 기본: Aura 남성 Orion
   function ttsEndpointFor(voice){ return '/api/tutor/tts'; }   // Cloudflare Workers AI
+  function isServerVoice(v){ return v==='cf' || v==='cf-male' || (v && v.indexOf('aura:')===0); }
   function ttsVoice(){
     try{ var v = localStorage.getItem('ttsVoice');
-      if(v==='cf' || v==='cf-male' || v==='phone' || (v && v.indexOf('dev:')===0)) return v;
+      if(isServerVoice(v) || v==='phone' || (v && v.indexOf('dev:')===0)) return v;
     }catch(e){}
     return TTS_DEFAULT_VOICE;
   }
@@ -5320,6 +5331,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   // 현재 발음 음성 상태 (배지용)
   function ttsStatusInfo(){
     var v=ttsVoice();
+    if(v && v.indexOf('aura:')===0){ var nm=v.slice(5); return { t:'Aura · '+nm.charAt(0).toUpperCase()+nm.slice(1), cls:'ok' }; }
     if(v==='cf-male') return { t:'남성 (Cloudflare)', cls:'ok' };
     if(v==='phone') return { t:'폰 기본 음성', cls:'free' };
     if(v && v.indexOf('dev:')===0){ var dv=findDeviceVoice(v.slice(4)); return { t:'폰 음성: '+(dv?dv.name:'기기 음성'), cls:'free' }; }
@@ -5342,7 +5354,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   function cloudSpeak(text, voice, onErr){
     voice = voice || ttsVoice();
     var chain = [voice];   // 실제 선택 음성(cf=여성 / cf-male=남성)을 그대로 서버에 전달
-    function play(u){ try{ if(ttsAudio){ ttsAudio.pause(); } }catch(e){} ttsAudio = new Audio(u); ttsAudio.play().catch(function(){ onErr(); }); }
+    function play(u){ try{ if(ttsAudio){ ttsAudio.pause(); } }catch(e){} ttsAudio = new Audio(u); ttsAudio.playbackRate=TTS_RATE; applyAudioGain(ttsAudio, 1.5); ttsAudio.play().catch(function(){ onErr(); }); }
     function tryAt(i){
       if(i >= chain.length){ TTS_CONFIG.cloudOk=false; lastTtsEngine='free'; updateTtsBadges(); onErr(); return; }
       var v = chain[i];
@@ -5361,7 +5373,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   // 옵션 메뉴 미리듣기: 특정 음성으로 샘플 문장 재생
   function previewVoice(voice){
     var sample = "Hi! This is how I sound. Let's practice English together.";
-    if(voice === 'cf' || voice === 'cf-male'){ cloudSpeak(sample, voice, function(){ webSpeak(sample,'en'); }); return; }
+    if(isServerVoice(voice)){ cloudSpeak(sample, voice, function(){ webSpeak(sample,'en'); }); return; }
     webSpeak(sample, 'en', resolveVoice(voice));
   }
   // 폰 기본 음성(Web Speech) — 항상 사용 가능한 폴백
@@ -5383,6 +5395,19 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       o.connect(og); og.connect(ctx.destination); o.start(t); o.stop(t+0.045);
     }catch(e){}
   }
+  // 서버(Cloudflare) 음성 재생 시 음량 부스트용 Web Audio. 자동재생 정책상 사용자 탭에서 resume됨.
+  var _gainCtx=null;
+  function applyAudioGain(audioEl, gainVal){
+    try{
+      var AC=window.AudioContext||window.webkitAudioContext; if(!AC) return;
+      if(!_gainCtx) _gainCtx=new AC();
+      if(_gainCtx.state==='suspended'){ try{ _gainCtx.resume(); }catch(e){} }
+      var src=_gainCtx.createMediaElementSource(audioEl);
+      var g=_gainCtx.createGain(); g.gain.value=gainVal;
+      src.connect(g); g.connect(_gainCtx.destination);
+    }catch(e){}
+  }
+  var TTS_RATE = 0.94;   // 아주 조금만 느리게
   function webSpeak(text, lang, vobj){
     if(!('speechSynthesis' in window)) return;
     try{
@@ -5397,8 +5422,8 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   }
   function speak(text, lang){
     var v = ttsVoice();
-    // Cloudflare 음성(남/여) + 영어 → 서버 TTS(실패 시 폰 음성 폴백)
-    if(lang !== 'ko' && (v === 'cf' || v === 'cf-male') && ttsAvailable()){
+    // Cloudflare 서버 음성(Aura/MeloTTS) + 영어 → 서버 TTS(실패 시 폰 음성 폴백)
+    if(lang !== 'ko' && isServerVoice(v) && ttsAvailable()){
       try{ if('speechSynthesis' in window) window.speechSynthesis.cancel(); }catch(e){}
       cloudSpeak(text, v, function(){ webSpeak(text, lang); });
       return;
@@ -6268,7 +6293,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     function ls(k,v){ try{ if(v===undefined) return localStorage.getItem(k); localStorage.setItem(k,v); }catch(e){ return null; } }
     function getImg(){ return ls(LS_IMG)||''; }
     function getVideo(){ return ls(LS_VIDEO)||''; }
-    function getVoice(){ var v=ls(LS_VOICE); return (v==='cf'||v==='cf-male'||v==='phone'||(v&&v.indexOf('dev:')===0))?v:'cf-male'; }
+    function getVoice(){ var v=ls(LS_VOICE); return (v==='cf'||v==='cf-male'||(v&&v.indexOf('aura:')===0)||v==='phone'||(v&&v.indexOf('dev:')===0))?v:'aura:orion'; }
     function setVoice(v){ ls(LS_VOICE,v); }
     function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
@@ -6357,7 +6382,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
         .then(function(r){ return r.ok ? r.blob() : r.text().then(function(tx){ var j=null; try{j=JSON.parse(tx);}catch(e){}
           var st=(j&&j.status)||r.status; throw new Error((st===429?'한도초과(429)':((j&&(j.detail||j.error))||('HTTP '+r.status)))); }); });
     }
-    function playBlob(b){ try{ audio=new Audio(URL.createObjectURL(b)); audio.play().catch(function(){}); }catch(e){} }
+    function playBlob(b){ try{ audio=new Audio(URL.createObjectURL(b)); audio.playbackRate=TTS_RATE; applyAudioGain(audio, 1.5); audio.play().catch(function(){}); }catch(e){} }
     function pickFemaleVoice(){
       try{
         var vs=window.speechSynthesis.getVoices()||[];
@@ -7848,7 +7873,12 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     var fb=document.createElement('div'); fb.className='opt-desc'; fb.style.marginTop='8px';
     var cur=TUTOR.getVoice();
     var dev=deviceEnVoices();
-    var voiceList=[['cf-male','🧑 남성 (Cloudflare)'],['cf','👩 여성 (Cloudflare)'],['phone','📱 폰 기본 음성']];
+    var voiceList=[
+      ['aura:orion','🧑 Orion (미국)'],['aura:arcas','🧑 Arcas (미국)'],['aura:perseus','🧑 Perseus (미국)'],
+      ['aura:zeus','🧑 Zeus (저음)'],['aura:helios','🧑 Helios (영국)'],['aura:angus','🧑 Angus (아일랜드)'],
+      ['aura:asteria','👩 Asteria (미국)'],['aura:luna','👩 Luna (미국)'],['aura:athena','👩 Athena (영국)'],
+      ['phone','📱 폰 기본 음성']
+    ];
     dev.forEach(function(v,i){ voiceList.push(['dev:'+v.voiceURI, (i+1)+'. '+v.name+' ('+v.lang+')']); });
     if(!dev.length){
       try{ window.speechSynthesis.onvoiceschanged=function(){ if(activePanel==='options'){ try{ renderOptions(); }catch(e){} } }; window.speechSynthesis.getVoices(); }catch(e){}
@@ -8033,9 +8063,11 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       var sub=document.createElement('div'); sub.style.margin='12px 2px 2px'; sub.style.fontSize='12px'; sub.style.fontWeight='600'; sub.style.color='var(--text3)';
       sub.textContent=txt; list.appendChild(sub);
     }
-    // Cloudflare 서버 음성(남/여) — 기기 상관없이 항상 동일하게 나옴 (추천)
-    subHead('추천 · 서버 음성 (기기 무관 · 남/여)');
-    TTS_VOICES.filter(function(v){ return v.grp==='server'; }).forEach(function(v){ list.appendChild(makeItem(v.id, v.label, true)); });
+    // Cloudflare Aura — 기기 상관없이 항상 동일하게 나옴 (추천). ▶로 들어보고 선택.
+    subHead('추천 · 남성 음성 (서버 · 기기 무관)');
+    TTS_VOICES.filter(function(v){ return v.grp==='male'; }).forEach(function(v){ list.appendChild(makeItem(v.id, v.label, true)); });
+    subHead('여성 음성 (서버)');
+    TTS_VOICES.filter(function(v){ return v.grp==='female'; }).forEach(function(v){ list.appendChild(makeItem(v.id, v.label, true)); });
     // 폰 시스템 기본 + 폰에 설치된 음성들
     subHead('폰 음성 (폰 설정 따름)');
     list.appendChild(makeItem('phone', '📱 폰 기본 음성 (시스템 설정 따름)', true));
