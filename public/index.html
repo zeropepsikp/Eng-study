@@ -5966,6 +5966,9 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     var ansBtn=document.createElement('button'); ansBtn.className='fill-ansbtn'; ansBtn.textContent='정답';
     btnRow.appendChild(mic); if(hintBtn) btnRow.appendChild(hintBtn); btnRow.appendChild(ansBtn);
     card.appendChild(btnRow);
+    host._fillMic = mic;
+    host._fillAns = ansBtn;
+    if(opts.noButtons){ btnRow.style.display='none'; }
     host.appendChild(card);
 
     var usedHelp=false, done=false;
@@ -7482,7 +7485,6 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     var gr=document.createElement('div'); gr.className='grade-row'; gr.style.marginTop='14px'; gr.style.display='block';
     wrap.appendChild(gr);
 
-    var nav=document.createElement('div'); nav.className='nav';
     var pv=document.createElement('button'); pv.textContent='← Prev';
     pv.disabled=(todayChunkDeckPos<=0);
     pv.addEventListener('click',function(){ if(todayChunkDeckPos>0){ todayChunkDeckPos--; renderTodayChunk(); } });
@@ -7498,14 +7500,24 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       } else { todayChunkDeckPos++; }
       renderTodayChunk();
     });
-    nav.appendChild(pv); nav.appendChild(nx); wrap.appendChild(nav);
+    var micExt=document.createElement('button'); micExt.innerHTML='🎤 말하기';
+    var ansExt=document.createElement('button'); ansExt.textContent='정답'; ansExt.style.color='var(--info)';
+    if(item.graded!=null){ micExt.disabled=true; ansExt.disabled=true; }
 
     chunkFillInto(gr, ch, cat, item, function(grade){
       if(item.graded!=null) return;
       applyTodayChunkGrade(item, ch, grade); item.result=grade;
       nx.disabled=false;
+      micExt.disabled=true; ansExt.disabled=true;
       speak(ch.en,'en');
     }, body);
+
+    micExt.addEventListener('click',function(){ if(gr._fillMic && !gr._fillMic.disabled) gr._fillMic.click(); });
+    ansExt.addEventListener('click',function(){ if(gr._fillAns && !gr._fillAns.disabled) gr._fillAns.click(); });
+
+    var nav=document.createElement('div'); nav.className='nav';
+    nav.appendChild(pv); nav.appendChild(micExt); nav.appendChild(ansExt); nav.appendChild(nx);
+    wrap.appendChild(nav);
   }
 
   function renderTodayHeader(){
@@ -8145,7 +8157,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   //  · 맞히면(streak 미달) 5문제 내 재등장. 졸업하면 큐에서 빠짐.
   //  · localStorage에 카테고리별 진행(streak) 저장.
   // ============================================================
-  var CHUNK_STREAK_GOAL = 3;            // 연속 N회 즉답 → 졸업
+  var CHUNK_STREAK_GOAL = 2;            // 연속 N회 즉답 → 졸업
   var CHUNK_PROG_KEY = 'eng_chunks_progress_v1';
   var curChunkCat = 1;
   var chunkProgress = (function(){      // { catId: { idx: streak } }
@@ -9477,7 +9489,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       renderCefrFill(area, ch.en, function(grade){
         onGraded(grade);
         chunkExamplesInto(exTarget, ch, item);   // 정답 직후 카드 안에 예시 노출
-      }, {noHint:true, blankAll:true});
+      }, {noHint:true, blankAll:true, noButtons:true});
     } else {
       var enRow=document.createElement('div'); enRow.style.display='flex'; enRow.style.alignItems='center'; enRow.style.justifyContent='center'; enRow.style.gap='8px';
       var en=document.createElement('div'); en.className='chunk-en'; en.textContent=ch.en;
@@ -9541,7 +9553,6 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     var gr=document.createElement('div'); gr.className='grade-row'; gr.style.marginTop='14px'; gr.style.display='block';
     wrap.appendChild(gr);
 
-    var nav=document.createElement('div'); nav.className='nav';
     var pv=document.createElement('button'); pv.textContent='← Prev';
     pv.disabled = (chunkDeckPos<=0);
     pv.addEventListener('click',function(){ if(chunkDeckPos>0){ chunkDeckPos--; renderChunk(); } });
@@ -9557,14 +9568,24 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       } else { chunkDeckPos++; }
       renderChunk();
     });
-    nav.appendChild(pv); nav.appendChild(nx); wrap.appendChild(nav);
+    var micExt=document.createElement('button'); micExt.innerHTML='🎤 말하기';
+    var ansExt=document.createElement('button'); ansExt.textContent='정답'; ansExt.style.color='var(--info)';
+    if(item.graded!=null){ micExt.disabled=true; ansExt.disabled=true; }
 
     chunkFillInto(gr, ch, cat, item, function(grade){
       if(item.graded!=null) return;
       applyChunkGrade(item, ch, grade); item.result=grade;
       nx.disabled=false;
+      micExt.disabled=true; ansExt.disabled=true;
       speak(ch.en,'en');
     }, body);
+
+    micExt.addEventListener('click',function(){ if(gr._fillMic && !gr._fillMic.disabled) gr._fillMic.click(); });
+    ansExt.addEventListener('click',function(){ if(gr._fillAns && !gr._fillAns.disabled) gr._fillAns.click(); });
+
+    var nav=document.createElement('div'); nav.className='nav';
+    nav.appendChild(pv); nav.appendChild(micExt); nav.appendChild(ansExt); nav.appendChild(nx);
+    wrap.appendChild(nav);
   }
 
   function applyChunkGrade(item, ch, grade){
