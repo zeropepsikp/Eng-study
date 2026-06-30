@@ -28,23 +28,25 @@ export async function onRequestPost(context) {
     if (!text) return new Response("missing text", { status: 400 });
     if (text.length > MAX_LEN) text = text.slice(0, MAX_LEN);
 
-    // 남성 요청이면 Deepgram Aura(남성), 아니면 MeloTTS. voice 값으로 판별.
+    // Aura 화자 지정: voice="aura:<speaker>" 또는 male/guy 등 → orion. 그 외 → MeloTTS.
     const voice = (data && typeof data.voice === "string") ? data.voice : "";
-    const wantMale = /male|man|guy|aura|orion|brian|matthew/i.test(voice);
+    let speaker = "";
+    if (voice.indexOf("aura:") === 0) speaker = voice.slice(5).replace(/[^a-zA-Z]/g, "").toLowerCase();
+    else if (/male|man|guy|orion|brian|matthew/i.test(voice)) speaker = "orion";
 
-    // 엣지 캐시 (text + 남/녀 기준)
+    // 엣지 캐시 (text + 음성 종류 기준)
     let cache = null, cacheKey = null;
     try {
       cache = caches.default;
-      cacheKey = new Request("https://cf-tts.local/" + (wantMale ? "m/" : "f/") + encodeURIComponent(text), { method: "GET" });
+      cacheKey = new Request("https://cf-tts.local/" + (speaker ? ("a-" + speaker + "/") : "f/") + encodeURIComponent(text), { method: "GET" });
       const hit = await cache.match(cacheKey);
       if (hit) return hit;
     } catch (e) { cache = null; }
 
     let out = null;
-    if (wantMale) {
-      // Deepgram Aura — 남성 화자(Orion). 모델 미지원/오류면 MeloTTS로 폴백.
-      try { out = await env.AI.run("@cf/deepgram/aura-1", { text: text, speaker: "orion" }); }
+    if (speaker) {
+      // Deepgram Aura — 지정 화자. 모델 미지원/오류면 MeloTTS로 폴백.
+      try { out = await env.AI.run("@cf/deepgram/aura-1", { text: text, speaker: speaker }); }
       catch (e) { out = null; }
     }
     if (!out) {
