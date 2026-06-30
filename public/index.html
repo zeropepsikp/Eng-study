@@ -3039,6 +3039,231 @@ var CHUNK_EX10 = {
 };
 window.CHUNK_EX10 = CHUNK_EX10;
 
+// ============================================================
+//  CHUNK_REP — 청크별 '대표 예문' (문제·정답 모두 한 예문으로)
+//  ko: 문법(청크) 부분은 파랑, 내용어는 { } 로 감싸 기본색 유지.
+//  영어 정답칸은 청크(en의 chunk.en 부분)만 빈칸, 내용어는 미리 노출.
+//  예) "I'm about to" → en:"I'm about to leave." (start/leave만 노출, "I'm about to" 입력)
+//      ko:"막 {나가}려던 참이야."  → '나가'는 기본색, 나머지(문법)는 파랑.
+// ============================================================
+var CHUNK_REP = {
+  // --- 1. Intentions ---
+  "I don't want to":{en:"I don't want to wait.",ko:"{기다리}기 싫어."},
+  "I'd like to":{en:"I'd like to order.",ko:"{주문}하고 싶은데요."},
+  "I need to":{en:"I need to leave now.",ko:"{지금 가}야 해."},
+  "I have to":{en:"I have to work today.",ko:"{오늘 일}해야 해."},
+  "I'm going to":{en:"I'm going to call him.",ko:"{걔한테 전화}할 거야."},
+  "I'm trying to":{en:"I'm trying to focus.",ko:"{집중}하려는 중이야."},
+  "I'm about to":{en:"I'm about to leave.",ko:"막 {나가}려던 참이야."},
+  "I was going to":{en:"I was going to tell you.",ko:"{말}하려고 했었어."},
+  "I'm planning to":{en:"I'm planning to travel.",ko:"{여행 갈} 계획이야."},
+  "I feel like":{en:"I feel like resting.",ko:"{쉬}고 싶어."},
+  "I'd rather":{en:"I'd rather stay home.",ko:"차라리 {집에 있}을래."},
+  "I'm supposed to":{en:"I'm supposed to meet her.",ko:"{그녀를 만나}기로 되어 있어."},
+  "I used to":{en:"I used to live there.",ko:"예전엔 {거기 살}았어."},
+  "I'm not ready to":{en:"I'm not ready to decide.",ko:"아직 {결정} 못 하겠어."},
+  "Let me":{en:"Let me check.",ko:"내가 {확인}해볼게."},
+  "I'll just":{en:"I'll just wait here.",ko:"그냥 {여기서 기다릴}게."},
+  "I might":{en:"I might be late.",ko:"{늦}을지도 몰라."},
+  "I was about to say":{en:"I was about to say that.",ko:"막 {그 말} 하려던 참이었어."},
+  "I'd love to":{en:"I'd love to come.",ko:"정말 {가}고 싶어."},
+  "I can't wait to":{en:"I can't wait to see it.",ko:"빨리 {보}고 싶어."},
+  "I wish":{en:"I wish I could go.",ko:"{갈} 수 있으면 좋을 텐데."},
+  "I was thinking of":{en:"I was thinking of leaving early.",ko:"{일찍 갈}까 생각 중이었어."},
+  "I'm willing to":{en:"I'm willing to try.",ko:"{해볼} 의향 있어."},
+  "You should":{en:"You should rest.",ko:"너 {쉬}는 게 좋아."},
+  "You shouldn't":{en:"You shouldn't worry.",ko:"너 {걱정} 안 하는 게 좋아."},
+  "You'd better":{en:"You'd better hurry.",ko:"너 {서두르}는 게 좋을걸."},
+  "You might want to":{en:"You might want to check.",ko:"너 {확인}하는 게 좋을지도."},
+  "You don't have to":{en:"You don't have to wait.",ko:"너 {기다리}지 않아도 돼."},
+  "You can always":{en:"You can always ask.",ko:"너 언제든 {물어보}면 돼."},
+  "Make sure to":{en:"Make sure to call.",ko:"꼭 {전화}해."},
+  "Don't forget to":{en:"Don't forget to call.",ko:"{전화}하는 거 잊지 마."},
+  "All you have to do is":{en:"All you have to do is wait.",ko:"너 {기다리}기만 하면 돼."},
+  // --- 2. Opinions ---
+  "I think":{en:"I think it's fine.",ko:"{괜찮}은 것 같아."},
+  "I don't think":{en:"I don't think it works.",ko:"{안 될} 것 같아."},
+  "I guess":{en:"I guess so.",ko:"{그런}가 봐."},
+  "I'm not sure":{en:"I'm not sure if it's true.",ko:"{사실}인지 모르겠어."},
+  "I believe":{en:"I believe you.",ko:"{널} 믿어."},
+  "It seems like":{en:"It seems like a good idea.",ko:"{좋은 생각} 같아."},
+  "It looks like":{en:"It looks like rain.",ko:"{비 올} 것 같아."},
+  "In my opinion":{en:"In my opinion, it's fine.",ko:"내 생각엔 {괜찮}아."},
+  "To be honest":{en:"To be honest, I forgot.",ko:"솔직히 {까먹}었어."},
+  "I'm afraid":{en:"I'm afraid I can't.",ko:"미안하지만 {안 될} 것 같아."},
+  "I hope":{en:"I hope so.",ko:"{그러}길 바라."},
+  "I'm worried about":{en:"I'm worried about you.",ko:"{네}가 걱정돼."},
+  "I'm glad":{en:"I'm glad to hear that.",ko:"{그 말 들으}니 다행이야."},
+  "I'm sorry but":{en:"I'm sorry but I can't.",ko:"미안한데 {안 돼}."},
+  "I agree":{en:"I agree with you.",ko:"{네 말}에 동의해."},
+  "I don't mind":{en:"I don't mind waiting.",ko:"{기다려}도 괜찮아."},
+  "It depends":{en:"It depends on the time.",ko:"{시간}에 따라 달라."},
+  "The thing is":{en:"The thing is, I'm broke.",ko:"문제는, {나 돈이 없}어."},
+  "What I mean is":{en:"What I mean is, it's late.",ko:"내 말은, {너무 늦었}다는 거야."},
+  "I'd say":{en:"I'd say it's worth it.",ko:"{그럴 가치 있}는 것 같아."},
+  "I'm sure":{en:"I'm sure it's fine.",ko:"분명 {괜찮}을 거야."},
+  "Maybe I should":{en:"Maybe I should ask.",ko:"{물어보}는 게 낫겠다."},
+  "It's hard to":{en:"It's hard to say.",ko:"{말하}기 어렵네."},
+  "It's easy to":{en:"It's easy to forget.",ko:"{잊}기 쉬워."},
+  "It's worth":{en:"It's worth trying.",ko:"{해볼} 가치 있어."},
+  "There's no":{en:"There's no problem.",ko:"{문제} 없어."},
+  "That's because":{en:"That's because it's late.",ko:"그건 {늦어}서 그래."},
+  // --- 3. Questions ---
+  "Can you":{en:"Can you help me?",ko:"{도와}줄 수 있어?"},
+  "Could you":{en:"Could you repeat that?",ko:"{다시 말씀}해주시겠어요?"},
+  "Can I":{en:"Can I sit here?",ko:"{여기 앉}아도 돼?"},
+  "Could I":{en:"Could I get some water?",ko:"{물 좀} 주실 수 있나요?"},
+  "Do you":{en:"Do you have time?",ko:"{시간} 있어?"},
+  "Do you want to":{en:"Do you want to come?",ko:"{같이 갈}래?"},
+  "Would you like to":{en:"Would you like to join us?",ko:"{같이 하}시겠어요?"},
+  "Did you":{en:"Did you eat?",ko:"{밥 먹}었어?"},
+  "Have you":{en:"Have you finished?",ko:"{다 했}어?"},
+  "Are you":{en:"Are you okay?",ko:"{괜찮}아?"},
+  "Is it":{en:"Is it far?",ko:"{멀}어?"},
+  "What time":{en:"What time do you start?",ko:"몇 시에 {시작}해?"},
+  "What kind of":{en:"What kind of food?",ko:"어떤 {음식}?"},
+  "What":{en:"What color do you like?",ko:"무슨 {색} 좋아해요?"},
+  "Which":{en:"Which bus goes downtown?",ko:"어느 {버스가 시내 가}요?"},
+  "How about":{en:"How about tomorrow?",ko:"{내일}은 어때?"},
+  "How do you":{en:"How do you know?",ko:"어떻게 {알}아?"},
+  "How long":{en:"How long does it take?",ko:"얼마나 {걸려}?"},
+  "How much":{en:"How much is it?",ko:"얼마{예요}?"},
+  "Why don't you":{en:"Why don't you rest?",ko:"좀 {쉬}는 게 어때?"},
+  "Why don't we":{en:"Why don't we start?",ko:"우리 {시작}하는 게 어때?"},
+  "Where is":{en:"Where is the bathroom?",ko:"{화장실} 어디예요?"},
+  "Is there":{en:"Is there a problem?",ko:"무슨 {문제} 있어?"},
+  "Do you mind if":{en:"Do you mind if I sit?",ko:"{앉}아도 될까요?"},
+  "What do you think":{en:"What do you think about it?",ko:"{그거} 어떻게 생각해?"},
+  "Can I get":{en:"Can I get a coffee?",ko:"{커피} 하나 주세요."},
+  "What if":{en:"What if it rains?",ko:"{비 오}면 어떡해?"},
+  "Should I":{en:"Should I wait?",ko:"{기다릴}까?"},
+  "Do you know":{en:"Do you know him?",ko:"{걔} 알아?"},
+  "Is it okay if I":{en:"Is it okay if I leave early?",ko:"나 {일찍 가}도 괜찮아?"},
+  "Would you mind":{en:"Would you mind waiting?",ko:"{기다려}주실 수 있을까요?"},
+  "What's it like":{en:"What's it like there?",ko:"{거긴} 어때?"},
+  "What's wrong with":{en:"What's wrong with it?",ko:"{이거} 뭐가 문제야?"},
+  "How come":{en:"How come you're late?",ko:"왜 {늦었}어?"},
+  "How do you say":{en:"How do you say this?",ko:"{이거} 영어로 뭐라고 해?"},
+  "What's the word for":{en:"What's the word for this?",ko:"{이거}는 뭐라고 하지?"},
+  "Can you explain":{en:"Can you explain this?",ko:"{이거} 설명해줄 수 있어?"},
+  "Do you mean":{en:"Do you mean this?",ko:"{이거}라는 거야?"},
+  "When do you":{en:"When do you start?",ko:"너 언제 {시작}해?"},
+  "When is":{en:"When is the meeting?",ko:"{회의} 언제야?"},
+  "Who":{en:"Who said that?",ko:"누가 {그 말 했}어?"},
+  "Which one":{en:"Which one do you want?",ko:"어느 거 {원해}?"},
+  "Whose":{en:"Whose is this?",ko:"{이거} 누구 거야?"},
+  // --- 5. Connectors ---
+  "but":{en:"I like it, but it's expensive.",ko:"{맘에 드}는데 {비싸}."},
+  "so":{en:"I was tired, so I left.",ko:"{피곤}해서 {갔}어."},
+  "because":{en:"I'm late because of traffic.",ko:"{차가 막혀}서 {늦}었어."},
+  "and then":{en:"We ate, and then we left.",ko:"{먹}고 나서 {나왔}어."},
+  "that's why":{en:"That's why I'm here.",ko:"그래서 {내가 온} 거야."},
+  "by the way":{en:"By the way, did you call?",ko:"참, {전화했}어?"},
+  "actually":{en:"Actually, I forgot.",ko:"사실 {깜빡했}어."},
+  "anyway":{en:"Anyway, let's go.",ko:"어쨌든 {가}자."},
+  "for example":{en:"For example, this one.",ko:"예를 들면 {이거}."},
+  "at least":{en:"At least we tried.",ko:"그래도 {해봤}잖아."},
+  "in fact":{en:"In fact, it's better.",ko:"사실 {더 나}아."},
+  "first of all":{en:"First of all, thanks.",ko:"우선, {고마워}."},
+  "after that":{en:"After that, we slept.",ko:"그 다음에 {잤}어."},
+  "in the end":{en:"In the end, it worked.",ko:"결국엔 {잘됐}어."},
+  "as soon as":{en:"Call me as soon as you arrive.",ko:"{도착}하자마자 {전화}해."},
+  "even though":{en:"Even though it's hard.",ko:"{힘}든데도."},
+  "that said":{en:"That said, I'll try.",ko:"그렇긴 한데, {해볼}게."},
+  "on the other hand":{en:"On the other hand, it's cheap.",ko:"반면에 {싸}잖아."},
+  "the problem is":{en:"The problem is time.",ko:"문제는 {시간}이야."},
+  "as long as":{en:"As long as you're happy.",ko:"네가 {행복}하기만 하면."},
+  "more or less":{en:"It's more or less done.",ko:"거의 {다 됐}어."},
+  "just in case":{en:"Bring it just in case.",ko:"혹시 모르니 {챙겨가}."},
+  "either way":{en:"Either way is fine.",ko:"어느 쪽이든 {괜찮}아."},
+  "if":{en:"Call me if you need help.",ko:"{도움 필요}하면 {전화}해."},
+  "if I were you":{en:"If I were you, I'd wait.",ko:"나라면 {기다리}겠어."},
+  "if you want":{en:"I can help, if you want.",ko:"원하면 {도와줄}게."},
+  "when":{en:"Call me when you get home.",ko:"{집에 도착}하면 {전화}해."},
+  "while":{en:"Wait here while I check.",ko:"내가 {확인}하는 동안 {기다려}."},
+  "before":{en:"Call before you come.",ko:"{오}기 전에 {전화}해."},
+  "after":{en:"Let's eat after we finish.",ko:"{끝내}고 나서 {먹}자."},
+  "until":{en:"Wait until I get back.",ko:"{돌아올} 때까지 {기다려}."},
+  "though":{en:"It's pricey, though.",ko:"근데 좀 {비싸}."},
+  "however":{en:"However, it's risky.",ko:"하지만 {위험}해."},
+  "the more ~, the more":{en:"The more I practice, the better I get.",ko:"{연습}할수록 {더 나아}져."},
+  "as ~ as":{en:"It's as good as the original.",ko:"{원래 것}만큼 {좋}아."},
+  "not as ~ as":{en:"It's not as hard as I thought.",ko:"{생각}만큼 {어렵}진 않아."},
+  "too ~ to":{en:"It's too late to call.",ko:"{전화하}기엔 너무 {늦}었어."},
+  "the one that":{en:"This is the one that I like.",ko:"이게 {내가 좋아하}는 거야."},
+  "someone who":{en:"I need someone who can drive.",ko:"{운전할 수 있}는 사람이 필요해."},
+  "something to":{en:"I need something to eat.",ko:"{먹}을 게 좀 필요해."},
+  "in other words":{en:"In other words, it's done.",ko:"다시 말해, {끝난} 거야."},
+  "that way":{en:"That way, we save time.",ko:"그러면 {시간을 아껴}."},
+  "no matter":{en:"No matter what, I'll try.",ko:"무슨 일이 있어도 {해볼}게."},
+  // --- 보강(gap) 청크 ---
+  "We could":{en:"We could order pizza.",ko:"우리 {피자 시켜}도 되고."},
+  "We should":{en:"We should leave soon.",ko:"우리 {곧 출발}하자."},
+  "Shall we":{en:"Shall we take a break?",ko:"우리 {좀 쉴}까?"},
+  "Shall I":{en:"Shall I open the window?",ko:"내가 {창문 열}까?"},
+  "Would you rather":{en:"Would you rather stay home?",ko:"차라리 {집에 있}을래?"},
+  "I'd appreciate it if":{en:"I'd appreciate it if you could help.",ko:"{도와}주시면 감사하겠어요."},
+  "unless":{en:"Call me unless you're busy.",ko:"{바쁘}지 않으면 {전화}해."},
+  "even if":{en:"I'll go even if it rains.",ko:"설령 {비가 와}도 {갈}게."},
+  "in case":{en:"Take an umbrella in case it rains.",ko:"{비 올} 경우 대비해 {우산 챙겨}."},
+  "once":{en:"Call me once you arrive.",ko:"일단 {도착}하면 {전화}해."},
+  "by the time":{en:"By the time we arrived, it ended.",ko:"우리가 {도착할} 때쯤엔 {끝났}어."},
+  "not only ~ but also":{en:"She is not only smart but also kind.",ko:"걔는 {똑똑}할 뿐만 아니라 {착}하기도 해."},
+  "whatever":{en:"Order whatever you like.",ko:"{좋아하}는 거 뭐든 {주문}해."},
+  "That reminds me":{en:"That reminds me, I owe you money.",ko:"그러고 보니, {나 너한테 돈 빚졌}네."},
+  "I'll let you know":{en:"I'll let you know soon.",ko:"{곧} 알려줄게."},
+  "I keep":{en:"I keep forgetting.",ko:"자꾸 {까먹}게 돼."},
+  "I ended up":{en:"I ended up staying home.",ko:"결국 {집에 있}게 됐어."},
+  "I don't know what to":{en:"I don't know what to say.",ko:"뭘 {말}해야 할지 모르겠어."},
+  "I wonder if":{en:"I wonder if it's true.",ko:"{사실}인지 궁금해."},
+  "That's what":{en:"That's what I meant.",ko:"그게 바로 {내가 말한} 거야."},
+  "Why would":{en:"Why would he lie?",ko:"걔가 왜 {거짓말}하겠어?"},
+  "Why are you":{en:"Why are you so quiet?",ko:"너 왜 그렇게 {조용}해?"},
+  "Why did you":{en:"Why did you leave early?",ko:"너 왜 {일찍 갔}어?"},
+  "How was":{en:"How was your trip?",ko:"{여행} 어땠어?"},
+  "How can I":{en:"How can I help?",ko:"내가 어떻게 {도와}줄까?"},
+  "How would you":{en:"How would you handle this?",ko:"너라면 이걸 어떻게 {처리}할 거야?"},
+  "What are you":{en:"What are you doing?",ko:"너 뭐 {하}는 중이야?"},
+  "What should I":{en:"What should I wear?",ko:"나 뭘 {입}어야 할까?"},
+  "What would you":{en:"What would you do?",ko:"너라면 뭘 {하}겠어?"},
+  "Where can I":{en:"Where can I charge my phone?",ko:"어디서 {폰 충전}할 수 있어?"},
+  "When did you":{en:"When did you start?",ko:"너 언제 {시작했}어?"},
+  "Can you tell me":{en:"Can you tell me how it works?",ko:"{어떻게 작동하}는지 알려줄래?"},
+  "Let me know":{en:"Let me know if you need help.",ko:"{도움 필요}하면 알려줘."},
+  "Speaking of":{en:"Speaking of food, I'm hungry.",ko:"{음식} 얘기 나와서 말인데, {배고파}."},
+  "As far as I know":{en:"As far as I know, it's closed.",ko:"내가 알기로는 {문 닫}았어."},
+  "Now that":{en:"Now that you mention it, I remember.",ko:"이제 {네가 말하}니까 {기억나}."},
+  "Other than that":{en:"Other than that, it's fine.",ko:"그거 빼고는 {괜찮}아."},
+  "Come to think of it":{en:"Come to think of it, she was right.",ko:"생각해 보니 {걔 말이 맞}았어."},
+  "It turns out":{en:"It turns out it was true.",ko:"알고 보니 {사실이}었어."},
+  "No wonder":{en:"No wonder you're tired.",ko:"어쩐지 {피곤}하더라."},
+  "It may seem":{en:"It may seem hard, but it's easy.",ko:"{어려워} 보여도, 사실 {쉬워}."},
+  "I'll":{en:"I'll take a taxi.",ko:"나 {택시 탈}게."},
+  "I won't":{en:"I won't tell anyone.",ko:"나 {아무한테도 말} 안 할게."},
+  "I prefer":{en:"I prefer tea.",ko:"나 {차}를 더 좋아해."},
+  "I'm into":{en:"I'm into hiking these days.",ko:"나 요즘 {등산}에 푹 빠졌어."},
+  "I'm not a fan of":{en:"I'm not a fan of horror movies.",ko:"나 {공포 영화} 별로 안 좋아해."},
+  "He said":{en:"He said he was late.",ko:"걔가 {늦는다}고 했어."},
+  "She told me":{en:"She told me she was busy.",ko:"걔가 나한테 {바쁘다}고 했어."},
+  "I heard that":{en:"I heard that it's true.",ko:"{사실이}라고 들었어."},
+  "They say":{en:"They say it's amazing.",ko:"{끝내준다}고들 해."},
+  "It's":{en:"It's a good idea.",ko:"{좋은 생각}이야."},
+  "There is":{en:"There is a problem.",ko:"{문제}가 있어."},
+  "It sounds like":{en:"It sounds like a good plan.",ko:"{좋은 계획} 같네."},
+  "It must be":{en:"It must be hard.",ko:"분명 {힘}들 거야."},
+  "I've never":{en:"I've never been there.",ko:"나 {거기 가}본 적 없어."},
+  "I've already":{en:"I've already finished.",ko:"나 이미 {끝냈}어."},
+  "I should have":{en:"I should have called.",ko:"나 {전화했}어야 했는데."},
+  "How many":{en:"How many people are coming?",ko:"몇 명이나 {와}?"},
+  "How often":{en:"How often do you exercise?",ko:"얼마나 자주 {운동}해?"},
+  "I was wondering if":{en:"I was wondering if you could help.",ko:"혹시 {도와}주실 수 있을까 해서요."},
+  "more ~ than":{en:"This is more expensive than that.",ko:"이게 저것보다 더 {비싸}."},
+  "the most":{en:"It's the most beautiful place.",ko:"가장 {아름다운} 곳이야."},
+  "either ~ or":{en:"Either tea or coffee is fine.",ko:"{차}든 {커피}든 괜찮아."},
+  "usually":{en:"I usually wake up early.",ko:"나 보통 {일찍 일어나}."}
+};
+window.CHUNK_REP = CHUNK_REP;
+
 
 window.LEVEL_DATA = LEVEL_DATA;
 // 핵심 표현 강조용 키워드 맵.
@@ -6031,6 +6256,23 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     }
     return { units:units, target:target, blankWords:blankWords };
   }
+  // 청크학습용: 문장 전체를 보여주되, '문법 청크' 부분(blankSub)만 빈칸으로.
+  // 예) en="I'm about to start", blankSub="I'm about to" → "start"는 미리 노출, "I'm about to"만 입력.
+  function buildFillSub(en, blankSub){
+    var lower=en.toLowerCase(), key=(blankSub||'').toLowerCase();
+    var start = key ? lower.indexOf(key) : -1;
+    var end = start<0 ? -1 : start+key.length;
+    var units=[], target='';
+    for(var pos=0; pos<en.length; pos++){
+      var ch=en[pos];
+      var inBlank = start>=0 && pos>=start && pos<end;
+      if(ch===' ') units.push({t:'sp'});
+      else if(inBlank && /[A-Za-z]/.test(ch)){ units.push({t:'box',ch:ch}); target+=ch.toLowerCase(); }
+      else units.push({t:'ch',ch:ch});
+    }
+    var blankWords = (blankSub||'').split(/\s+/).filter(Boolean);
+    return { units:units, target:target, blankWords:blankWords };
+  }
   // 말하기(STT) 채점: 빈칸 정답 단어들만 순서대로 나오면 통과.
   // 보여주는 단어나 앞뒤 군더더기는 무시 (예: 정답 "she wears", 화면 "glasses" → "she wears"만 맞으면 OK)
   function cefrSttWords(str){
@@ -6056,7 +6298,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   function renderCefrFill(host, en, onDone, opts){
     opts = opts||{};
     host.innerHTML='';
-    var fb = buildFill(en, opts.blankAll);
+    var fb = opts.blankSub ? buildFillSub(en, opts.blankSub) : buildFill(en, opts.blankAll);
     var card=document.createElement('div'); card.className='fill-wrap';
     var area=document.createElement('div'); area.className='fill-area';
     var slots=document.createElement('div'); slots.className='fill-slots';
@@ -7597,7 +7839,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     card.appendChild(tag); card.appendChild(sk);
     var body=document.createElement('div'); body.style.width='100%';
     var clab=document.createElement('div'); clab.className='chunk-side'; clab.style.color=col.fg; clab.textContent='Korean';
-    var cko=document.createElement('div'); cko.className='chunk-ko'; cko.textContent=ch.ko;
+    var cko=document.createElement('div'); cko.className='chunk-ko'; paintChunkKo(cko, ch);
     body.appendChild(clab); body.appendChild(cko);
     card.appendChild(body);
     wrap.appendChild(card);
@@ -9602,19 +9844,52 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     host.appendChild(exBlock);
   }
   // 청크 빈칸 채우기(CEFR와 동일, 단 힌트 없음·전부 빈칸). graded면 정답+예시 표시.
+  // 청크의 대표 예문(rep)을 찾아 { en, ko(마킹), blank } 형태로 돌려준다. 없으면 null.
+  function chunkRep(ch){
+    if(!ch || !window.CHUNK_REP) return null;
+    var r = CHUNK_REP[ch.en]; if(!r || !r.en) return null;
+    var blank = r.blank;
+    if(blank===undefined){
+      var k = ch.en;
+      blank = (k.indexOf('~')<0 && r.en.toLowerCase().indexOf(k.toLowerCase())>=0) ? k : null;
+    }
+    return { en:r.en, ko:r.ko, blank:blank };
+  }
+  // { } 로 감싼 내용어는 기본색, 나머지(문법)는 파랑으로 칠한다.
+  function paintMarkedKo(el, marked){
+    el.innerHTML='';
+    var parts = String(marked).split(/(\{[^}]*\})/);
+    parts.forEach(function(p){
+      if(p==null || p==='') return;
+      var span=document.createElement('span');
+      if(p.charAt(0)==='{' && p.charAt(p.length-1)==='}'){ span.textContent=p.slice(1,-1); }
+      else { span.textContent=p; span.style.color='var(--info)'; span.style.fontWeight='600'; }
+      el.appendChild(span);
+    });
+  }
+  // 청크 한국어 문제칸을 칠한다. rep 있으면 대표 예문(문법 강조), 없으면 기존 라벨.
+  function paintChunkKo(el, ch){
+    var rep = chunkRep(ch);
+    if(rep && rep.ko){ paintMarkedKo(el, rep.ko); }
+    else { el.textContent = ch.ko; }
+  }
   function chunkFillInto(area, ch, cat, item, onGraded, exHost){
     area.innerHTML='';
     var exTarget = exHost || area;   // 예시는 문제카드 안(exHost)에 작게
+    var rep = chunkRep(ch);
+    var fillEn = (rep && rep.en) ? rep.en : ch.en;
+    var fillOpts = {noHint:true, noButtons:true};
+    if(rep && rep.blank){ fillOpts.blankSub = rep.blank; } else { fillOpts.blankAll = true; }
     if(item.graded==null){
-      renderCefrFill(area, ch.en, function(grade){
+      renderCefrFill(area, fillEn, function(grade){
         onGraded(grade);
         chunkExamplesInto(exTarget, ch, item);   // 정답 직후 카드 안에 예시 노출
-      }, {noHint:true, blankAll:true, noButtons:true});
+      }, fillOpts);
     } else {
       var enRow=document.createElement('div'); enRow.style.display='flex'; enRow.style.alignItems='center'; enRow.style.justifyContent='center'; enRow.style.gap='8px';
-      var en=document.createElement('div'); en.className='chunk-en'; en.textContent=ch.en;
+      var en=document.createElement('div'); en.className='chunk-en'; en.textContent=fillEn;
       en.style.color = (item.result==='ok') ? 'var(--green)' : 'var(--coral)';
-      enRow.appendChild(en); enRow.appendChild(spkBtn(ch.en,'mini'));
+      enRow.appendChild(en); enRow.appendChild(spkBtn(fillEn,'mini'));
       area.appendChild(enRow);
       chunkExamplesInto(exTarget, ch, item);
     }
@@ -9665,7 +9940,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
 
     var body=document.createElement('div'); body.style.width='100%';
     var clab=document.createElement('div'); clab.className='chunk-side'; clab.style.color=col.fg; clab.textContent='Korean';
-    var cko=document.createElement('div'); cko.className='chunk-ko'; cko.textContent=ch.ko;
+    var cko=document.createElement('div'); cko.className='chunk-ko'; paintChunkKo(cko, ch);
     body.appendChild(clab); body.appendChild(cko);
     card.appendChild(body);
     wrap.appendChild(card);
