@@ -9862,8 +9862,8 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     parts.forEach(function(p){
       if(p==null || p==='') return;
       var span=document.createElement('span');
-      if(p.charAt(0)==='{' && p.charAt(p.length-1)==='}'){ span.textContent=p.slice(1,-1); }
-      else { span.textContent=p; span.style.color='var(--info)'; span.style.fontWeight='600'; }
+      if(p.charAt(0)==='{' && p.charAt(p.length-1)==='}'){ span.textContent=p.slice(1,-1); span.style.color='var(--text3)'; }
+      else { span.textContent=p; span.style.color='var(--text)'; span.style.fontWeight='600'; }
       el.appendChild(span);
     });
   }
