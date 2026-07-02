@@ -573,6 +573,13 @@
     border-radius:50%;background:#fff;transition:left .15s;box-shadow:0 1px 3px rgba(0,0,0,0.25);}
   .opt-switch.on{background:var(--indigo);}
   .opt-switch.on::after{left:22px;}
+  .opt-rate-slider{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:999px;
+    background:var(--border2);outline:none;margin-top:10px;cursor:pointer;}
+  .opt-rate-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:22px;height:22px;
+    border-radius:50%;background:var(--info);border:3px solid var(--surface2);box-shadow:0 1px 3px rgba(0,0,0,0.3);cursor:pointer;}
+  .opt-rate-slider::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--info);
+    border:3px solid var(--surface2);box-shadow:0 1px 3px rgba(0,0,0,0.3);cursor:pointer;}
+  .opt-rate-ticks{display:flex;justify-content:space-between;font-size:10.5px;color:var(--text3);margin-top:4px;}
   .acct-btn{flex:1;border:1px solid var(--border);background:var(--surface2);color:var(--text);
     border-radius:11px;padding:11px 12px;font-size:13.5px;font-weight:700;cursor:pointer;}
   .acct-btn.primary{background:var(--indigo);color:#fff;border-color:transparent;}
@@ -5699,7 +5706,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   // Azure 서버 음성 요청. 실패하면 onErr(폰 기본음성 폴백).
   function cloudSpeak(text, voice, onErr){
     voice = voice || ttsVoice();
-    function play(u){ try{ if(ttsAudio){ ttsAudio.pause(); } }catch(e){} ttsAudio = new Audio(u); ttsAudio.playbackRate=TTS_RATE; applyAudioGain(ttsAudio, 1.5); ttsAudio.play().catch(function(){ onErr(); }); }
+    function play(u){ try{ if(ttsAudio){ ttsAudio.pause(); } }catch(e){} ttsAudio = new Audio(u); ttsAudio.playbackRate=getTtsRate(); applyAudioGain(ttsAudio, 1.5); ttsAudio.play().catch(function(){ onErr(); }); }
     function ok(u){ TTS_CONFIG.cloudOk=true; lastTtsEngine='azure'; updateTtsBadges(); play(u); }
     var ck = voice + '\n' + text;
     if(ttsCache[ck]){ ok(ttsCache[ck]); return; }
@@ -5747,7 +5754,17 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       src.connect(g); g.connect(_gainCtx.destination);
     }catch(e){}
   }
-  var TTS_RATE = 0.94;   // 아주 조금만 느리게
+  // 재생 속도 (옵션에서 슬라이더로 조절, 기기/브라우저 로컬 저장)
+  var TTS_RATE_KEY='eng_tts_rate', TTS_RATE_MIN=0.6, TTS_RATE_MAX=1.3, TTS_RATE_DEFAULT=0.94;
+  function getTtsRate(){
+    try{ var v=parseFloat(localStorage.getItem(TTS_RATE_KEY)); if(v>=TTS_RATE_MIN && v<=TTS_RATE_MAX) return v; }catch(e){}
+    return TTS_RATE_DEFAULT;
+  }
+  function setTtsRate(v){
+    v=Math.max(TTS_RATE_MIN, Math.min(TTS_RATE_MAX, v));
+    try{ localStorage.setItem(TTS_RATE_KEY, String(v)); }catch(e){}
+    return v;
+  }
   function webSpeak(text, lang){
     if(!('speechSynthesis' in window)) return;
     try{
@@ -5755,7 +5772,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       ss.cancel();
       var u = new SpeechSynthesisUtterance(text);
       u.lang = lang==='ko' ? 'ko-KR' : 'en-US';
-      u.rate = lang==='ko' ? 1.0 : 0.95;
+      u.rate = lang==='ko' ? 1.0 : getTtsRate();
       if(IS_ANDROID){
         // 안드로이드 크롬: cancel() 직후 speak()는 씹히거나 선택 음성 무시(기본 여성)로
         // 재생되는 버그가 있음 → 짧게 지연 후 재생 + resume()으로 멈춤 상태 해제.
@@ -6741,7 +6758,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
         .then(function(r){ return r.ok ? r.blob() : r.text().then(function(tx){ var j=null; try{j=JSON.parse(tx);}catch(e){}
           var st=(j&&j.status)||r.status; throw new Error((st===429?'한도초과(429)':((j&&(j.detail||j.error))||('HTTP '+r.status)))); }); });
     }
-    function playBlob(b){ try{ audio=new Audio(URL.createObjectURL(b)); audio.playbackRate=TTS_RATE; applyAudioGain(audio, 1.5); audio.play().catch(function(){}); }catch(e){} }
+    function playBlob(b){ try{ audio=new Audio(URL.createObjectURL(b)); audio.playbackRate=getTtsRate(); applyAudioGain(audio, 1.5); audio.play().catch(function(){}); }catch(e){} }
     function pickFemaleVoice(){
       try{
         var vs=window.speechSynthesis.getVoices()||[];
@@ -8209,6 +8226,9 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     // ===== 오늘의 학습(청크) 하루 문제 수 =====
     renderTodayChunkCountOption(wrap);
 
+    // ===== 재생 속도 =====
+    renderRateSection(wrap);
+
     // ===== 영어 발음 음성 선택 =====
     renderVoiceSection(wrap);
 
@@ -8368,6 +8388,35 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     });
     row.appendChild(txt); row.appendChild(sw);
     wrap.appendChild(row);
+  }
+
+  function renderRateSection(wrap){
+    var sec=document.createElement('div'); sec.className='opt-row'; sec.style.flexDirection='column'; sec.style.alignItems='stretch';
+    var head=document.createElement('div'); head.className='opt-text';
+    var t=document.createElement('div'); t.className='opt-title'; t.textContent='🐢 재생 속도';
+    var d=document.createElement('div'); d.className='opt-desc'; head.appendChild(t); head.appendChild(d);
+    sec.appendChild(head);
+
+    var slider=document.createElement('input'); slider.type='range'; slider.className='opt-rate-slider';
+    slider.min=String(TTS_RATE_MIN); slider.max=String(TTS_RATE_MAX); slider.step='0.02';
+    slider.value=String(getTtsRate());
+    slider.setAttribute('aria-label','발음 재생 속도');
+    function paintDesc(v){ d.textContent = v.toFixed(2)+'배속 · 드래그해서 조절 (기본 '+TTS_RATE_DEFAULT.toFixed(2)+'배)'; }
+    paintDesc(getTtsRate());
+    slider.addEventListener('input', function(){ paintDesc(parseFloat(slider.value)); });
+    slider.addEventListener('change', function(){ setTtsRate(parseFloat(slider.value)); });
+    sec.appendChild(slider);
+
+    var ticks=document.createElement('div'); ticks.className='opt-rate-ticks';
+    ['0.6x 느리게','1.0x 보통','1.3x 빠르게'].forEach(function(txt){ var s=document.createElement('span'); s.textContent=txt; ticks.appendChild(s); });
+    sec.appendChild(ticks);
+
+    var testBtn=document.createElement('button'); testBtn.className='acct-btn'; testBtn.style.marginTop='10px';
+    testBtn.textContent='▶ 이 속도로 들어보기';
+    testBtn.addEventListener('click', function(){ setTtsRate(parseFloat(slider.value)); speak("This is how fast I'll sound.", 'en'); });
+    sec.appendChild(testBtn);
+
+    wrap.appendChild(sec);
   }
 
   function renderVoiceSection(wrap){
