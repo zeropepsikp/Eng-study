@@ -7749,20 +7749,23 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       }catch(e){}
     }
     var refs=allChunkRefs();
+    // 복습 시점 지난 졸업 청크 먼저, 그 다음 미졸업 — 둘 다 부족하면 전체에서(복습)
+    var due=refs.filter(function(r){ return chunkIsDue(r.cat,r.idx); });
     var unmastered=refs.filter(function(r){ return chunkStreak(r.cat,r.idx)<CHUNK_STREAK_GOAL; });
-    var pool = (unmastered.length>=n) ? unmastered : refs.slice();   // 미졸업이 부족하면 전체에서(복습)
-    shuffleArr(pool);
+    shuffleArr(due); shuffleArr(unmastered);
+    var pool = due.concat(unmastered);
+    if(pool.length<n){ var rest=refs.filter(function(r){ return !chunkNeedsWork(r.cat,r.idx); }); shuffleArr(rest); pool=pool.concat(rest); }
     todayChunkSet = pool.slice(0, Math.min(n, pool.length));
     try{ localStorage.setItem(TODAY_CHUNK_KEY, JSON.stringify({day:day, count:n, set:todayChunkSet})); }catch(e){}
   }
   function buildTodayChunkQueue(){
     todayChunkQueue=[]; todayChunkPos=0;
-    var pending=todayChunkSet.filter(function(r){ return chunkStreak(r.cat,r.idx)<CHUNK_STREAK_GOAL; });
+    var pending=todayChunkSet.filter(function(r){ return chunkNeedsWork(r.cat,r.idx); });
     shuffleArr(pending);
     pending.forEach(function(r,nn){ todayChunkQueue.push({cat:r.cat, idx:r.idx, dueAt:nn}); });
   }
   function pullNextTodayChunk(){
-    var live=todayChunkQueue.filter(function(q){ return chunkStreak(q.cat,q.idx)<CHUNK_STREAK_GOAL; });
+    var live=todayChunkQueue.filter(function(q){ return chunkNeedsWork(q.cat,q.idx); });
     if(!live.length) return null;
     live.sort(function(a,b){ return a.dueAt-b.dueAt; });
     var pick=null;
@@ -7793,10 +7796,8 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   function applyTodayChunkGrade(item, ch, grade){
     item.graded=grade;
     if(!item._counted){ item._counted=true; STATS.recordDaily(grade, 'chunk'); }  // 오늘의 학습 통계(청크)
-    var cur=chunkStreak(item.cat, item.idx);
-    if(grade==='ok'){ setChunkStreak(item.cat, item.idx, cur+1); }
-    else { setChunkStreak(item.cat, item.idx, 0); }
-    if(chunkStreak(item.cat, item.idx) < CHUNK_STREAK_GOAL){ scheduleTodayChunkAgain(item.cat, item.idx, grade==='ok'); }
+    chunkApplySrs(item.cat, item.idx, grade==='ok');
+    if(chunkNeedsWork(item.cat, item.idx)){ scheduleTodayChunkAgain(item.cat, item.idx, grade==='ok'); }
   }
 
   function renderTodayChunk(){
@@ -7829,7 +7830,8 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
 
     wrap.innerHTML='';
     var card=document.createElement('div'); card.className='chunk-card'; card.style.borderColor=col.fg;
-    var tag=document.createElement('div'); tag.className='chunk-tag'; tag.style.color=col.fg; tag.textContent=d.name;
+    var tag=document.createElement('div'); tag.className='chunk-tag'; tag.style.color=col.fg;
+    tag.textContent=d.name + (streak>=CHUNK_STREAK_GOAL ? ' · ↻ 복습' : '');
     var sk=document.createElement('div'); sk.className='chunk-streak';
     var skLab=document.createElement('span'); skLab.textContent='streak'; sk.appendChild(skLab);
     for(var s=0;s<CHUNK_STREAK_GOAL;s++){ var dot=document.createElement('span'); dot.className='dot'+(s<streak?' on':''); if(s<streak) dot.style.background=col.fg; sk.appendChild(dot); }
@@ -8515,14 +8517,61 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   var CHUNK_STREAK_GOAL = 2;            // 연속 N회 즉답 → 졸업
   var CHUNK_PROG_KEY = 'eng_chunks_progress_v1';
   var curChunkCat = 1;
-  var chunkProgress = (function(){      // { catId: { idx: streak } }
+  var chunkProgress = (function(){      // { catId: { idx: {s:streak, box:n, due:ts} } } (구형: idx: streak 숫자)
     try{ return JSON.parse(localStorage.getItem(CHUNK_PROG_KEY)) || {}; }catch(e){ return {}; }
   })();
   function saveChunkProgress(){ try{ localStorage.setItem(CHUNK_PROG_KEY, JSON.stringify(chunkProgress)); }catch(e){} }
-  function chunkStreak(cat, idx){ return (chunkProgress[cat] && chunkProgress[cat][idx]) || 0; }
-  function setChunkStreak(cat, idx, v){
+  // ---- 청크 SRS (망각 곡선 복습): 졸업 후 box 간격으로 재등장 ----
+  var CHUNK_SRS_DAYS = [0, 1, 3, 7, 14, 30, 60];
+  var CHUNK_DAY_MS = 24*60*60*1000;
+  // 구형(숫자 streak) → 신형(셀 객체) 일괄 이행. 기존 졸업분은 내일부터 복습 시작.
+  (function(){
+    var changed=false;
+    for(var c in chunkProgress){ for(var i in chunkProgress[c]){
+      var v=chunkProgress[c][i];
+      if(typeof v==='number'){
+        chunkProgress[c][i] = (v>=CHUNK_STREAK_GOAL) ? {s:v, box:1, due:Date.now()+CHUNK_DAY_MS} : {s:v, box:0};
+        changed=true;
+      }
+    }}
+    if(changed) saveChunkProgress();
+  })();
+  function chunkCell(cat, idx){
+    var v=chunkProgress[cat] && chunkProgress[cat][idx];
+    if(v==null) return {s:0, box:0};
+    if(typeof v==='number') return (v>=CHUNK_STREAK_GOAL) ? {s:v, box:1, due:Date.now()+CHUNK_DAY_MS} : {s:v, box:0};
+    return v;
+  }
+  function setChunkCell(cat, idx, c){
     if(!chunkProgress[cat]) chunkProgress[cat]={};
-    chunkProgress[cat][idx]=v; saveChunkProgress();
+    chunkProgress[cat][idx]=c; saveChunkProgress();
+  }
+  function chunkStreak(cat, idx){ return chunkCell(cat, idx).s || 0; }
+  function setChunkStreak(cat, idx, v){
+    var c=chunkCell(cat, idx); c.s=v;
+    if(v<CHUNK_STREAK_GOAL){ c.box=0; delete c.due; }
+    setChunkCell(cat, idx, c);
+  }
+  // 졸업했지만 복습 시점(due)이 지났으면 다시 볼 때가 된 것
+  function chunkIsDue(cat, idx){
+    var c=chunkCell(cat, idx);
+    return c.s>=CHUNK_STREAK_GOAL && (!c.due || Date.now()>=c.due);
+  }
+  // 출제 대상 = 미졸업 또는 복습 시점 지남
+  function chunkNeedsWork(cat, idx){
+    return chunkStreak(cat, idx)<CHUNK_STREAK_GOAL || chunkIsDue(cat, idx);
+  }
+  // 채점 → streak/SRS 갱신. 졸업 시 box=1(1일 뒤 복습), 복습 성공마다 box+1(3→7→14→30→60일). 틀리면 전부 리셋.
+  function chunkApplySrs(cat, idx, ok){
+    var c=chunkCell(cat, idx);
+    if(ok){
+      if(c.s>=CHUNK_STREAK_GOAL){ c.box=Math.min((c.box||1)+1, CHUNK_SRS_DAYS.length-1); }   // 복습 성공 → 간격 확장
+      else { c.s++; if(c.s>=CHUNK_STREAK_GOAL){ c.box=1; } }                                  // 학습 진행 / 졸업
+      if(c.s>=CHUNK_STREAK_GOAL) c.due=Date.now()+CHUNK_SRS_DAYS[c.box]*CHUNK_DAY_MS;
+    } else {
+      c.s=0; c.box=0; delete c.due;                                                           // 오답 → 처음부터
+    }
+    setChunkCell(cat, idx, c);
   }
   function chunkCatStats(cat){
     var arr=CHUNK_DATA[cat].chunks, learned=0, prog=0;
@@ -8545,16 +8594,16 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   function buildChunkQueue(cat){
     chunkQueue = []; chunkPos = 0;
     var arr=CHUNK_DATA[cat].chunks;
-    // 아직 졸업 안 한 청크만, 가벼운 셔플로 초기 큐 구성
+    // 미졸업 + 복습 시점 지난 청크, 가벼운 셔플로 초기 큐 구성
     var pending=[];
-    for(var i=0;i<arr.length;i++){ if(chunkStreak(cat,i)<CHUNK_STREAK_GOAL) pending.push(i); }
+    for(var i=0;i<arr.length;i++){ if(chunkNeedsWork(cat,i)) pending.push(i); }
     for(var k=pending.length-1;k>0;k--){ var j=Math.floor(Math.random()*(k+1)); var t=pending[k]; pending[k]=pending[j]; pending[j]=t; }
     pending.forEach(function(idx,n){ chunkQueue.push({idx:idx, dueAt:n}); });
   }
 
   function pullNextChunk(){
-    // 졸업 안 한 항목 중 dueAt<=chunkPos 인 것 우선, 없으면 가장 가까운 것
-    var live=chunkQueue.filter(function(q){ return chunkStreak(curChunkCat,q.idx)<CHUNK_STREAK_GOAL; });
+    // 출제 대상(미졸업·복습) 중 dueAt<=chunkPos 인 것 우선, 없으면 가장 가까운 것
+    var live=chunkQueue.filter(function(q){ return chunkNeedsWork(curChunkCat,q.idx); });
     if(!live.length) return null;
     live.sort(function(a,b){ return a.dueAt-b.dueAt; });
     var pick=null;
@@ -9924,7 +9973,8 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     wrap.innerHTML='';
     var card=document.createElement('div'); card.className='chunk-card';
     card.style.borderColor=col.fg;
-    var tag=document.createElement('div'); tag.className='chunk-tag'; tag.style.color=col.fg; tag.textContent=d.name;
+    var tag=document.createElement('div'); tag.className='chunk-tag'; tag.style.color=col.fg;
+    tag.textContent=d.name + (streak>=CHUNK_STREAK_GOAL ? ' · ↻ 복습' : '');
     // streak 도트
     var sk=document.createElement('div'); sk.className='chunk-streak'; sk.textContent='';
     var skLab=document.createElement('span'); skLab.textContent='streak'; sk.appendChild(skLab);
@@ -9980,11 +10030,9 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   function applyChunkGrade(item, ch, grade){
     item.graded = grade;
     var cat=curChunkCat;
-    var cur=chunkStreak(cat, item.idx);
-    if(grade==='ok'){ setChunkStreak(cat, item.idx, cur+1); }      // 즉답 → streak +1
-    else { setChunkStreak(cat, item.idx, 0); }                      // 느림/모름 → 리셋
-    // 졸업 미달이면 재등장 예약
-    if(chunkStreak(cat, item.idx) < CHUNK_STREAK_GOAL){
+    chunkApplySrs(cat, item.idx, grade==='ok');
+    // 아직 볼 게 남았으면(미졸업 또는 복습 시점) 재등장 예약
+    if(chunkNeedsWork(cat, item.idx)){
       scheduleChunkAgain(item.idx, grade==='ok');
     }
   }
