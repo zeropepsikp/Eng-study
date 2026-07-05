@@ -7405,7 +7405,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
         deck: todayDeck, pos: todayPos, target: todayTarget, correct: todayCorrect,
         preset: startPreset, review: reviewQueue, built: todayBuilt,
         stage: todayStageLv, set: levelSet,
-        cefr: (cefrPool && cefrPool.length) ? { pool:cefrPool, order:cefrOrder, idx:cefrIdx, solved:cefrSolved } : null,
+        cefr: (cefrPool && cefrPool.length) ? { pool:cefrPool, order:cefrOrder, idx:cefrIdx, solved:cefrSolved, weak:todayLevelWeakMode } : null,
         day: STATS.todayKey ? STATS.todayKey() : ''
       };
       localStorage.setItem(TODAY_SESSION_KEY, JSON.stringify(payload));
@@ -7420,6 +7420,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       if(cefrFill() && p && p.cefr && p.cefr.pool && p.cefr.pool.length && p.set===levelSet){
         cefrPool=p.cefr.pool; cefrOrder=p.cefr.order||cefrPool.map(function(_,i){return i;});
         cefrIdx=p.cefr.idx||0; cefrSolved=p.cefr.solved||0; todayTarget=p.target||cefrPool.length; todayBuilt=true;
+        todayLevelWeakMode=!!p.cefr.weak;
         if(p.stage) todayStageLv=p.stage;
         return true;
       }
@@ -7617,10 +7618,40 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     return all.slice(0, Math.min(n, all.length));
   }
   function startCefrToday(){
+    todayLevelWeakMode=false;
     cefrPool = buildCefrPool(30);
     cefrOrder = cefrPool.map(function(_,i){ return i; });
     cefrIdx = 0; cefrSolved = 0; todayTarget = cefrPool.length; todayBuilt=true;
     saveTodaySession(); renderToday();
+  }
+  // ---- 🔥 약점 복습 (레벨): 전 레벨에서 오답·애매 누적이 큰 예시 상위 15개 ----
+  var todayLevelWeakMode=false;
+  function buildWeakCefrPool(n){
+    var raw=STATS.raw(), out=[];
+    for(var lv in raw){
+      var L=+lv; if(!LEVEL_DATA[L]) continue;
+      if(L===SIT_LV && !realLifeOn) continue;
+      for(var ei in raw[lv]){
+        var E=+ei; var expr=LEVEL_DATA[L].exprs[E]; if(!expr) continue;
+        for(var bi in raw[lv][ei]){
+          var B=+bi; if(!expr.bank[B]) continue;
+          var c=raw[lv][ei][bi];
+          var bad=(c.no||0)*3+(c.meh||0)-(c.ok||0)*0.8;
+          if(bad>0.5) out.push({lv:L, ei:E, bi:B, solved:false, _bad:bad});
+        }
+      }
+    }
+    out.sort(function(a,b){ return b._bad-a._bad; });
+    return out.slice(0, n);
+  }
+  function startCefrWeakToday(){
+    var pool=buildWeakCefrPool(15);
+    if(!pool.length) return false;
+    todayLevelWeakMode=true;
+    cefrPool=pool; cefrOrder=pool.map(function(_,i){ return i; });
+    cefrIdx=0; cefrSolved=0; todayTarget=pool.length; todayBuilt=true;
+    saveTodaySession(); renderToday();
+    return true;
   }
   function extendCefrToday(n){
     var add = buildCefrPool(n); var base = cefrPool.length;
@@ -7778,7 +7809,8 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     pending.forEach(function(r,nn){ todayChunkQueue.push({cat:r.cat, idx:r.idx, dueAt:nn}); });
   }
   function pullNextTodayChunk(){
-    var live=todayChunkQueue.filter(function(q){ return chunkNeedsWork(q.cat,q.idx); });
+    // force = 약점 복습 첫 등장(졸업 여부 무관 1회 보장). 이후 재등장은 일반 규칙.
+    var live=todayChunkQueue.filter(function(q){ return q.force || chunkNeedsWork(q.cat,q.idx); });
     if(!live.length) return null;
     live.sort(function(a,b){ return a.dueAt-b.dueAt; });
     var pick=null;
@@ -7791,11 +7823,35 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     todayChunkQueue.push({cat:cat, idx:idx, dueAt: todayChunkPos + (correct?5:3)});
   }
   function openTodayChunk(force){
+    todayChunkWeakMode=false;
     buildTodayChunkSet(force);
     buildTodayChunkQueue();
     todayChunkDeck=[]; todayChunkDeckPos=0;
     var first=pullNextTodayChunk();
     if(first) todayChunkDeck.push(first);
+  }
+  // ---- 🔥 약점 복습 (청크): 누적 오답 많은 순으로 즉석 세트 ----
+  var todayChunkWeakMode=false;
+  function weakChunkRefs(){
+    var out=[];
+    for(var c in CHUNK_DATA){ var arr=CHUNK_DATA[c].chunks;
+      for(var i=0;i<arr.length;i++){ var f=chunkCell(c,i).f||0; if(f>0) out.push({cat:c, idx:i, f:f}); } }
+    out.sort(function(a,b){ return b.f-a.f; });
+    return out;
+  }
+  function openWeakChunkSet(){
+    var weak=weakChunkRefs(); if(!weak.length) return false;
+    var n=Math.min(todayChunkCount(), weak.length);
+    todayChunkSet=weak.slice(0,n).map(function(r){ return {cat:r.cat, idx:r.idx}; });
+    todayChunkWeakMode=true;
+    // 졸업 여부와 무관하게 한 번씩은 반드시 출제(force). 채점 후 재등장은 일반 규칙.
+    todayChunkQueue=[]; todayChunkPos=0;
+    var pend=todayChunkSet.slice(); shuffleArr(pend);
+    pend.forEach(function(r,nn){ todayChunkQueue.push({cat:r.cat, idx:r.idx, dueAt:nn, force:true}); });
+    todayChunkDeck=[]; todayChunkDeckPos=0;
+    var first=pullNextTodayChunk();
+    if(first) todayChunkDeck.push(first);
+    return true;
   }
   function todayChunkSetStats(){
     var learned=0, prog=0, total=todayChunkSet.length;
@@ -7819,18 +7875,38 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     var hi=$('today-help'); if(hi) hi.style.display='none';
     if(!todayChunkDeck.length) openTodayChunk(false);
     var st=todayChunkSetStats();
-    $('today-prog').textContent = '청크 · '+st.learned+' / '+st.total+' mastered';
+    $('today-prog').textContent = (todayChunkWeakMode?'🔥 약점 복습':'청크')+' · '+st.learned+' / '+st.total+' mastered';
     var cntInfo=$('today-count'); if(cntInfo) cntInfo.textContent='';
     $('today-fill').style.width = (st.total? (st.progress/st.total*100):0)+'%';
+
+    // 약점 복습 진입/복귀 버튼 줄
+    function weakRow(){
+      var row=document.createElement('div'); row.style.textAlign='center'; row.style.marginBottom='10px';
+      var b=document.createElement('button'); b.className='chunk-replay'; b.style.display='inline-block';
+      if(todayChunkWeakMode){
+        b.textContent='↩ 일반 세트로';
+        b.addEventListener('click',function(){ openTodayChunk(false); renderToday(); });
+      } else {
+        var wc=weakChunkRefs().length;
+        if(!wc) return null;
+        b.textContent='🔥 약점 복습 ('+wc+')';
+        b.addEventListener('click',function(){ if(openWeakChunkSet()) renderToday(); });
+      }
+      row.appendChild(b); return row;
+    }
 
     var item=todayChunkDeck[todayChunkDeckPos]||null;
     if(!item){
       wrap.innerHTML='';
+      var wr0=weakRow(); if(wr0) wrap.appendChild(wr0);
       var done=document.createElement('div'); done.className='today-done';
-      done.innerHTML='<div class="big">오늘 세트 완료! 🎉</div><div class="sub">'+st.total+'개 표현을 모두 자동화했어요.</div>';
+      done.innerHTML = todayChunkWeakMode
+        ? '<div class="big">약점 복습 완료! 🔥</div><div class="sub">'+st.total+'개 약점 표현을 다시 익혔어요.</div>'
+        : '<div class="big">오늘 세트 완료! 🎉</div><div class="sub">'+st.total+'개 표현을 모두 자동화했어요.</div>';
       var more=document.createElement('div'); more.className='today-more';
-      var fresh=document.createElement('button'); fresh.className='today-again'; fresh.textContent='↻ 새 세트';
-      fresh.addEventListener('click',function(){ openTodayChunk(true); renderToday(); });
+      var fresh=document.createElement('button'); fresh.className='today-again';
+      fresh.textContent = todayChunkWeakMode ? '↩ 일반 세트로' : '↻ 새 세트';
+      fresh.addEventListener('click',function(){ if(todayChunkWeakMode){ openTodayChunk(false); } else { openTodayChunk(true); } renderToday(); });
       more.appendChild(fresh); done.appendChild(more); wrap.appendChild(done);
       $('today-fill').style.width='100%';
       return;
@@ -7842,6 +7918,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     var streak=chunkStreak(cat, item.idx);
 
     wrap.innerHTML='';
+    var wr=weakRow(); if(wr) wrap.appendChild(wr);
     var card=document.createElement('div'); card.className='chunk-card'; card.style.borderColor=col.fg;
     var tag=document.createElement('div'); tag.className='chunk-tag'; tag.style.color=col.fg;
     tag.textContent=d.name + (streak>=CHUNK_STREAK_GOAL ? ' · ↻ 복습' : '');
@@ -7909,20 +7986,43 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   function renderTodayCefrFlow(wrap){
     if(!cefrPool.length){ startCefrToday(); return; }
     var target=cefrPool.length;
+    var modeLab = todayLevelWeakMode ? '🔥 약점 복습' : lvName(LEVEL_DATA[todayStageLv]);
     // 헤더/진척도 (맞힌 표현 수 기준)
-    $('today-prog').textContent = cefrSolved+' / '+target+' 맞힘  ·  '+lvName(LEVEL_DATA[todayStageLv]);
+    $('today-prog').textContent = cefrSolved+' / '+target+' 맞힘  ·  '+modeLab;
     var info=$('today-count'); if(info) info.textContent=STATS.todayCount()+' today';
     saveTodaySession();
+
+    // 약점 복습 진입/복귀 버튼 줄
+    function weakLvRow(){
+      var row=document.createElement('div'); row.style.textAlign='center'; row.style.marginBottom='10px';
+      var b=document.createElement('button'); b.className='chunk-replay'; b.style.display='inline-block';
+      if(todayLevelWeakMode){
+        b.textContent='↩ 일반 세트로';
+        b.addEventListener('click',function(){ startCefrToday(); });
+      } else {
+        var wc=buildWeakCefrPool(15).length;
+        if(!wc) return null;
+        b.textContent='🔥 약점 복습 ('+wc+')';
+        b.addEventListener('click',function(){ startCefrWeakToday(); });
+      }
+      row.appendChild(b); return row;
+    }
 
     if(cefrSolved>=target){
       $('today-fill').style.width='100%';
       wrap.innerHTML='';
+      var wr0=weakLvRow(); if(wr0) wrap.appendChild(wr0);
       var done=document.createElement('div'); done.className='today-done';
-      done.innerHTML='<div class="big">단계 완료! 🎉</div><div class="sub">'+target+'개 표현을 모두 맞혔어요.</div>';
+      done.innerHTML = todayLevelWeakMode
+        ? '<div class="big">약점 복습 완료! 🔥</div><div class="sub">'+target+'개 약점 표현을 다시 맞혔어요.</div>'
+        : '<div class="big">단계 완료! 🎉</div><div class="sub">'+target+'개 표현을 모두 맞혔어요.</div>';
       var moreWrap=document.createElement('div'); moreWrap.className='today-more';
-      [10,20,30].forEach(function(n){ var mb=document.createElement('button'); mb.className='today-again'; mb.textContent='+'+n+' more';
-        mb.addEventListener('click',function(){ extendCefrToday(n); }); moreWrap.appendChild(mb); });
-      var fresh=document.createElement('button'); fresh.className='today-again ghost'; fresh.textContent='New set';
+      if(!todayLevelWeakMode){
+        [10,20,30].forEach(function(n){ var mb=document.createElement('button'); mb.className='today-again'; mb.textContent='+'+n+' more';
+          mb.addEventListener('click',function(){ extendCefrToday(n); }); moreWrap.appendChild(mb); });
+      }
+      var fresh=document.createElement('button'); fresh.className='today-again ghost';
+      fresh.textContent = todayLevelWeakMode ? '↩ 일반 세트로' : 'New set';
       fresh.addEventListener('click',function(){ startCefrToday(); });
       moreWrap.appendChild(fresh); done.appendChild(moreWrap); wrap.appendChild(done);
       return;
@@ -7933,6 +8033,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     $('today-fill').style.background=col.fg;
 
     wrap.innerHTML='';
+    var wrL=weakLvRow(); if(wrL) wrap.appendChild(wrL);
     var card=document.createElement('div'); card.className='card cefr-card';
     var tag=document.createElement('div'); tag.className='card-tag'; tag.textContent=lvName(d);
     var body=document.createElement('div'); body.className='card-center';
@@ -7950,7 +8051,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       if(answered) return; answered=true;
       cefrAnswer(grade);
       var nb=$('today-cefr-next'); if(nb) nb.disabled=false;
-      $('today-prog').textContent = cefrSolved+' / '+target+' 맞힘  ·  '+lvName(LEVEL_DATA[todayStageLv]);
+      $('today-prog').textContent = cefrSolved+' / '+target+' 맞힘  ·  '+modeLab;
       $('today-fill').style.width=Math.round(cefrSolved/target*100)+'%';
       speak(q.en,'en');
     });
@@ -8583,6 +8684,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       if(c.s>=CHUNK_STREAK_GOAL) c.due=Date.now()+CHUNK_SRS_DAYS[c.box]*CHUNK_DAY_MS;
     } else {
       c.s=0; c.box=0; delete c.due;                                                           // 오답 → 처음부터
+      c.f=(c.f||0)+1;                                                                          // 누적 오답(약점 판별용)
     }
     setChunkCell(cat, idx, c);
   }
