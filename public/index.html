@@ -580,6 +580,19 @@
   .opt-rate-slider::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--info);
     border:3px solid var(--surface2);box-shadow:0 1px 3px rgba(0,0,0,0.3);cursor:pointer;}
   .opt-rate-ticks{display:flex;justify-content:space-between;font-size:10.5px;color:var(--text3);margin-top:4px;}
+  /* 청크 1단계: 단어 타일 어순 배열 */
+  .tile-answer{min-height:40px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;align-items:center;
+    padding:8px 4px;border-bottom:2px solid var(--border);margin-bottom:14px;}
+  .tile-chip{background:var(--info-bg);color:var(--text);border-radius:8px;padding:6px 10px;font-size:15px;font-weight:600;}
+  .tile-pool{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;}
+  .tile-btn{border:1px solid var(--border);background:var(--surface2);color:var(--text);
+    border-radius:10px;padding:9px 13px;font-size:15px;font-weight:600;cursor:pointer;}
+  .tile-btn.placed{opacity:0.25;}
+  .tile-btn.wrong{border-color:var(--coral);color:var(--coral);animation:tileshake .3s;}
+  @keyframes tileshake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+  /* 청크 3단계(복습): 듣고 받아쓰기 다시 듣기 버튼 */
+  .chunk-replay{display:block;margin:0 auto 10px;border:1px solid var(--info);background:var(--info-bg);
+    color:var(--text);border-radius:999px;padding:7px 16px;font-size:13px;font-weight:600;cursor:pointer;}
   .acct-btn{flex:1;border:1px solid var(--border);background:var(--surface2);color:var(--text);
     border-radius:11px;padding:11px 12px;font-size:13.5px;font-weight:700;cursor:pointer;}
   .acct-btn.primary{background:var(--indigo);color:#fff;border-color:transparent;}
@@ -7838,7 +7851,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     card.appendChild(tag); card.appendChild(sk);
     var body=document.createElement('div'); body.style.width='100%';
     var clab=document.createElement('div'); clab.className='chunk-side'; clab.style.color=col.fg; clab.textContent='Korean';
-    var cko=document.createElement('div'); cko.className='chunk-ko'; paintChunkKo(cko, ch);
+    var cko=document.createElement('div'); cko.className='chunk-ko'; paintChunkKo(cko, ch, cat, item);
     body.appendChild(clab); body.appendChild(cko);
     card.appendChild(body);
     wrap.appendChild(card);
@@ -7870,7 +7883,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       applyTodayChunkGrade(item, ch, grade); item.result=grade;
       nx.disabled=false;
       micExt.disabled=true; ansExt.disabled=true;
-      var rep=chunkRep(ch);
+      var rep=chunkRepFor(ch, cat, item);
       speak((rep && rep.en) || ch.en, 'en');
     }, body);
 
@@ -9909,24 +9922,128 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       el.appendChild(span);
     });
   }
-  // 청크 한국어 문제칸을 칠한다. rep 있으면 대표 예문(문법 강조), 없으면 기존 라벨.
-  function paintChunkKo(el, ch){
-    var rep = chunkRep(ch);
-    if(rep && rep.ko){ paintMarkedKo(el, rep.ko); }
+  // 이 카드에 쓸 예문 결정.
+  // 학습 단계(미졸업)는 대표 예문 고정, 복습(졸업 후)은 CHUNK_EX10에서 로테이션.
+  // 채점 시 streak이 바뀌어도 카드에 표시된 예문이 유지되도록 item에 캐시한다.
+  function chunkRepFor(ch, cat, item){
+    if(item && item._rep!==undefined) return item._rep;
+    var rep=null;
+    if(item && chunkStreak(cat, item.idx)>=CHUNK_STREAK_GOAL){
+      var pool=(window.CHUNK_EX10 && CHUNK_EX10[ch.en]) || null;
+      if(pool && pool.length){
+        var e=pool[Math.floor(Math.random()*pool.length)];
+        var blank=(ch.en.indexOf('~')<0 && e.en.toLowerCase().indexOf(ch.en.toLowerCase())>=0) ? ch.en : null;
+        rep={ en:e.en, ko:e.ko, blank:blank };
+      }
+    }
+    if(!rep) rep=chunkRep(ch);
+    if(item) item._rep=rep;
+    return rep;
+  }
+  // 청크 한국어 문제칸을 칠한다. 마킹({})이 있으면 문법 강조, 없으면 그대로.
+  function paintChunkKo(el, ch, cat, item){
+    var rep = (item!=null) ? chunkRepFor(ch, cat, item) : chunkRep(ch);
+    if(rep && rep.ko){
+      if(String(rep.ko).indexOf('{')>=0) paintMarkedKo(el, rep.ko);
+      else el.textContent=rep.ko;
+    }
     else { el.textContent = ch.ko; }
+  }
+  // 1단계(첫 노출): 단어 타일을 순서대로 탭해 문장 완성. 틀린 타일은 흔들리고 되돌아감.
+  // 기존 nav(말하기/정답 버튼)와 호환되도록 host._fillMic/_fillAns를 노출한다.
+  function renderChunkTiles(host, en, onDone){
+    host.innerHTML='';
+    var card=document.createElement('div'); card.className='fill-wrap';
+    var words=en.split(/\s+/).filter(Boolean);
+    var ans=document.createElement('div'); ans.className='tile-answer';
+    var pool=document.createElement('div'); pool.className='tile-pool';
+    var hint=document.createElement('div'); hint.className='fill-tap'; hint.textContent='단어를 순서대로 탭해 문장을 완성하세요';
+    var placedN=0, done=false, usedHelp=false;
+    function addChip(w){ var chip=document.createElement('span'); chip.className='tile-chip'; chip.textContent=w; ans.appendChild(chip); }
+    function finish(){
+      if(done) return; done=true;
+      var correct=!usedHelp;
+      hint.textContent = correct ? '정답! 🎉  아래 Next로 넘어가세요' : '정답을 확인했어요 · Next로 넘어가세요';
+      if(host._fillMic) host._fillMic.disabled=true;
+      if(host._fillAns) host._fillAns.disabled=true;
+      onDone(correct?'ok':'no');
+    }
+    function completeAll(){
+      ans.innerHTML=''; words.forEach(addChip); placedN=words.length;
+      Array.prototype.forEach.call(pool.children, function(c){ c.disabled=true; c.classList.add('placed'); });
+    }
+    function place(btn, w){
+      if(done) return;
+      if(w!==words[placedN]){          // 순서 오류 → 흔들고 되돌림 (타이핑의 오타와 동일하게 관대)
+        btn.classList.add('wrong'); setTimeout(function(){ btn.classList.remove('wrong'); }, 350);
+        playTick(true); return;
+      }
+      playTick(false);
+      btn.disabled=true; btn.classList.add('placed');
+      addChip(w); placedN++;
+      if(placedN===words.length) finish();
+    }
+    var order=words.map(function(w,i){ return i; });
+    for(var k=order.length-1;k>0;k--){ var j=Math.floor(Math.random()*(k+1)); var t=order[k]; order[k]=order[j]; order[j]=t; }
+    order.forEach(function(i){
+      var b=document.createElement('button'); b.className='tile-btn'; b.textContent=words[i];
+      b.addEventListener('click', function(){ place(b, words[i]); });
+      pool.appendChild(b);
+    });
+    card.appendChild(ans); card.appendChild(pool); card.appendChild(hint);
+    host.appendChild(card);
+    // 숨은 정답 버튼: nav의 '정답'이 프록시 클릭 → 자동 완성 + 오답 처리
+    var ansBtn=document.createElement('button'); ansBtn.style.display='none';
+    ansBtn.addEventListener('click', function(){ if(done) return; usedHelp=true; completeAll(); finish(); });
+    host.appendChild(ansBtn); host._fillAns=ansBtn;
+    // 숨은 말하기 버튼: 문장 전체를 말하면 통과
+    var micRec=null;
+    var micBtn=document.createElement('button'); micBtn.style.display='none';
+    micBtn.addEventListener('click', function(){
+      if(done) return;
+      var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+      if(!SR){ hint.textContent='이 브라우저는 음성 입력을 지원하지 않아요.'; return; }
+      if(micRec){ try{ micRec.stop(); }catch(e){} micRec=null; return; }
+      micRec=new SR(); micRec.lang='en-US'; micRec.interimResults=false; micRec.continuous=false;
+      micRec.onstart=function(){ hint.textContent='지금 문장을 말하세요'; };
+      micRec.onresult=function(e){ var txt=''; for(var i=0;i<e.results.length;i++) txt+=e.results[i][0].transcript;
+        if(spokenHasAnswer(txt, words)){ completeAll(); finish(); }
+        else { hint.textContent='“'+txt+'” — 다시 시도'; } };
+      micRec.onerror=function(ev){ hint.textContent=(ev.error==='not-allowed')?'마이크 권한을 허용해 주세요.':'인식 실패, 다시 시도'; };
+      micRec.onend=function(){ micRec=null; };
+      try{ micRec.start(); }catch(e){}
+    });
+    host.appendChild(micBtn); host._fillMic=micBtn;
   }
   function chunkFillInto(area, ch, cat, item, onGraded, exHost){
     area.innerHTML='';
     var exTarget = exHost || area;   // 예시는 문제카드 안(exHost)에 작게
-    var rep = chunkRep(ch);
+    var rep = chunkRepFor(ch, cat, item);
     var fillEn = (rep && rep.en) ? rep.en : ch.en;
-    var fillOpts = {noHint:true, noButtons:true};
-    if(rep && rep.blank){ fillOpts.blankSub = rep.blank; } else { fillOpts.blankAll = true; }
+    var streak = chunkStreak(cat, item.idx);
+    var isReview = streak>=CHUNK_STREAK_GOAL;
     if(item.graded==null){
-      renderCefrFill(area, fillEn, function(grade){
+      var done=function(grade){
         onGraded(grade);
         chunkExamplesInto(exTarget, ch, item);   // 정답 직후 카드 안에 예시 노출
-      }, fillOpts);
+      };
+      if(!isReview && streak===0){
+        // 1단계(첫 노출·오답 후 재학습): 타일 어순 배열
+        renderChunkTiles(area, fillEn, done);
+      } else {
+        // 2단계(streak 1): 부분 빈칸 타이핑 · 3단계(복습): 듣고 전체 받아쓰기
+        var fillOpts = {noHint:true, noButtons:true};
+        if(isReview){ fillOpts.blankAll = true; }
+        else if(rep && rep.blank){ fillOpts.blankSub = rep.blank; }
+        else { fillOpts.blankAll = true; }
+        renderCefrFill(area, fillEn, done, fillOpts);
+        if(isReview){
+          var replay=document.createElement('button'); replay.className='chunk-replay'; replay.textContent='🔊 듣고 받아쓰기 · 다시 듣기';
+          replay.addEventListener('click', function(ev){ ev.stopPropagation(); speak(fillEn,'en'); });
+          area.insertBefore(replay, area.firstChild);
+          setTimeout(function(){ speak(fillEn,'en'); }, 250);   // 진입 시 1회 자동 재생
+        }
+      }
     } else {
       var enRow=document.createElement('div'); enRow.style.display='flex'; enRow.style.alignItems='center'; enRow.style.justifyContent='center'; enRow.style.gap='8px';
       var en=document.createElement('div'); en.className='chunk-en'; en.textContent=fillEn;
@@ -9983,7 +10100,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
 
     var body=document.createElement('div'); body.style.width='100%';
     var clab=document.createElement('div'); clab.className='chunk-side'; clab.style.color=col.fg; clab.textContent='Korean';
-    var cko=document.createElement('div'); cko.className='chunk-ko'; paintChunkKo(cko, ch);
+    var cko=document.createElement('div'); cko.className='chunk-ko'; paintChunkKo(cko, ch, cat, item);
     body.appendChild(clab); body.appendChild(cko);
     card.appendChild(body);
     wrap.appendChild(card);
@@ -10015,7 +10132,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       applyChunkGrade(item, ch, grade); item.result=grade;
       nx.disabled=false;
       micExt.disabled=true; ansExt.disabled=true;
-      var rep=chunkRep(ch);
+      var rep=chunkRepFor(ch, cat, item);
       speak((rep && rep.en) || ch.en, 'en');
     }, body);
 
