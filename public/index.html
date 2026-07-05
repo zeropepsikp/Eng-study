@@ -7929,7 +7929,9 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     var body=document.createElement('div'); body.style.width='100%';
     var clab=document.createElement('div'); clab.className='chunk-side'; clab.style.color=col.fg; clab.textContent='Korean';
     var cko=document.createElement('div'); cko.className='chunk-ko'; paintChunkKo(cko, ch, cat, item);
-    body.appendChild(clab); body.appendChild(cko);
+    var koRow=document.createElement('div'); koRow.className='ko-row'; koRow.appendChild(cko);
+    if(item.graded!=null){ var rpx=chunkRepFor(ch, cat, item); koRow.appendChild(spkBtn((rpx && rpx.en)||ch.en,'mini')); }
+    body.appendChild(clab); body.appendChild(koRow);
     card.appendChild(body);
     wrap.appendChild(card);
 
@@ -10057,6 +10059,9 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     host.innerHTML='';
     var card=document.createElement('div'); card.className='fill-wrap';
     var words=en.split(/\s+/).filter(Boolean);
+    // 구두점(? . ! , 따옴표 등)은 어순 힌트가 되므로 타일·배치 중에는 떼고, 완성 후에만 원문으로 보여준다
+    function bareOf(w){ var b=w.replace(/^["'“”‘’(]+/,'').replace(/["'“”‘’)?.!,;:]+$/,''); return b||w; }
+    var bare=words.map(bareOf);
     var ans=document.createElement('div'); ans.className='tile-answer';
     var pool=document.createElement('div'); pool.className='tile-pool';
     var hint=document.createElement('div'); hint.className='fill-tap'; hint.textContent='단어를 순서대로 탭해 문장을 완성하세요';
@@ -10064,6 +10069,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     function addChip(w){ var chip=document.createElement('span'); chip.className='tile-chip'; chip.textContent=w; ans.appendChild(chip); }
     function finish(){
       if(done) return; done=true;
+      ans.innerHTML=''; words.forEach(addChip);   // 완성 → 구두점 포함 원문으로 표시
       var correct=!usedHelp;
       hint.textContent = correct ? '정답! 🎉  아래 Next로 넘어가세요' : '정답을 확인했어요 · Next로 넘어가세요';
       if(host._fillMic) host._fillMic.disabled=true;
@@ -10071,25 +10077,25 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       onDone(correct?'ok':'no');
     }
     function completeAll(){
-      ans.innerHTML=''; words.forEach(addChip); placedN=words.length;
+      placedN=words.length;
       Array.prototype.forEach.call(pool.children, function(c){ c.disabled=true; c.classList.add('placed'); });
     }
-    function place(btn, w){
+    function place(btn, i){
       if(done) return;
-      if(w!==words[placedN]){          // 순서 오류 → 흔들고 되돌림 (타이핑의 오타와 동일하게 관대)
+      if(bare[i]!==bare[placedN]){     // 순서 오류 → 흔들고 되돌림 (타이핑의 오타와 동일하게 관대)
         btn.classList.add('wrong'); setTimeout(function(){ btn.classList.remove('wrong'); }, 350);
         playTick(true); return;
       }
       playTick(false);
       btn.disabled=true; btn.classList.add('placed');
-      addChip(w); placedN++;
+      addChip(bare[placedN]); placedN++;
       if(placedN===words.length) finish();
     }
     var order=words.map(function(w,i){ return i; });
     for(var k=order.length-1;k>0;k--){ var j=Math.floor(Math.random()*(k+1)); var t=order[k]; order[k]=order[j]; order[j]=t; }
     order.forEach(function(i){
-      var b=document.createElement('button'); b.className='tile-btn'; b.textContent=words[i];
-      b.addEventListener('click', function(){ place(b, words[i]); });
+      var b=document.createElement('button'); b.className='tile-btn'; b.textContent=bare[i];
+      b.addEventListener('click', function(){ place(b, i); });
       pool.appendChild(b);
     });
     card.appendChild(ans); card.appendChild(pool); card.appendChild(hint);
@@ -10203,7 +10209,9 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     var body=document.createElement('div'); body.style.width='100%';
     var clab=document.createElement('div'); clab.className='chunk-side'; clab.style.color=col.fg; clab.textContent='Korean';
     var cko=document.createElement('div'); cko.className='chunk-ko'; paintChunkKo(cko, ch, cat, item);
-    body.appendChild(clab); body.appendChild(cko);
+    var koRow=document.createElement('div'); koRow.className='ko-row'; koRow.appendChild(cko);
+    if(item.graded!=null){ var rpx=chunkRepFor(ch, cat, item); koRow.appendChild(spkBtn((rpx && rpx.en)||ch.en,'mini')); }
+    body.appendChild(clab); body.appendChild(koRow);
     card.appendChild(body);
     wrap.appendChild(card);
 
