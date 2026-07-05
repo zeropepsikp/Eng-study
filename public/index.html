@@ -6662,15 +6662,13 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   //  AI Tutor (실시간 회화) — Stage 1
   // ============================================================
   var TUTOR = (function(){
-    var LS_IMG='eng_tutor_img', LS_VOICE='eng_tutor_voice', LS_SESS='eng_tutor_sess', LS_HIST='eng_tutor_hist', LS_VIDEO='eng_tutor_video';
+    var LS_IMG='eng_tutor_img', LS_SESS='eng_tutor_sess', LS_HIST='eng_tutor_hist', LS_VIDEO='eng_tutor_video';
     var personaText=null, learnerText=null, scenList=null, scenCache={};
     var sess=null, ccOn=false, busy=false, audio=null, logEl=null, wired=false, videoAborted=false, healthChecked=false, onVideoProgress=null;
 
     function ls(k,v){ try{ if(v===undefined) return localStorage.getItem(k); localStorage.setItem(k,v); }catch(e){ return null; } }
     function getImg(){ return ls(LS_IMG)||''; }
     function getVideo(){ return ls(LS_VIDEO)||''; }
-    function getVoice(){ var v=ls(LS_VOICE); return (v==='phone'||(v&&v.indexOf('azure:')===0))?v:TTS_DEFAULT_VOICE; }
-    function setVoice(v){ ls(LS_VOICE,v); }
     function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
     // ---- 마크다운 문서 로드 (실패 시 내장 기본값) ----
@@ -6798,12 +6796,12 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     function ttsChainFor(voice, text){
       return fetchTTS('/api/tutor/azure-tts', {text:text, voice:(voice||TTS_DEFAULT_VOICE)}).then(function(b){ return {blob:b, engine:'azure'}; });
     }
-    // 폰 기본 음성 또는 Azure
+    // 폰 기본 음성 또는 Azure — 옵션의 "🔊 영어 발음 음성" 선택을 그대로 따른다.
     function speak(text){
       if(!text) return;
       try{ if(audio){ audio.pause(); audio=null; } }catch(e){}
       playStageVideo();
-      var vv=getVoice();
+      var vv=ttsVoice();
       if(vv==='phone'){ setStatus('ok','폰 기본 음성'); browserSpeak(text); return; }
       ttsChainFor(vv, text)
         .then(function(res){ setStatus('ok','Azure 음성'); playBlob(res.blob); })
@@ -6812,15 +6810,6 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     function playStageVideo(){
       var v=$('tutor-video'); if(!v) return;
       try{ v.currentTime=0; var p=v.play(); if(p&&p.catch) p.catch(function(){}); }catch(e){}
-    }
-    // 옵션 미리듣기: 성공/실패를 콜백으로 알려줌
-    function previewVoice(voice, cb){
-      try{ if(audio){ audio.pause(); audio=null; } }catch(e){}
-      var sample="Hi, I'm Mia. Let's practice English together!";
-      if(voice==='phone'){ browserSpeak(sample); if(cb) cb(true,'폰 기본'); return; }
-      ttsChainFor(voice, sample)
-        .then(function(res){ playBlob(res.blob); if(cb) cb(true, 'Azure'); })
-        .catch(function(){ browserSpeak("Hi, I'm Mia."); if(cb) cb(false, '한도/오류 — 기본 음성'); });
     }
     // ---- 상태칩 (제미니 키 활성화 표시) ----
     function setStatus(kind, text){
@@ -7102,7 +7091,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       });
     }
 
-    return { open:open, getVoice:getVoice, setVoice:setVoice, getHistory:getHistory, resetImage:resetImage, speak:speak, previewVoice:previewVoice,
+    return { open:open, getHistory:getHistory, resetImage:resetImage, speak:speak,
       generateVideoNow:generateVideoNow, hasImage:hasImage, hasVideo:hasVideo, removeVideo:removeVideo };
   })();
   function openTutor(){ TUTOR.open(); }
@@ -8245,34 +8234,12 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   }
 
   function renderTutorSection(wrap){
-    // 튜터 음성 선택
+    // 튜터 음성 — 별도 선택 없이 위 "🔊 영어 발음 음성"에서 고른 음성을 그대로 따른다.
     var row=document.createElement('div'); row.className='opt-row'; row.style.display='block';
     var t=document.createElement('div'); t.className='opt-title'; t.textContent='AI 튜터 음성 (Mia)';
     var d=document.createElement('div'); d.className='opt-desc';
-    d.textContent='Tutor 목소리예요. Azure 음성(남/녀 다수) 중 골라 쓰거나, 폰 기본 음성으로 둘 수 있어요.';
+    d.textContent='위 "🔊 영어 발음 음성"에서 고른 음성을 그대로 사용해요. 다른 음성을 쓰고 싶으면 그 설정을 바꿔주세요.';
     row.appendChild(t); row.appendChild(d);
-    var grid=document.createElement('div'); grid.style.display='flex'; grid.style.flexWrap='wrap'; grid.style.gap='8px'; grid.style.marginTop='10px';
-    var fb=document.createElement('div'); fb.className='opt-desc'; fb.style.marginTop='8px';
-    var cur=TUTOR.getVoice();
-    var voiceList = TTS_VOICES.map(function(v){ return [v.id, v.label]; });
-    voiceList.push(['phone','📱 폰 기본 음성']);
-    voiceList.forEach(function(v){
-      var b=document.createElement('button'); b.className='tutor-btn'+(v[0]===cur?' on':'');
-      b.style.flex='0 0 auto';
-      b.innerHTML='<div style="font-weight:600;font-size:12px;">'+v[1]+'</div>';
-      b.addEventListener('click', function(){
-        TUTOR.setVoice(v[0]);
-        Array.prototype.forEach.call(grid.children, function(c){ c.classList.remove('on'); });
-        b.classList.add('on');
-        fb.style.color=''; fb.textContent='▷ '+v[1]+' 미리듣기 중…';
-        TUTOR.previewVoice(v[0], function(ok, msg){
-          if(ok){ fb.style.color=''; fb.textContent='✓ '+v[1]+' ('+msg+')'; }
-          else { fb.style.color='var(--text3)'; fb.textContent='ⓘ '+v[1]+' · '+msg; }
-        });
-      });
-      grid.appendChild(b);
-    });
-    row.appendChild(grid); row.appendChild(fb);
 
     // 튜터 영상/초기화 — 특정 계정에게만 노출
     var _u = (window.AUTH && window.AUTH.currentUser) ? window.AUTH.currentUser() : null;
