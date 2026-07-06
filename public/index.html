@@ -8034,6 +8034,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       nx.disabled=false;
       micExt.disabled=true; ansExt.disabled=true;
       var rep=chunkRepFor(ch, cat, item);
+      koRow.appendChild(spkBtn((rep && rep.en) || ch.en,'mini'));   // 정답 노출 후 다시듣기 스피커
       speak((rep && rep.en) || ch.en, 'en');
     }, body);
 
@@ -10323,6 +10324,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       nx.disabled=false;
       micExt.disabled=true; ansExt.disabled=true;
       var rep=chunkRepFor(ch, cat, item);
+      koRow.appendChild(spkBtn((rep && rep.en) || ch.en,'mini'));   // 정답 노출 후 다시듣기 스피커
       speak((rep && rep.en) || ch.en, 'en');
     }, body);
 
