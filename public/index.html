@@ -7683,7 +7683,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     adaptPromo=0; adaptDemo=0; adaptFeedback=null;    // 레벨(todayAdaptLv)은 이어서 유지
     cefrPool = [ pickAdaptiveCefr() ];
     cefrOrder = [0];
-    cefrIdx = 0; cefrSolved = 0; todayTarget = 30; todayBuilt=true;
+    cefrIdx = 0; cefrSolved = 0; todayTarget = todayChunkCount(); todayBuilt=true;
     saveTodaySession(); renderToday();
   }
   // ---- 🔥 약점 복습 (레벨): 전 레벨에서 오답·애매 누적이 큰 예시 상위 15개 ----
@@ -7823,15 +7823,16 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   // ============================================================
   //  오늘의 학습 — 청크 모드 (카테고리 무관 랜덤 N개, 4회 정답=졸업)
   // ============================================================
+  // 오늘의 학습 하루 목표 개수 (청크·레벨 공통). 10개 단위, 10~150, 기본 30.
   var TODAY_CHUNK_COUNT_KEY = 'eng_today_chunk_count';
   function todayChunkCount(){
     var v; try{ v=parseInt(localStorage.getItem(TODAY_CHUNK_COUNT_KEY),10); }catch(e){}
     if(!v || isNaN(v)) v=30;
-    v=Math.round(v/10)*10; if(v<10) v=10; if(v>100) v=100;
+    v=Math.round(v/10)*10; if(v<10) v=10; if(v>150) v=150;
     return v;
   }
   function setTodayChunkCount(n){
-    n=Math.round(n/10)*10; if(n<10) n=10; if(n>100) n=100;
+    n=Math.round(n/10)*10; if(n<10) n=10; if(n>150) n=150;
     try{ localStorage.setItem(TODAY_CHUNK_COUNT_KEY, String(n)); }catch(e){}
   }
 
@@ -8469,9 +8470,9 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   function renderTodayChunkCountOption(wrap){
     var row=document.createElement('div'); row.className='opt-row';
     var txt=document.createElement('div'); txt.className='opt-text';
-    var t=document.createElement('div'); t.className='opt-title'; t.textContent='오늘의 학습(청크) 하루 표현 수';
+    var t=document.createElement('div'); t.className='opt-title'; t.textContent='오늘의 학습 하루 목표 개수';
     var d=document.createElement('div'); d.className='opt-desc';
-    d.textContent='오늘의 학습이 청크 모드일 때 하루에 랜덤으로 나오는 표현 개수예요. 10개 단위로 10~100개. (기본 30개)';
+    d.textContent='오늘의 학습에서 하루에 푸는 문제 수예요. 청크·레벨 모드 모두 적용돼요. 10개 단위로 10~150개. (기본 30개)';
     txt.appendChild(t); txt.appendChild(d);
     var ctrl=document.createElement('div'); ctrl.style.display='flex'; ctrl.style.alignItems='center'; ctrl.style.gap='10px'; ctrl.style.flex='0 0 auto';
     var minus=document.createElement('button'); minus.className='mini-btn'; minus.textContent='−';
@@ -8479,8 +8480,9 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     var plus=document.createElement('button'); plus.className='mini-btn'; plus.textContent='+';
     function apply(n){
       setTodayChunkCount(n); num.textContent=String(todayChunkCount());
-      openTodayChunk(true);                                  // 세트 새로 구성
-      if(activePanel==='today' && todayMode==='chunk') renderToday();
+      openTodayChunk(true);                                  // 청크 세트 새로 구성
+      cefrPool=[];                                           // 레벨(적응형) 세트도 새 목표로 재시작
+      if(activePanel==='today') renderToday();
     }
     minus.addEventListener('click',function(){ apply(todayChunkCount()-10); });
     plus.addEventListener('click',function(){ apply(todayChunkCount()+10); });
