@@ -590,7 +590,7 @@
   .tile-btn.placed{opacity:0.25;}
   .tile-btn.wrong{border-color:var(--coral);color:var(--coral);animation:tileshake .3s;}
   @keyframes tileshake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
-  /* 청크 3단계(복습): 듣고 받아쓰기 다시 듣기 버튼 */
+  /* 알약형 액션 버튼(약점 복습 진입/복귀 등) */
   .chunk-replay{display:block;margin:0 auto 10px;border:1px solid var(--info);background:var(--info-bg);
     color:var(--text);border-radius:999px;padding:7px 16px;font-size:13px;font-weight:600;cursor:pointer;}
   .adapt-toast{text-align:center;margin:0 auto 10px;border-radius:10px;padding:8px 14px;
@@ -10220,22 +10220,15 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
         onGraded(grade);
         chunkExamplesInto(exTarget, ch, item);   // 정답 직후 카드 안에 예시 노출
       };
-      if(!isReview && streak===0){
-        // 1단계(첫 노출·오답 후 재학습): 타일 어순 배열
+      if(!isReview){
+        // 학습 단계(streak 0·1): 단어 타일 어순 배열
         renderChunkTiles(area, fillEn, done);
       } else {
-        // 2단계(streak 1): 부분 빈칸 타이핑 · 3단계(복습): 듣고 전체 받아쓰기
+        // 복습 단계(졸업 후): 빈칸 타이핑
         var fillOpts = {noHint:true, noButtons:true};
-        if(isReview){ fillOpts.blankAll = true; }
-        else if(rep && rep.blank){ fillOpts.blankSub = rep.blank; }
+        if(rep && rep.blank){ fillOpts.blankSub = rep.blank; }
         else { fillOpts.blankAll = true; }
         renderCefrFill(area, fillEn, done, fillOpts);
-        if(isReview){
-          var replay=document.createElement('button'); replay.className='chunk-replay'; replay.textContent='🔊 듣고 받아쓰기 · 다시 듣기';
-          replay.addEventListener('click', function(ev){ ev.stopPropagation(); speak(fillEn,'en'); });
-          area.insertBefore(replay, area.firstChild);
-          setTimeout(function(){ speak(fillEn,'en'); }, 250);   // 진입 시 1회 자동 재생
-        }
       }
     } else {
       var enRow=document.createElement('div'); enRow.style.display='flex'; enRow.style.alignItems='center'; enRow.style.justifyContent='center'; enRow.style.gap='8px';
