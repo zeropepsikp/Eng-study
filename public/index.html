@@ -8437,31 +8437,8 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     // window.AUTH 가 있으면(=Firebase 활성화) 실제 로그인 UI를, 없으면 안내만 표시.
     renderAccountSection(wrap);
 
-    // ===== 말하기 모드 =====
+    // ===== 말하기 모드 (최하단) =====
     renderSpeakModeOption(wrap);
-
-    // ===== 오늘의 학습 데이터 초기화 (최하단) =====
-    renderTodayResetOptions(wrap);
-  }
-
-  // 오늘의 학습 레벨/청크 각각만 초기화하는 버튼 2개
-  function renderTodayResetOptions(wrap){
-    [
-      { title:'오늘의 학습(레벨) 초기화', label:'↺ 오늘의 학습(레벨) 초기화',
-        desc:'적응 난이도를 B2로 되돌리고 오늘의 레벨 세트를 새로 시작해요. 레벨 학습 성취도는 그대로예요.',
-        run:resetTodayLevelData },
-      { title:'오늘의 학습(청크) 초기화', label:'↺ 오늘의 학습(청크) 초기화',
-        desc:'오늘의 청크 세트를 새로 뽑아요. 청크 학습 성취도는 그대로예요.',
-        run:resetTodayChunkData }
-    ].forEach(function(it){
-      var sec=document.createElement('div'); sec.className='opt-row'; sec.style.flexDirection='column'; sec.style.alignItems='stretch';
-      var t=document.createElement('div'); t.className='opt-title'; t.textContent=it.title;
-      var d=document.createElement('div'); d.className='opt-desc'; d.textContent=it.desc;
-      var b=document.createElement('button'); b.className='menu-reset-btn'; b.style.marginTop='10px'; b.style.alignSelf='center'; b.textContent=it.label;
-      armReset(b, it.label, function(){ it.run(); b.textContent='✓ 초기화됨'; setTimeout(function(){ b.textContent=it.label; }, 1500); });
-      sec.appendChild(t); sec.appendChild(d); sec.appendChild(b);
-      wrap.appendChild(sec);
-    });
   }
 
   function renderTutorSection(wrap){
@@ -10666,11 +10643,23 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     wrap.appendChild(seg);
 
     var srcName = (dailySrc==='c') ? '청크' : '레벨';
+    // 오늘의 학습(레벨/청크) 각각만 초기화 — 성취도(레벨·청크 메뉴 데이터)는 안 건드림
+    function todayResetBtn(){
+      var box=document.createElement('div'); box.className='menu-reset-box';
+      var label='↺ 오늘의 학습('+srcName+') 초기화';
+      var b=document.createElement('button'); b.className='menu-reset-btn'; b.textContent=label;
+      var run = (dailySrc==='c') ? resetTodayChunkData : resetTodayLevelData;
+      armReset(b, label, function(){ run(); b.textContent='✓ 초기화됨'; renderStats(); });
+      var d=document.createElement('div'); d.className='menu-reset-desc';
+      d.textContent='오늘의 '+srcName+' 세트만 새로 시작해요. '+srcName+' 학습 성취도는 그대로예요.';
+      box.appendChild(b); box.appendChild(d);
+      return box;
+    }
     var tot = STATS.dailyTotalsBy(dailySrc);
     if(!tot.total){
       var emp=document.createElement('div'); emp.className='empty';
       emp.innerHTML='아직 '+srcName+' 기록이 없어요.<br>오늘의 학습('+srcName+' 모드)에서 카드를 풀면 쌓입니다.';
-      wrap.appendChild(emp); return;
+      wrap.appendChild(emp); wrap.appendChild(todayResetBtn()); return;
     }
     // 요약 대시보드 카드
     var dash=document.createElement('div'); dash.className='dash';
@@ -10717,6 +10706,8 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     var note=document.createElement('div'); note.className='acc-note';
     note.innerHTML='Score: <b>Got it=1, So-so=0.5, No idea=0</b>, averaged. · '+srcName+' 모드 기준';
     wrap.appendChild(note);
+
+    wrap.appendChild(todayResetBtn());
   }
 
   // ============================================================
