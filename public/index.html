@@ -605,8 +605,14 @@
   .chunk-fill{height:100%;width:0;border-radius:999px;transition:width .25s;background:var(--indigo);}
   .chunk-prog-label{font-size:11.5px;color:var(--text3);margin-top:5px;}
   .chunk-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg);
-    padding:30px 18px 18px;min-height:96px;display:flex;flex-direction:column;align-items:center;
+    padding:34px 18px 18px;min-height:96px;display:flex;flex-direction:column;align-items:center;
     justify-content:center;text-align:center;cursor:pointer;position:relative;}
+  .seen-badge{font-size:10.5px;font-weight:700;letter-spacing:.02em;color:var(--text3);
+    background:var(--surface);border:1px solid var(--border);border-radius:999px;
+    padding:2px 8px;line-height:1.4;white-space:nowrap;}
+  .seen-badge.is-new{color:var(--info);border-color:var(--info);}
+  .card > .seen-badge{position:absolute;top:12px;right:16px;z-index:3;}
+  .chunk-card > .seen-badge{position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:3;}
   /* 정답 후 카드 안에 들어가는 예시 — 더 작게 */
   .chunk-card .ex-block{margin-top:12px;padding-top:10px;width:100%;}
   .chunk-card .ex-head .lab{font-size:11px;}
@@ -5465,8 +5471,14 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     else if(grade==='meh') c.meh++;
     else if(grade==='no') c.no++;
     updateSrs(c, grade);   // 간격 반복 스케줄 갱신
+    c.seen = Date.now();   // 마지막으로 푼 시각(다시 나올 때 '언제 풀었는지' 표시용)
     bumpDaily(grade, source);
     save();
+  }
+  // 마지막으로 푼 시각(없으면 null) — 셀을 새로 만들지 않고 읽기만 한다.
+  function seenAt(lv, ei, bi){
+    var s = store.stats, c = (s[lv] && s[lv][ei] && s[lv][ei][bi]);
+    return (c && c.seen) || null;
   }
   // 셀(SRS) 없이 일별 통계만 기록 (청크 모드용)
   function recordDaily(grade, source){ bumpDaily(grade, source); save(); }
@@ -5576,7 +5588,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   }
 
   window.STATS = {
-    record:record, recordDaily:recordDaily, weight:weight, weightedPick:weightedPick,
+    record:record, recordDaily:recordDaily, seenAt:seenAt, weight:weight, weightedPick:weightedPick,
     accuracy:accuracy, attempts:attempts,
     exprAccuracy:exprAccuracy, levelAccuracy:levelAccuracy,
     resetAll:resetAll, resetLevel:resetLevel, resetDaily:resetDaily,
@@ -5813,6 +5825,25 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     b.setAttribute('aria-label','발음 듣기');
     b.innerHTML = SPK_SVG + (cls? '' : '<span>듣기</span>');
     b.addEventListener('click', function(ev){ ev.stopPropagation(); speak(text,'en'); });
+    return b;
+  }
+  // 마지막으로 푼 시각 → 'NEW / N분 전 / N시간 전 / N일 전' 라벨
+  function timeAgoLabel(ts){
+    if(!ts) return 'NEW';
+    var diff = Date.now() - ts; if(diff < 0) diff = 0;
+    var min = Math.floor(diff/60000);
+    if(min < 1) return '방금';
+    if(min < 60) return min+'분 전';
+    var hr = Math.floor(min/60);
+    if(hr < 24) return hr+'시간 전';
+    var day = Math.floor(hr/24);
+    return day+'일 전';
+  }
+  // 문제카드 우상단 '언제 다시 푼 문제인지' 배지
+  function seenBadge(ts){
+    var b=document.createElement('div'); b.className='seen-badge';
+    if(!ts){ b.classList.add('is-new'); b.textContent='NEW'; }
+    else b.textContent=timeAgoLabel(ts);
     return b;
   }
 
@@ -6438,6 +6469,8 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     cardTag.textContent = d.name + ' · 문제 ' + (curExpr+1) + ' / ' + d.exprs.length;
     cardEl.classList.remove('longtext'); cardEl.classList.add('cefr-card');
     cardSpk.innerHTML=''; cardBody.innerHTML='';
+    var oldB=cardEl.querySelector(':scope > .seen-badge'); if(oldB) oldB.remove();
+    cardEl.appendChild(seenBadge(STATS.seenAt(curLevel, curOrig(), qPick[curExpr])));
     var lab=document.createElement('div'); lab.className='side-label'; lab.style.color=col.fg; lab.textContent='Korean';
     var koRow=document.createElement('div'); koRow.className='ko-row';
     var ko=document.createElement('div'); ko.className='ko-q'; ko.textContent=q.free;
@@ -7920,6 +7953,8 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     wrap.innerHTML='';
     var wr=weakRow(); if(wr) wrap.appendChild(wr);
     var card=document.createElement('div'); card.className='chunk-card'; card.style.borderColor=col.fg;
+    if(item._seenSnap===undefined) item._seenSnap = chunkSeenAt(cat, item.idx);
+    card.appendChild(seenBadge(item._seenSnap));
     var tag=document.createElement('div'); tag.className='chunk-tag'; tag.style.color=col.fg;
     tag.textContent=d.name + (streak>=CHUNK_STREAK_GOAL ? ' · ↻ 복습' : '');
     var sk=document.createElement('div'); sk.className='chunk-streak';
@@ -8037,6 +8072,8 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     wrap.innerHTML='';
     var wrL=weakLvRow(); if(wrL) wrap.appendChild(wrL);
     var card=document.createElement('div'); card.className='card cefr-card';
+    if(item._seenSnap===undefined) item._seenSnap = STATS.seenAt(item.lv, item.ei, item.bi);
+    card.appendChild(seenBadge(item._seenSnap));
     var tag=document.createElement('div'); tag.className='card-tag'; tag.textContent=lvName(d);
     var body=document.createElement('div'); body.className='card-center';
     var lab=document.createElement('div'); lab.className='side-label'; lab.style.color=col.fg; lab.textContent='Korean';
@@ -8688,7 +8725,13 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       c.s=0; c.box=0; delete c.due;                                                           // 오답 → 처음부터
       c.f=(c.f||0)+1;                                                                          // 누적 오답(약점 판별용)
     }
+    c.seen = Date.now();   // 마지막으로 푼 시각
     setChunkCell(cat, idx, c);
+  }
+  // 마지막으로 푼 시각(없으면 null)
+  function chunkSeenAt(cat, idx){
+    var v = chunkProgress[cat] && chunkProgress[cat][idx];
+    return (v && typeof v==='object' && v.seen) || null;
   }
   function chunkCatStats(cat){
     var arr=CHUNK_DATA[cat].chunks, learned=0, prog=0;
@@ -10198,6 +10241,8 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     wrap.innerHTML='';
     var card=document.createElement('div'); card.className='chunk-card';
     card.style.borderColor=col.fg;
+    if(item._seenSnap===undefined) item._seenSnap = chunkSeenAt(cat, item.idx);
+    card.appendChild(seenBadge(item._seenSnap));
     var tag=document.createElement('div'); tag.className='chunk-tag'; tag.style.color=col.fg;
     tag.textContent=d.name + (streak>=CHUNK_STREAK_GOAL ? ' · ↻ 복습' : '');
     // streak 도트
