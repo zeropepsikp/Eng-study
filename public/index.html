@@ -575,10 +575,14 @@
   .opt-switch.on::after{left:22px;}
   /* 메뉴별 데이터 초기화 버튼 (최하단) */
   .menu-reset-box{margin:22px 0 6px;text-align:center;}
+  .menu-reset-row{display:flex;align-items:center;justify-content:center;gap:8px;}
   .menu-reset-btn{border:1px solid var(--coral);color:var(--coral);background:transparent;
     border-radius:999px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;}
   .menu-reset-btn.armed{background:var(--coral);color:#fff;}
-  .menu-reset-desc{font-size:11px;color:var(--text3);line-height:1.5;margin-top:7px;}
+  .reset-tip{display:none;margin:9px auto 0;max-width:320px;background:var(--text);color:var(--bg);
+    font-size:12px;line-height:1.55;padding:9px 12px;border-radius:var(--radius);text-align:left;
+    box-shadow:0 4px 14px rgba(0,0,0,0.18);}
+  .reset-tip.show{display:block;}
   .opt-rate-slider{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:999px;
     background:var(--border2);outline:none;margin-top:10px;cursor:pointer;}
   .opt-rate-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:22px;height:22px;
@@ -848,10 +852,7 @@
 
     <button class="expr-jump" id="expr-toggle"><span class="ej-arrow" id="ej-arrow">▶</span> Expressions in this level (tap to expand)</button>
     <div class="chips" id="chips" style="display:none;"></div>
-    <div class="menu-reset-box">
-      <button class="menu-reset-btn" id="level-menu-reset">↺ 레벨 학습 기록 초기화</button>
-      <div class="menu-reset-desc">이 앱의 레벨 학습 성취도(정답 기록·복습 스케줄)만 지워요. 청크·오늘의 학습과는 무관해요.</div>
-    </div>
+    <div id="level-menu-reset-slot"></div>
   </div>
 
   <!-- CHUNKS SUBTABS (카테고리 탭만, 전체 폭 사용) -->
@@ -873,10 +874,7 @@
       </div>
     </div>
     <div id="chunk-card-wrap"></div>
-    <div class="menu-reset-box">
-      <button class="menu-reset-btn" id="chunk-menu-reset">↺ 청크 학습 기록 초기화</button>
-      <div class="menu-reset-desc">모든 청크의 성취도(streak·복습 스케줄)만 지워요. 레벨·오늘의 학습과는 무관해요.</div>
-    </div>
+    <div id="chunk-menu-reset-slot"></div>
   </div>
 
   <!-- DRILL PANEL (청크 기반 대화 연습) -->
@@ -7377,6 +7375,18 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       doReset();
     });
   }
+  // 초기화 버튼 + [?] 설명 툴팁을 한 세트로 만들어 반환. (4개 버튼 공통 · 일관된 형태)
+  function buildResetControl(opts){
+    var box=document.createElement('div'); box.className='menu-reset-box';
+    var row=document.createElement('div'); row.className='menu-reset-row';
+    var b=document.createElement('button'); b.className='menu-reset-btn'; b.textContent=opts.label;
+    var q=document.createElement('button'); q.className='help-icon'; q.type='button'; q.setAttribute('aria-label','초기화 설명'); q.textContent='?';
+    var tip=document.createElement('div'); tip.className='reset-tip'; tip.textContent=opts.tip;
+    q.addEventListener('click', function(ev){ ev.stopPropagation(); tip.classList.toggle('show'); });
+    armReset(b, opts.label, function(){ opts.run(); if(opts.done) opts.done(b); });
+    row.appendChild(b); row.appendChild(q); box.appendChild(row); box.appendChild(tip);
+    return box;
+  }
   // 1) 레벨 학습 메뉴: 레벨 성취도(정답기록·복습 스케줄) 전체
   function resetLevelMenuData(){
     STATS.resetStats(); levelState={};
@@ -7404,8 +7414,16 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     try{ openTodayChunk(true); }catch(e){}
     try{ if(activePanel==='today' && todayMode==='chunk') renderToday(); }catch(e){}
   }
-  armReset($('level-menu-reset'), '↺ 레벨 학습 기록 초기화', resetLevelMenuData);
-  armReset($('chunk-menu-reset'), '↺ 청크 학습 기록 초기화', resetChunkMenuData);
+  (function(){
+    var ls=$('level-menu-reset-slot');
+    if(ls) ls.appendChild(buildResetControl({
+      label:'↺ 레벨 학습 진행도 초기화', run:resetLevelMenuData,
+      tip:'레벨 학습의 모든 정답 기록·복습 스케줄(진행도)을 지워요. A1~C2 전 레벨이 초기화됩니다. 청크·오늘의 학습에는 영향 없어요.' }));
+    var cs=$('chunk-menu-reset-slot');
+    if(cs) cs.appendChild(buildResetControl({
+      label:'↺ 청크 학습 진행도 초기화', run:resetChunkMenuData,
+      tip:'청크 학습의 모든 정답 기록·복습 스케줄(진행도)을 지워요. 전 카테고리·표현이 초기화됩니다. 레벨·오늘의 학습에는 영향 없어요.' }));
+  })();
   (function(){
     var t=$('expr-toggle'), chips=$('chips'), arrow=$('ej-arrow');
     if(t){ t.addEventListener('click',function(){
@@ -10643,17 +10661,18 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     wrap.appendChild(seg);
 
     var srcName = (dailySrc==='c') ? '청크' : '레벨';
-    // 오늘의 학습(레벨/청크) 각각만 초기화 — 성취도(레벨·청크 메뉴 데이터)는 안 건드림
+    // 오늘의 학습(레벨/청크) 각각만 초기화 — 진행도(레벨·청크 메뉴 데이터)는 안 건드림
     function todayResetBtn(){
-      var box=document.createElement('div'); box.className='menu-reset-box';
-      var label='↺ 오늘의 학습('+srcName+') 초기화';
-      var b=document.createElement('button'); b.className='menu-reset-btn'; b.textContent=label;
-      var run = (dailySrc==='c') ? resetTodayChunkData : resetTodayLevelData;
-      armReset(b, label, function(){ run(); b.textContent='✓ 초기화됨'; renderStats(); });
-      var d=document.createElement('div'); d.className='menu-reset-desc';
-      d.textContent='오늘의 '+srcName+' 세트만 새로 시작해요. '+srcName+' 학습 성취도는 그대로예요.';
-      box.appendChild(b); box.appendChild(d);
-      return box;
+      var isChunk = (dailySrc==='c');
+      var tip = isChunk
+        ? '오늘의 학습(청크)의 오늘 세트를 새로 뽑아요. 청크 학습 진행도와 통계 기록은 그대로예요.'
+        : '오늘의 학습(레벨)의 오늘 세트를 새로 시작하고 적응 난이도를 B2로 되돌려요. 레벨 학습 진행도와 통계 기록은 그대로예요.';
+      return buildResetControl({
+        label:'↺ 오늘의 학습('+srcName+') 초기화',
+        run: (isChunk ? resetTodayChunkData : resetTodayLevelData),
+        tip: tip,
+        done: function(b){ b.textContent='✓ 초기화됨'; setTimeout(function(){ b.textContent='↺ 오늘의 학습('+srcName+') 초기화'; }, 1500); }
+      });
     }
     var tot = STATS.dailyTotalsBy(dailySrc);
     if(!tot.total){
