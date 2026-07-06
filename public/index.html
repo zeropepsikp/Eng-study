@@ -590,9 +590,6 @@
   .tile-btn.placed{opacity:0.25;}
   .tile-btn.wrong{border-color:var(--coral);color:var(--coral);animation:tileshake .3s;}
   @keyframes tileshake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
-  /* 알약형 액션 버튼(약점 복습 진입/복귀 등) */
-  .chunk-replay{display:block;margin:0 auto 10px;border:1px solid var(--info);background:var(--info-bg);
-    color:var(--text);border-radius:999px;padding:7px 16px;font-size:13px;font-weight:600;cursor:pointer;}
   .adapt-toast{text-align:center;margin:0 auto 10px;border-radius:10px;padding:8px 14px;
     font-size:13px;font-weight:700;}
   .adapt-toast.up{color:#16a34a;background:#16a34a14;border:1px solid #16a34a55;}
@@ -7457,12 +7454,12 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       var raw = localStorage.getItem(TODAY_SESSION_KEY);
       if(!raw) return false;
       var p = JSON.parse(raw);
-      // CEFR 세션 복원 (구버전 고정풀 세션은 alv/weak 없으므로 무시하고 새로 시작)
+      // CEFR 적응형 세션 복원 (구버전 고정풀·약점복습 세션은 무시하고 새로 시작)
       if(cefrFill() && p && p.cefr && p.cefr.pool && p.cefr.pool.length && p.set===levelSet
-         && (p.cefr.weak || p.cefr.alv!==undefined)){
+         && !p.cefr.weak && p.cefr.alv!==undefined){
         cefrPool=p.cefr.pool; cefrOrder=p.cefr.order||cefrPool.map(function(_,i){return i;});
         cefrIdx=p.cefr.idx||0; cefrSolved=p.cefr.solved||0; todayTarget=p.target||30; todayBuilt=true;
-        todayLevelWeakMode=!!p.cefr.weak;
+        todayLevelWeakMode=false;
         if(p.cefr.alv>=ADAPT_FLOOR && p.cefr.alv<=ADAPT_CAP) todayAdaptLv=p.cefr.alv;
         adaptPromo=p.cefr.promo||0; adaptDemo=p.cefr.demo||0; adaptFeedback=null;
         return true;
@@ -7947,38 +7944,18 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     var hi=$('today-help'); if(hi) hi.style.display='none';
     if(!todayChunkDeck.length) openTodayChunk(false);
     var st=todayChunkSetStats();
-    $('today-prog').textContent = (todayChunkWeakMode?'🔥 약점 복습':'청크')+' · '+st.learned+' / '+st.total+' mastered';
+    $('today-prog').textContent = '청크 · '+st.learned+' / '+st.total+' mastered';
     var cntInfo=$('today-count'); if(cntInfo) cntInfo.textContent='';
     $('today-fill').style.width = (st.total? (st.progress/st.total*100):0)+'%';
-
-    // 약점 복습 진입/복귀 버튼 줄
-    function weakRow(){
-      var row=document.createElement('div'); row.style.textAlign='center'; row.style.marginBottom='10px';
-      var b=document.createElement('button'); b.className='chunk-replay'; b.style.display='inline-block';
-      if(todayChunkWeakMode){
-        b.textContent='↩ 일반 세트로';
-        b.addEventListener('click',function(){ openTodayChunk(false); renderToday(); });
-      } else {
-        var wc=weakChunkRefs().length;
-        if(!wc) return null;
-        b.textContent='🔥 약점 복습 ('+wc+')';
-        b.addEventListener('click',function(){ if(openWeakChunkSet()) renderToday(); });
-      }
-      row.appendChild(b); return row;
-    }
 
     var item=todayChunkDeck[todayChunkDeckPos]||null;
     if(!item){
       wrap.innerHTML='';
-      var wr0=weakRow(); if(wr0) wrap.appendChild(wr0);
       var done=document.createElement('div'); done.className='today-done';
-      done.innerHTML = todayChunkWeakMode
-        ? '<div class="big">약점 복습 완료! 🔥</div><div class="sub">'+st.total+'개 약점 표현을 다시 익혔어요.</div>'
-        : '<div class="big">오늘 세트 완료! 🎉</div><div class="sub">'+st.total+'개 표현을 모두 자동화했어요.</div>';
+      done.innerHTML='<div class="big">오늘 세트 완료! 🎉</div><div class="sub">'+st.total+'개 표현을 모두 자동화했어요.</div>';
       var more=document.createElement('div'); more.className='today-more';
-      var fresh=document.createElement('button'); fresh.className='today-again';
-      fresh.textContent = todayChunkWeakMode ? '↩ 일반 세트로' : '↻ 새 세트';
-      fresh.addEventListener('click',function(){ if(todayChunkWeakMode){ openTodayChunk(false); } else { openTodayChunk(true); } renderToday(); });
+      var fresh=document.createElement('button'); fresh.className='today-again'; fresh.textContent='↻ 새 세트';
+      fresh.addEventListener('click',function(){ openTodayChunk(true); renderToday(); });
       more.appendChild(fresh); done.appendChild(more); wrap.appendChild(done);
       $('today-fill').style.width='100%';
       return;
@@ -7990,7 +7967,6 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     var streak=chunkStreak(cat, item.idx);
 
     wrap.innerHTML='';
-    var wr=weakRow(); if(wr) wrap.appendChild(wr);
     var card=document.createElement('div'); card.className='chunk-card'; card.style.borderColor=col.fg;
     if(item._seenSnap===undefined) item._seenSnap = chunkSeenAt(cat, item.idx);
     card.appendChild(seenBadge(item._seenSnap));
@@ -8062,44 +8038,22 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   // CEFR 오늘의 학습 — 고정 풀 진행/렌더 (다 맞출 때까지)
   function renderTodayCefrFlow(wrap){
     if(!cefrPool.length){ startCefrToday(); return; }
-    var target = todayLevelWeakMode ? cefrPool.length : todayTarget;
-    var modeLab = todayLevelWeakMode ? '🔥 약점 복습' : lvName(LEVEL_DATA[todayAdaptLv]);
+    var target = todayTarget;
+    var modeLab = lvName(LEVEL_DATA[todayAdaptLv]);
     // 헤더/진척도 (맞힌 표현 수 기준)
     $('today-prog').textContent = cefrSolved+' / '+target+' 맞힘  ·  '+modeLab;
     var info=$('today-count'); if(info) info.textContent=STATS.todayCount()+' today';
     saveTodaySession();
 
-    // 약점 복습 진입/복귀 버튼 줄
-    function weakLvRow(){
-      var row=document.createElement('div'); row.style.textAlign='center'; row.style.marginBottom='10px';
-      var b=document.createElement('button'); b.className='chunk-replay'; b.style.display='inline-block';
-      if(todayLevelWeakMode){
-        b.textContent='↩ 일반 세트로';
-        b.addEventListener('click',function(){ startCefrToday(); });
-      } else {
-        var wc=buildWeakCefrPool(15).length;
-        if(!wc) return null;
-        b.textContent='🔥 약점 복습 ('+wc+')';
-        b.addEventListener('click',function(){ startCefrWeakToday(); });
-      }
-      row.appendChild(b); return row;
-    }
-
     if(cefrSolved>=target){
       $('today-fill').style.width='100%';
       wrap.innerHTML='';
-      var wr0=weakLvRow(); if(wr0) wrap.appendChild(wr0);
       var done=document.createElement('div'); done.className='today-done';
-      done.innerHTML = todayLevelWeakMode
-        ? '<div class="big">약점 복습 완료! 🔥</div><div class="sub">'+target+'개 약점 표현을 다시 맞혔어요.</div>'
-        : '<div class="big">단계 완료! 🎉</div><div class="sub">'+target+'개 표현을 모두 맞혔어요.</div>';
+      done.innerHTML='<div class="big">단계 완료! 🎉</div><div class="sub">'+target+'개 표현을 모두 맞혔어요.</div>';
       var moreWrap=document.createElement('div'); moreWrap.className='today-more';
-      if(!todayLevelWeakMode){
-        [10,20,30].forEach(function(n){ var mb=document.createElement('button'); mb.className='today-again'; mb.textContent='+'+n+' more';
-          mb.addEventListener('click',function(){ extendCefrToday(n); }); moreWrap.appendChild(mb); });
-      }
-      var fresh=document.createElement('button'); fresh.className='today-again ghost';
-      fresh.textContent = todayLevelWeakMode ? '↩ 일반 세트로' : 'New set';
+      [10,20,30].forEach(function(n){ var mb=document.createElement('button'); mb.className='today-again'; mb.textContent='+'+n+' more';
+        mb.addEventListener('click',function(){ extendCefrToday(n); }); moreWrap.appendChild(mb); });
+      var fresh=document.createElement('button'); fresh.className='today-again ghost'; fresh.textContent='New set';
       fresh.addEventListener('click',function(){ startCefrToday(); });
       moreWrap.appendChild(fresh); done.appendChild(moreWrap); wrap.appendChild(done);
       return;
@@ -8110,9 +8064,8 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     $('today-fill').style.background=col.fg;
 
     wrap.innerHTML='';
-    var wrL=weakLvRow(); if(wrL) wrap.appendChild(wrL);
     // 레벨 변동 안내(직전 답으로 레벨업/다운) — 1회 표시 후 소거
-    if(!todayLevelWeakMode && adaptFeedback){
+    if(adaptFeedback){
       var fb=document.createElement('div'); fb.className='adapt-toast '+(adaptFeedback.dir==='up'?'up':'down');
       fb.textContent = (adaptFeedback.dir==='up'?'⬆ 레벨 업! → ':'⬇ 난이도 조정 → ') + lvName(LEVEL_DATA[adaptFeedback.to]);
       wrap.appendChild(fb); adaptFeedback=null;
