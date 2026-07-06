@@ -8481,7 +8481,8 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     function apply(n){
       setTodayChunkCount(n); num.textContent=String(todayChunkCount());
       openTodayChunk(true);                                  // 청크 세트 새로 구성
-      cefrPool=[];                                           // 레벨(적응형) 세트도 새 목표로 재시작
+      cefrPool=[]; cefrOrder=[]; cefrIdx=0; cefrSolved=0;    // 레벨(적응형) 세트도 새 목표로 재시작
+      saveTodaySession();                                    // 저장된 옛 세트(옛 목표)가 복원되지 않도록 갱신
       if(activePanel==='today') renderToday();
     }
     minus.addEventListener('click',function(){ apply(todayChunkCount()-10); });
