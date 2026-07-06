@@ -5428,7 +5428,10 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   function boxInterval(box){ return SRS_DAYS[Math.min(box, SRS_DAYS.length-1)] * DAY_MS; }
   // grade에 따라 box 갱신: 맞춤=한 칸 위, 애매=유지, 모름=1칸으로 리셋
   function updateSrs(c, grade){
-    if(grade==='ok') c.box = Math.min((c.box||0)+1, SRS_DAYS.length-1);
+    if(grade==='ok'){
+      if((c.box||0)===0) c.box = 2;                              // 새(미예약) 문제 첫 정답 → 한 단계 더(3일)
+      else c.box = Math.min(c.box+1, SRS_DAYS.length-1);
+    }
     else if(grade==='no') c.box = 1;          // 틀리면 1일 뒤 다시
     else c.box = Math.max(c.box||0, 1);        // 애매는 최소 1일
     c.due = Date.now() + boxInterval(c.box);
@@ -8762,7 +8765,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     var c=chunkCell(cat, idx);
     if(ok){
       if(c.s>=CHUNK_STREAK_GOAL){ c.box=Math.min((c.box||1)+1, CHUNK_SRS_DAYS.length-1); }   // 복습 성공 → 간격 확장
-      else { c.s++; if(c.s>=CHUNK_STREAK_GOAL){ c.box=1; } }                                  // 학습 진행 / 졸업
+      else { c.s++; if(c.s>=CHUNK_STREAK_GOAL){ c.box=(c.f>0)?1:2; } }                        // 졸업: 새(무오답)면 3일, 틀린적 있으면 1일
       if(c.s>=CHUNK_STREAK_GOAL) c.due=Date.now()+CHUNK_SRS_DAYS[c.box]*CHUNK_DAY_MS;
     } else {
       c.s=0; c.box=0; delete c.due;                                                           // 오답 → 처음부터
