@@ -573,6 +573,12 @@
     border-radius:50%;background:#fff;transition:left .15s;box-shadow:0 1px 3px rgba(0,0,0,0.25);}
   .opt-switch.on{background:var(--indigo);}
   .opt-switch.on::after{left:22px;}
+  /* 메뉴별 데이터 초기화 버튼 (최하단) */
+  .menu-reset-box{margin:22px 0 6px;text-align:center;}
+  .menu-reset-btn{border:1px solid var(--coral);color:var(--coral);background:transparent;
+    border-radius:999px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;}
+  .menu-reset-btn.armed{background:var(--coral);color:#fff;}
+  .menu-reset-desc{font-size:11px;color:var(--text3);line-height:1.5;margin-top:7px;}
   .opt-rate-slider{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:999px;
     background:var(--border2);outline:none;margin-top:10px;cursor:pointer;}
   .opt-rate-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:22px;height:22px;
@@ -842,6 +848,10 @@
 
     <button class="expr-jump" id="expr-toggle"><span class="ej-arrow" id="ej-arrow">▶</span> Expressions in this level (tap to expand)</button>
     <div class="chips" id="chips" style="display:none;"></div>
+    <div class="menu-reset-box">
+      <button class="menu-reset-btn" id="level-menu-reset">↺ 레벨 학습 기록 초기화</button>
+      <div class="menu-reset-desc">이 앱의 레벨 학습 성취도(정답 기록·복습 스케줄)만 지워요. 청크·오늘의 학습과는 무관해요.</div>
+    </div>
   </div>
 
   <!-- CHUNKS SUBTABS (카테고리 탭만, 전체 폭 사용) -->
@@ -861,9 +871,12 @@
         <div class="chunk-prog-bar"><div class="chunk-fill" id="chunk-fill"></div></div>
         <div class="chunk-prog-label" id="chunk-prog-label"></div>
       </div>
-      <button class="chunk-reset-btn" id="chunk-reset-btn" title="청크 학습 기록만 초기화">Reset</button>
     </div>
     <div id="chunk-card-wrap"></div>
+    <div class="menu-reset-box">
+      <button class="menu-reset-btn" id="chunk-menu-reset">↺ 청크 학습 기록 초기화</button>
+      <div class="menu-reset-desc">모든 청크의 성취도(streak·복습 스케줄)만 지워요. 레벨·오늘의 학습과는 무관해요.</div>
+    </div>
   </div>
 
   <!-- DRILL PANEL (청크 기반 대화 연습) -->
@@ -5559,6 +5572,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
 
   function clearObj(o){ Object.keys(o).forEach(function(k){ delete o[k]; }); }
   function resetAll(){ clearObj(store.stats); clearObj(store.daily); save(); }   // 현재 활성 세트만 초기화
+  function resetStats(){ clearObj(store.stats); save(); }                        // 레벨 성취도만(일별 로그 유지)
   function resetLevel(lv){ if(store.stats[lv]){ delete store.stats[lv]; save(); } }
   function resetDaily(){ clearObj(store.daily); save(); }
 
@@ -5592,7 +5606,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     record:record, recordDaily:recordDaily, seenAt:seenAt, weight:weight, weightedPick:weightedPick,
     accuracy:accuracy, attempts:attempts,
     exprAccuracy:exprAccuracy, levelAccuracy:levelAccuracy,
-    resetAll:resetAll, resetLevel:resetLevel, resetDaily:resetDaily,
+    resetAll:resetAll, resetStats:resetStats, resetLevel:resetLevel, resetDaily:resetDaily,
     dailyAll:dailyAll, dailyFor:dailyFor, todayCount:todayCount, dailyTotals:dailyTotals, dailyTotalsBy:dailyTotalsBy, todayCountBy:todayCountBy, todayKey:todayKey,
     setNamespace:setNamespace,
     isDue:isDue, dueCount:dueCount,
@@ -7350,6 +7364,48 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     curExpr=0; flipped=false; graded=false; speakSubmitted=false; speakResult=null; speakInput=''; buildChips(); render();
   });
   $('reset-btn').addEventListener('click',function(){ delete levelState[curLevel]; startLevel(); });
+
+  // ===== 메뉴별 데이터 초기화 (전체가 아니라 딱 그 메뉴 부분만) =====
+  // 두 번 탭해야 실행되는 안전 버튼.
+  function armReset(btn, label, doReset){
+    if(!btn) return;
+    var armed=false, tmr=null;
+    btn.addEventListener('click', function(){
+      if(!armed){ armed=true; btn.classList.add('armed'); btn.textContent='정말 초기화? (다시 탭)';
+        tmr=setTimeout(function(){ armed=false; btn.classList.remove('armed'); btn.textContent=label; }, 4000); return; }
+      clearTimeout(tmr); armed=false; btn.classList.remove('armed'); btn.textContent=label;
+      doReset();
+    });
+  }
+  // 1) 레벨 학습 메뉴: 레벨 성취도(정답기록·복습 스케줄) 전체
+  function resetLevelMenuData(){
+    STATS.resetStats(); levelState={};
+    try{ buildLevelSubtabs(); }catch(e){}
+    try{ if(activePanel==='study') startLevel(); }catch(e){}
+  }
+  // 2) 청크 학습 메뉴: 모든 청크 성취도(streak·복습 스케줄)
+  function resetChunkMenuData(){
+    chunkProgress={}; saveChunkProgress();
+    try{ if(activePanel==='chunks') openChunkCat(curChunkCat); }catch(e){}
+  }
+  // 3) 오늘의 학습(레벨): 적응 난이도(B2로) + 오늘 레벨 세션 (성취도는 레벨 메뉴 소관)
+  function resetTodayLevelData(){
+    todayAdaptLv=ADAPT_FLOOR; saveAdaptLv();
+    adaptPromo=0; adaptDemo=0; adaptFeedback=null;
+    cefrPool=[]; cefrOrder=[]; cefrIdx=0; cefrSolved=0;
+    try{ localStorage.removeItem(TODAY_STAGE_KEY); }catch(e){}
+    saveTodaySession();
+    try{ if(activePanel==='today' && todayMode==='level') renderToday(); }catch(e){}
+  }
+  // 4) 오늘의 학습(청크): 오늘 청크 세트/진행 (성취도는 청크 메뉴 소관)
+  function resetTodayChunkData(){
+    try{ localStorage.removeItem(TODAY_CHUNK_KEY); }catch(e){}
+    todayChunkSet=[]; todayChunkDeck=[]; todayChunkDeckPos=0; todayChunkWeakMode=false;
+    try{ openTodayChunk(true); }catch(e){}
+    try{ if(activePanel==='today' && todayMode==='chunk') renderToday(); }catch(e){}
+  }
+  armReset($('level-menu-reset'), '↺ 레벨 학습 기록 초기화', resetLevelMenuData);
+  armReset($('chunk-menu-reset'), '↺ 청크 학습 기록 초기화', resetChunkMenuData);
   (function(){
     var t=$('expr-toggle'), chips=$('chips'), arrow=$('ej-arrow');
     if(t){ t.addEventListener('click',function(){
@@ -8381,8 +8437,31 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     // window.AUTH 가 있으면(=Firebase 활성화) 실제 로그인 UI를, 없으면 안내만 표시.
     renderAccountSection(wrap);
 
-    // ===== 말하기 모드 (최하단) =====
+    // ===== 말하기 모드 =====
     renderSpeakModeOption(wrap);
+
+    // ===== 오늘의 학습 데이터 초기화 (최하단) =====
+    renderTodayResetOptions(wrap);
+  }
+
+  // 오늘의 학습 레벨/청크 각각만 초기화하는 버튼 2개
+  function renderTodayResetOptions(wrap){
+    [
+      { title:'오늘의 학습(레벨) 초기화', label:'↺ 오늘의 학습(레벨) 초기화',
+        desc:'적응 난이도를 B2로 되돌리고 오늘의 레벨 세트를 새로 시작해요. 레벨 학습 성취도는 그대로예요.',
+        run:resetTodayLevelData },
+      { title:'오늘의 학습(청크) 초기화', label:'↺ 오늘의 학습(청크) 초기화',
+        desc:'오늘의 청크 세트를 새로 뽑아요. 청크 학습 성취도는 그대로예요.',
+        run:resetTodayChunkData }
+    ].forEach(function(it){
+      var sec=document.createElement('div'); sec.className='opt-row'; sec.style.flexDirection='column'; sec.style.alignItems='stretch';
+      var t=document.createElement('div'); t.className='opt-title'; t.textContent=it.title;
+      var d=document.createElement('div'); d.className='opt-desc'; d.textContent=it.desc;
+      var b=document.createElement('button'); b.className='menu-reset-btn'; b.style.marginTop='10px'; b.style.alignSelf='center'; b.textContent=it.label;
+      armReset(b, it.label, function(){ it.run(); b.textContent='✓ 초기화됨'; setTimeout(function(){ b.textContent=it.label; }, 1500); });
+      sec.appendChild(t); sec.appendChild(d); sec.appendChild(b);
+      wrap.appendChild(sec);
+    });
   }
 
   function renderTutorSection(wrap){
