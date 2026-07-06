@@ -593,6 +593,10 @@
   /* 청크 3단계(복습): 듣고 받아쓰기 다시 듣기 버튼 */
   .chunk-replay{display:block;margin:0 auto 10px;border:1px solid var(--info);background:var(--info-bg);
     color:var(--text);border-radius:999px;padding:7px 16px;font-size:13px;font-weight:600;cursor:pointer;}
+  .adapt-toast{text-align:center;margin:0 auto 10px;border-radius:10px;padding:8px 14px;
+    font-size:13px;font-weight:700;}
+  .adapt-toast.up{color:#16a34a;background:#16a34a14;border:1px solid #16a34a55;}
+  .adapt-toast.down{color:#d97706;background:#d9770614;border:1px solid #d9770655;}
   .acct-btn{flex:1;border:1px solid var(--border);background:var(--surface2);color:var(--text);
     border-radius:11px;padding:11px 12px;font-size:13.5px;font-weight:700;cursor:pointer;}
   .acct-btn.primary{background:var(--indigo);color:#fff;border-color:transparent;}
@@ -776,7 +780,7 @@
   <!-- 레벨별 학습: 헤더(제목 + 물음표 + 말하기 토글) — 서브탭 위 -->
   <div class="today-head" id="study-head" style="display:none;">
     <div class="study-head-left">
-      <div class="section-title">Level Study <span class="tts-badge ok" id="tts-badge-level">🔊 Azure 음성</span></div>
+      <div class="section-title">Level Study</div>
     </div>
     <div class="speak-toggle-slot" id="speak-toggle-slot2"></div>
   </div>
@@ -788,7 +792,7 @@
   <!-- TODAY PANEL -->
   <div class="panel show" id="panel-today">
     <div class="today-head">
-      <div class="section-title">Today’s Study <span class="tts-badge ok" id="tts-badge-today">🔊 Azure 음성</span></div>
+      <div class="section-title">Today’s Study</div>
       <div class="speak-toggle-slot" id="speak-toggle-slot"></div>
     </div>
     <div class="today-stage-row" id="today-stage-row"></div>
@@ -857,7 +861,7 @@
 
   <!-- CHUNKS PANEL -->
   <div class="panel" id="panel-chunks">
-    <div class="section-title">Chunks Study <span class="tts-badge ok" id="tts-badge-chunk">🔊 Azure 음성</span></div>
+    <div class="section-title">Chunks Study</div>
     <div class="chunk-head" id="chunk-head">
       <div class="chunk-prog-wrap">
         <div class="chunk-prog-bar"><div class="chunk-fill" id="chunk-fill"></div></div>
@@ -870,7 +874,7 @@
 
   <!-- DRILL PANEL (청크 기반 대화 연습) -->
   <div class="panel" id="panel-drill">
-    <div class="section-title">Drill Study <span class="tts-badge ok" id="tts-badge-drill">🔊 Azure 음성</span></div>
+    <div class="section-title">Drill Study</div>
     <div id="drill-body"></div>
   </div>
 
@@ -6142,7 +6146,8 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   function buildTodayStageRow(){
     var host=$('today-stage-row'); if(!host) return;
     host.innerHTML='';
-    if(todayMode!=='level'){ host.style.display='none'; return; }
+    // CEFR 오늘의 학습은 적응형(레벨 선택 없음) → 단계 선택줄 숨김
+    if(todayMode!=='level' || cefrFill()){ host.style.display='none'; return; }
     host.style.display='flex';
     if(todayStageLv>NUM_LEVELS) todayStageLv=1;
     for(var lv=1; lv<=NUM_LEVELS; lv++){ (function(lv){
@@ -7438,7 +7443,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
         deck: todayDeck, pos: todayPos, target: todayTarget, correct: todayCorrect,
         preset: startPreset, review: reviewQueue, built: todayBuilt,
         stage: todayStageLv, set: levelSet,
-        cefr: (cefrPool && cefrPool.length) ? { pool:cefrPool, order:cefrOrder, idx:cefrIdx, solved:cefrSolved, weak:todayLevelWeakMode } : null,
+        cefr: (cefrPool && cefrPool.length) ? { pool:cefrPool, order:cefrOrder, idx:cefrIdx, solved:cefrSolved, weak:todayLevelWeakMode, alv:todayAdaptLv, promo:adaptPromo, demo:adaptDemo } : null,
         day: STATS.todayKey ? STATS.todayKey() : ''
       };
       localStorage.setItem(TODAY_SESSION_KEY, JSON.stringify(payload));
@@ -7449,12 +7454,14 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       var raw = localStorage.getItem(TODAY_SESSION_KEY);
       if(!raw) return false;
       var p = JSON.parse(raw);
-      // CEFR 고정 풀 세션 복원
-      if(cefrFill() && p && p.cefr && p.cefr.pool && p.cefr.pool.length && p.set===levelSet){
+      // CEFR 세션 복원 (구버전 고정풀 세션은 alv/weak 없으므로 무시하고 새로 시작)
+      if(cefrFill() && p && p.cefr && p.cefr.pool && p.cefr.pool.length && p.set===levelSet
+         && (p.cefr.weak || p.cefr.alv!==undefined)){
         cefrPool=p.cefr.pool; cefrOrder=p.cefr.order||cefrPool.map(function(_,i){return i;});
-        cefrIdx=p.cefr.idx||0; cefrSolved=p.cefr.solved||0; todayTarget=p.target||cefrPool.length; todayBuilt=true;
+        cefrIdx=p.cefr.idx||0; cefrSolved=p.cefr.solved||0; todayTarget=p.target||30; todayBuilt=true;
         todayLevelWeakMode=!!p.cefr.weak;
-        if(p.stage) todayStageLv=p.stage;
+        if(p.cefr.alv>=ADAPT_FLOOR && p.cefr.alv<=ADAPT_CAP) todayAdaptLv=p.cefr.alv;
+        adaptPromo=p.cefr.promo||0; adaptDemo=p.cefr.demo||0; adaptFeedback=null;
         return true;
       }
       if(!p || !p.deck || !p.deck.length) return false;
@@ -7640,11 +7647,35 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     return exprIdxs[exprIdxs.length-1];
   }
 
-  // 처음 새 세트 시작: 첫 문제만 즉석으로 뽑고, 이후 진행하며 1개씩 추가
-  // ===== CEFR 오늘의 학습: 고정 30표현 풀 (다 맞출 때까지, 틀린 건 5문제 내 재등장) =====
+  // ===== CEFR 오늘의 학습: 적응형 난이도 스트림 =====
+  // B2에서 시작해, 연속 정답이 쌓이면 서서히 레벨↑(C1·C2), 연속 오답이면 레벨↓(최저 B2).
+  // 레벨 선택 UI 없이 실력에 맞춰 자동 조절. (개별 레벨 집중은 레벨별 학습에서)
+  var ADAPT_FLOOR = 4, ADAPT_CAP = 6;         // B2 ~ C2
+  var ADAPT_PROMO_NEED = 4, ADAPT_DEMO_NEED = 2;
+  var TODAY_ADAPT_KEY = 'eng_today_adapt_lv';
+  var todayAdaptLv = (function(){ try{ var v=parseInt(localStorage.getItem(TODAY_ADAPT_KEY),10); return (v>=ADAPT_FLOOR&&v<=ADAPT_CAP)?v:ADAPT_FLOOR; }catch(e){ return ADAPT_FLOOR; } })();
+  var adaptPromo=0, adaptDemo=0, adaptFeedback=null;
+  function saveAdaptLv(){ try{ localStorage.setItem(TODAY_ADAPT_KEY, String(todayAdaptLv)); }catch(e){} }
+  function pickAdaptiveCefr(){
+    var L=todayAdaptLv; if(!LEVEL_DATA[L]) L=ADAPT_FLOOR;
+    var exprs=LEVEL_DATA[L].exprs;
+    var exprIdx=[]; for(var e=0;e<exprs.length;e++) exprIdx.push(e);
+    var ei=weightedExpr(L, exprIdx);
+    var all=[]; for(var bi=0;bi<exprs[ei].bank.length;bi++) all.push(bi);
+    return {lv:L, ei:ei, bi:STATS.weightedPick(L, ei, all), solved:false};
+  }
+  function adaptOnGrade(grade){
+    adaptFeedback=null;
+    if(grade==='ok'){ adaptPromo++; adaptDemo=0;
+      if(adaptPromo>=ADAPT_PROMO_NEED && todayAdaptLv<ADAPT_CAP){ todayAdaptLv++; adaptPromo=0; adaptFeedback={dir:'up', to:todayAdaptLv}; saveAdaptLv(); }
+    } else if(grade==='no'){ adaptDemo++; adaptPromo=0;
+      if(adaptDemo>=ADAPT_DEMO_NEED && todayAdaptLv>ADAPT_FLOOR){ todayAdaptLv--; adaptDemo=0; adaptFeedback={dir:'down', to:todayAdaptLv}; saveAdaptLv(); }
+    } else { adaptPromo=0; adaptDemo=0; }   // 애매는 중립
+  }
+  // 처음 새 세트 시작: 적응형 스트림(첫 문제만 뽑고 진행하며 추가)
   var cefrPool=[], cefrOrder=[], cefrIdx=0, cefrSolved=0;
-  function buildCefrPool(n){
-    var L=todayStageLv; if(!LEVEL_DATA[L]) L=1;
+  function buildCefrPool(n){   // 약점 복습 확장용(고정 레벨 풀은 미사용)
+    var L=todayAdaptLv; if(!LEVEL_DATA[L]) L=ADAPT_FLOOR;
     var exprs=(LEVEL_DATA[L]&&LEVEL_DATA[L].exprs)||[];
     var all=[]; for(var ei=0;ei<exprs.length;ei++){ for(var bi=0;bi<exprs[ei].bank.length;bi++){ all.push({lv:L,ei:ei,bi:bi,solved:false}); } }
     for(var i=all.length-1;i>0;i--){ var j=rint(i+1); var t=all[i];all[i]=all[j];all[j]=t; }
@@ -7652,9 +7683,10 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   }
   function startCefrToday(){
     todayLevelWeakMode=false;
-    cefrPool = buildCefrPool(30);
-    cefrOrder = cefrPool.map(function(_,i){ return i; });
-    cefrIdx = 0; cefrSolved = 0; todayTarget = cefrPool.length; todayBuilt=true;
+    adaptPromo=0; adaptDemo=0; adaptFeedback=null;    // 레벨(todayAdaptLv)은 이어서 유지
+    cefrPool = [ pickAdaptiveCefr() ];
+    cefrOrder = [0];
+    cefrIdx = 0; cefrSolved = 0; todayTarget = 30; todayBuilt=true;
     saveTodaySession(); renderToday();
   }
   // ---- 🔥 약점 복습 (레벨): 전 레벨에서 오답·애매 누적이 큰 예시 상위 15개 ----
@@ -7687,24 +7719,28 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     return true;
   }
   function extendCefrToday(n){
-    var add = buildCefrPool(n); var base = cefrPool.length;
-    cefrPool = cefrPool.concat(add);
-    for(var i=0;i<add.length;i++) cefrOrder.push(base+i);
-    todayTarget = cefrPool.length;
+    todayTarget += n;                        // 적응형: 목표만 늘리고 스트림은 계속 이어짐
     saveTodaySession(); renderToday();
   }
   function cefrCurIdx(){
     while(cefrIdx<cefrOrder.length && cefrPool[cefrOrder[cefrIdx]] && cefrPool[cefrOrder[cefrIdx]].solved) cefrIdx++;
-    if(cefrIdx>=cefrOrder.length && cefrSolved<cefrPool.length){
-      var uns=[]; for(var k=0;k<cefrPool.length;k++){ if(!cefrPool[k].solved) uns.push(k); }
-      for(var i=uns.length-1;i>0;i--){ var j=rint(i+1); var t=uns[i];uns[i]=uns[j];uns[j]=t; }
-      cefrOrder = cefrOrder.concat(uns);
+    if(cefrIdx>=cefrOrder.length){
+      if(todayLevelWeakMode){                // 약점 복습: 남은 미해결 재투입(고정 풀)
+        if(cefrSolved<cefrPool.length){
+          var uns=[]; for(var k=0;k<cefrPool.length;k++){ if(!cefrPool[k].solved) uns.push(k); }
+          for(var i=uns.length-1;i>0;i--){ var j=rint(i+1); var t=uns[i];uns[i]=uns[j];uns[j]=t; }
+          cefrOrder = cefrOrder.concat(uns);
+        }
+      } else if(cefrSolved<todayTarget){     // 적응형: 현재 레벨에서 새 문제 추가
+        cefrPool.push(pickAdaptiveCefr()); cefrOrder.push(cefrPool.length-1);
+      }
     }
     return cefrOrder[cefrIdx];
   }
   function cefrAnswer(grade){
     var idx=cefrOrder[cefrIdx]; var it=cefrPool[idx]; if(!it || it.solved) return;
     STATS.record(it.lv, it.ei, it.bi, grade);
+    if(!todayLevelWeakMode) adaptOnGrade(grade);   // 실력 따라 다음 문제 레벨 조정
     if(grade!=='no'){ it.solved=true; cefrSolved++; }
     else {                                  // 틀림 → 3~5문제 뒤에 같은 표현 다시
       var off=3+Math.floor(Math.random()*3);
@@ -8022,8 +8058,8 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   // CEFR 오늘의 학습 — 고정 풀 진행/렌더 (다 맞출 때까지)
   function renderTodayCefrFlow(wrap){
     if(!cefrPool.length){ startCefrToday(); return; }
-    var target=cefrPool.length;
-    var modeLab = todayLevelWeakMode ? '🔥 약점 복습' : lvName(LEVEL_DATA[todayStageLv]);
+    var target = todayLevelWeakMode ? cefrPool.length : todayTarget;
+    var modeLab = todayLevelWeakMode ? '🔥 약점 복습' : lvName(LEVEL_DATA[todayAdaptLv]);
     // 헤더/진척도 (맞힌 표현 수 기준)
     $('today-prog').textContent = cefrSolved+' / '+target+' 맞힘  ·  '+modeLab;
     var info=$('today-count'); if(info) info.textContent=STATS.todayCount()+' today';
@@ -8071,6 +8107,12 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
 
     wrap.innerHTML='';
     var wrL=weakLvRow(); if(wrL) wrap.appendChild(wrL);
+    // 레벨 변동 안내(직전 답으로 레벨업/다운) — 1회 표시 후 소거
+    if(!todayLevelWeakMode && adaptFeedback){
+      var fb=document.createElement('div'); fb.className='adapt-toast '+(adaptFeedback.dir==='up'?'up':'down');
+      fb.textContent = (adaptFeedback.dir==='up'?'⬆ 레벨 업! → ':'⬇ 난이도 조정 → ') + lvName(LEVEL_DATA[adaptFeedback.to]);
+      wrap.appendChild(fb); adaptFeedback=null;
+    }
     var card=document.createElement('div'); card.className='card cefr-card';
     if(item._seenSnap===undefined) item._seenSnap = STATS.seenAt(item.lv, item.ei, item.bi);
     card.appendChild(seenBadge(item._seenSnap));
