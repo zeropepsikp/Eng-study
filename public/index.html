@@ -590,16 +590,6 @@
   .opt-rate-slider::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--info);
     border:3px solid var(--surface2);box-shadow:0 1px 3px rgba(0,0,0,0.3);cursor:pointer;}
   .opt-rate-ticks{display:flex;justify-content:space-between;font-size:10.5px;color:var(--text3);margin-top:4px;}
-  /* 청크 1단계: 단어 타일 어순 배열 */
-  .tile-answer{min-height:40px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;align-items:center;
-    padding:8px 4px;border-bottom:2px solid var(--border);margin-bottom:14px;}
-  .tile-chip{background:var(--info-bg);color:var(--text);border-radius:8px;padding:6px 10px;font-size:15px;font-weight:600;}
-  .tile-pool{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;}
-  .tile-btn{border:1px solid var(--border);background:var(--surface2);color:var(--text);
-    border-radius:10px;padding:9px 13px;font-size:15px;font-weight:600;cursor:pointer;}
-  .tile-btn.placed{opacity:0.25;}
-  .tile-btn.wrong{border-color:var(--coral);color:var(--coral);animation:tileshake .3s;}
-  @keyframes tileshake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
   .adapt-toast{text-align:center;margin:0 auto 10px;border-radius:10px;padding:8px 14px;
     font-size:13px;font-weight:700;}
   .adapt-toast.up{color:#16a34a;background:#16a34a14;border:1px solid #16a34a55;}
@@ -7393,9 +7383,16 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     try{ buildLevelSubtabs(); }catch(e){}
     try{ if(activePanel==='study') startLevel(); }catch(e){}
   }
-  // 2) 청크 학습 메뉴: 모든 청크 성취도(streak·복습 스케줄)
+  function clearObjInPlace(o){ Object.keys(o).forEach(function(k){ delete o[k]; }); }
+  // 2a) 청크 학습 메뉴 — 현재 카테고리만
+  function resetChunkCategoryData(){
+    var cat=curChunkCat;
+    if(chunkProgress[cat]){ delete chunkProgress[cat]; saveChunkProgress(); }
+    try{ if(activePanel==='chunks') openChunkCat(cat); }catch(e){}
+  }
+  // 2b) 청크 학습 메뉴 — 전체
   function resetChunkMenuData(){
-    chunkProgress={}; saveChunkProgress();
+    clearObjInPlace(chunkProgress); saveChunkProgress();
     try{ if(activePanel==='chunks') openChunkCat(curChunkCat); }catch(e){}
   }
   // 3) 오늘의 학습(레벨): 적응 난이도(B2로) + 오늘 레벨 세션 (성취도는 레벨 메뉴 소관)
@@ -7407,8 +7404,9 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     saveTodaySession();
     try{ if(activePanel==='today' && todayMode==='level') renderToday(); }catch(e){}
   }
-  // 4) 오늘의 학습(청크): 오늘 청크 세트/진행 (성취도는 청크 메뉴 소관)
+  // 4) 오늘의 학습(청크): 오늘 전용 진행도 + 오늘 세트 완전 초기화 (청크 메뉴 진행도와 분리)
   function resetTodayChunkData(){
+    clearObjInPlace(todayChunkProgress); saveTodayChunkProgress();
     try{ localStorage.removeItem(TODAY_CHUNK_KEY); }catch(e){}
     todayChunkSet=[]; todayChunkDeck=[]; todayChunkDeckPos=0; todayChunkWeakMode=false;
     try{ openTodayChunk(true); }catch(e){}
@@ -7420,9 +7418,14 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       label:'↺ 레벨 학습 진행도 초기화', run:resetLevelMenuData,
       tip:'레벨 학습의 모든 정답 기록·복습 스케줄(진행도)을 지워요. A1~C2 전 레벨이 초기화됩니다. 청크·오늘의 학습에는 영향 없어요.' }));
     var cs=$('chunk-menu-reset-slot');
-    if(cs) cs.appendChild(buildResetControl({
-      label:'↺ 청크 학습 진행도 초기화', run:resetChunkMenuData,
-      tip:'청크 학습의 모든 정답 기록·복습 스케줄(진행도)을 지워요. 전 카테고리·표현이 초기화됩니다. 레벨·오늘의 학습에는 영향 없어요.' }));
+    if(cs){
+      cs.appendChild(buildResetControl({
+        label:'↺ 이 카테고리 초기화', run:resetChunkCategoryData,
+        tip:'지금 보고 있는 카테고리(표현 묶음)의 청크 진행도만 지워요. 다른 카테고리·오늘의 학습에는 영향 없어요.' }));
+      cs.appendChild(buildResetControl({
+        label:'↺ 청크 학습 전체 초기화', run:resetChunkMenuData,
+        tip:'청크 학습의 모든 정답 기록·복습 스케줄(진행도)을 지워요. 전 카테고리가 초기화됩니다. 레벨·오늘의 학습에는 영향 없어요.' }));
+    }
   })();
   (function(){
     var t=$('expr-toggle'), chips=$('chips'), arrow=$('ej-arrow');
@@ -7934,24 +7937,24 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       }catch(e){}
     }
     var refs=allChunkRefs();
-    // 복습 시점 지난 졸업 청크 먼저, 그 다음 미졸업 — 둘 다 부족하면 전체에서(복습)
-    var due=refs.filter(function(r){ return chunkIsDue(r.cat,r.idx); });
-    var unmastered=refs.filter(function(r){ return chunkStreak(r.cat,r.idx)<CHUNK_STREAK_GOAL; });
+    // 복습 시점 지난 졸업 청크 먼저, 그 다음 미졸업 — 둘 다 부족하면 전체에서(복습) · 오늘의 학습 전용 진행도 기준
+    var due=refs.filter(function(r){ return chunkIsDue(r.cat,r.idx,todayChunkStore); });
+    var unmastered=refs.filter(function(r){ return chunkStreak(r.cat,r.idx,todayChunkStore)<CHUNK_STREAK_GOAL; });
     shuffleArr(due); shuffleArr(unmastered);
     var pool = due.concat(unmastered);
-    if(pool.length<n){ var rest=refs.filter(function(r){ return !chunkNeedsWork(r.cat,r.idx); }); shuffleArr(rest); pool=pool.concat(rest); }
+    if(pool.length<n){ var rest=refs.filter(function(r){ return !chunkNeedsWork(r.cat,r.idx,todayChunkStore); }); shuffleArr(rest); pool=pool.concat(rest); }
     todayChunkSet = pool.slice(0, Math.min(n, pool.length));
     try{ localStorage.setItem(TODAY_CHUNK_KEY, JSON.stringify({day:day, count:n, set:todayChunkSet})); }catch(e){}
   }
   function buildTodayChunkQueue(){
     todayChunkQueue=[]; todayChunkPos=0;
-    var pending=todayChunkSet.filter(function(r){ return chunkNeedsWork(r.cat,r.idx); });
+    var pending=todayChunkSet.filter(function(r){ return chunkNeedsWork(r.cat,r.idx,todayChunkStore); });
     shuffleArr(pending);
     pending.forEach(function(r,nn){ todayChunkQueue.push({cat:r.cat, idx:r.idx, dueAt:nn}); });
   }
   function pullNextTodayChunk(){
     // force = 약점 복습 첫 등장(졸업 여부 무관 1회 보장). 이후 재등장은 일반 규칙.
-    var live=todayChunkQueue.filter(function(q){ return q.force || chunkNeedsWork(q.cat,q.idx); });
+    var live=todayChunkQueue.filter(function(q){ return q.force || chunkNeedsWork(q.cat,q.idx,todayChunkStore); });
     if(!live.length) return null;
     live.sort(function(a,b){ return a.dueAt-b.dueAt; });
     var pick=null;
@@ -7997,7 +8000,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   function todayChunkSetStats(){
     var learned=0, prog=0, total=todayChunkSet.length;
     todayChunkSet.forEach(function(r){
-      var s=Math.min(chunkStreak(r.cat,r.idx), CHUNK_STREAK_GOAL);
+      var s=Math.min(chunkStreak(r.cat,r.idx,todayChunkStore), CHUNK_STREAK_GOAL);
       prog += s/CHUNK_STREAK_GOAL;
       if(s>=CHUNK_STREAK_GOAL) learned++;
     });
@@ -8006,8 +8009,8 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   function applyTodayChunkGrade(item, ch, grade){
     item.graded=grade;
     if(!item._counted){ item._counted=true; STATS.recordDaily(grade, 'chunk'); }  // 오늘의 학습 통계(청크)
-    chunkApplySrs(item.cat, item.idx, grade==='ok');
-    if(chunkNeedsWork(item.cat, item.idx)){ scheduleTodayChunkAgain(item.cat, item.idx, grade==='ok'); }
+    chunkApplySrs(item.cat, item.idx, grade==='ok', todayChunkStore);
+    if(chunkNeedsWork(item.cat, item.idx, todayChunkStore)){ scheduleTodayChunkAgain(item.cat, item.idx, grade==='ok'); }
   }
 
   function renderTodayChunk(){
@@ -8036,11 +8039,11 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     var cat=item.cat, d=CHUNK_DATA[cat], ch=d.chunks[item.idx];
     var col=colorVars(d.color);
     $('today-fill').style.background = col.fg;
-    var streak=chunkStreak(cat, item.idx);
+    var streak=chunkStreak(cat, item.idx, todayChunkStore);
 
     wrap.innerHTML='';
     var card=document.createElement('div'); card.className='chunk-card'; card.style.borderColor=col.fg;
-    if(item._seenSnap===undefined) item._seenSnap = chunkSeenAt(cat, item.idx);
+    if(item._seenSnap===undefined) item._seenSnap = chunkSeenAt(cat, item.idx, todayChunkStore);
     card.appendChild(seenBadge(item._seenSnap));
     var tag=document.createElement('div'); tag.className='chunk-tag'; tag.style.color=col.fg;
     tag.textContent=d.name + (streak>=CHUNK_STREAK_GOAL ? ' · ↻ 복습' : '');
@@ -8741,55 +8744,55 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   //  · localStorage에 카테고리별 진행(streak) 저장.
   // ============================================================
   var CHUNK_STREAK_GOAL = 2;            // 연속 N회 즉답 → 졸업
-  var CHUNK_PROG_KEY = 'eng_chunks_progress_v1';
+  var CHUNK_PROG_KEY = 'eng_chunks_progress_v1';        // 청크 학습 메뉴 진행도
+  var TODAY_CHUNK_PROG_KEY = 'eng_today_chunk_prog_v1'; // 오늘의 학습(청크) 진행도 — 완전 분리
   var curChunkCat = 1;
-  var chunkProgress = (function(){      // { catId: { idx: {s:streak, box:n, due:ts} } } (구형: idx: streak 숫자)
-    try{ return JSON.parse(localStorage.getItem(CHUNK_PROG_KEY)) || {}; }catch(e){ return {}; }
-  })();
+  function loadProg(key){ try{ return JSON.parse(localStorage.getItem(key)) || {}; }catch(e){ return {}; } }
+  var chunkProgress = loadProg(CHUNK_PROG_KEY);
+  var todayChunkProgress = loadProg(TODAY_CHUNK_PROG_KEY);
   function saveChunkProgress(){ try{ localStorage.setItem(CHUNK_PROG_KEY, JSON.stringify(chunkProgress)); }catch(e){} }
+  function saveTodayChunkProgress(){ try{ localStorage.setItem(TODAY_CHUNK_PROG_KEY, JSON.stringify(todayChunkProgress)); }catch(e){} }
+  // 청크 진행도 저장소 래퍼 — 기본은 메뉴 스토어, 오늘의 학습은 todayChunkStore 를 넘겨 완전 분리한다.
+  var chunkStore = { map:chunkProgress, save:saveChunkProgress };
+  var todayChunkStore = { map:todayChunkProgress, save:saveTodayChunkProgress };
   // ---- 청크 SRS (망각 곡선 복습): 졸업 후 box 간격으로 재등장 ----
   var CHUNK_SRS_DAYS = [0, 1, 3, 7, 14, 30, 60];
   var CHUNK_DAY_MS = 24*60*60*1000;
-  // 구형(숫자 streak) → 신형(셀 객체) 일괄 이행. 기존 졸업분은 내일부터 복습 시작.
-  (function(){
-    var changed=false;
-    for(var c in chunkProgress){ for(var i in chunkProgress[c]){
-      var v=chunkProgress[c][i];
-      if(typeof v==='number'){
-        chunkProgress[c][i] = (v>=CHUNK_STREAK_GOAL) ? {s:v, box:1, due:Date.now()+CHUNK_DAY_MS} : {s:v, box:0};
-        changed=true;
-      }
-    }}
-    if(changed) saveChunkProgress();
-  })();
-  function chunkCell(cat, idx){
-    var v=chunkProgress[cat] && chunkProgress[cat][idx];
+  // 구형(숫자 streak) → 신형(셀 객체) 일괄 이행 (두 저장소 모두)
+  [chunkStore, todayChunkStore].forEach(function(st){
+    var changed=false, m=st.map;
+    for(var c in m){ for(var i in m[c]){ var v=m[c][i];
+      if(typeof v==='number'){ m[c][i]=(v>=CHUNK_STREAK_GOAL)?{s:v,box:1,due:Date.now()+CHUNK_DAY_MS}:{s:v,box:0}; changed=true; } } }
+    if(changed) st.save();
+  });
+  function chunkCell(cat, idx, st){ st=st||chunkStore;
+    var v=st.map[cat] && st.map[cat][idx];
     if(v==null) return {s:0, box:0};
     if(typeof v==='number') return (v>=CHUNK_STREAK_GOAL) ? {s:v, box:1, due:Date.now()+CHUNK_DAY_MS} : {s:v, box:0};
     return v;
   }
-  function setChunkCell(cat, idx, c){
-    if(!chunkProgress[cat]) chunkProgress[cat]={};
-    chunkProgress[cat][idx]=c; saveChunkProgress();
+  function setChunkCell(cat, idx, c, st){ st=st||chunkStore;
+    if(!st.map[cat]) st.map[cat]={};
+    st.map[cat][idx]=c; st.save();
   }
-  function chunkStreak(cat, idx){ return chunkCell(cat, idx).s || 0; }
-  function setChunkStreak(cat, idx, v){
-    var c=chunkCell(cat, idx); c.s=v;
+  function chunkStreak(cat, idx, st){ return chunkCell(cat, idx, st).s || 0; }
+  function setChunkStreak(cat, idx, v, st){
+    var c=chunkCell(cat, idx, st); c.s=v;
     if(v<CHUNK_STREAK_GOAL){ c.box=0; delete c.due; }
-    setChunkCell(cat, idx, c);
+    setChunkCell(cat, idx, c, st);
   }
   // 졸업했지만 복습 시점(due)이 지났으면 다시 볼 때가 된 것
-  function chunkIsDue(cat, idx){
-    var c=chunkCell(cat, idx);
+  function chunkIsDue(cat, idx, st){
+    var c=chunkCell(cat, idx, st);
     return c.s>=CHUNK_STREAK_GOAL && (!c.due || Date.now()>=c.due);
   }
   // 출제 대상 = 미졸업 또는 복습 시점 지남
-  function chunkNeedsWork(cat, idx){
-    return chunkStreak(cat, idx)<CHUNK_STREAK_GOAL || chunkIsDue(cat, idx);
+  function chunkNeedsWork(cat, idx, st){
+    return chunkStreak(cat, idx, st)<CHUNK_STREAK_GOAL || chunkIsDue(cat, idx, st);
   }
   // 채점 → streak/SRS 갱신. 졸업 시 box=1(1일 뒤 복습), 복습 성공마다 box+1(3→7→14→30→60일). 틀리면 전부 리셋.
-  function chunkApplySrs(cat, idx, ok){
-    var c=chunkCell(cat, idx);
+  function chunkApplySrs(cat, idx, ok, st){
+    var c=chunkCell(cat, idx, st);
     if(ok){
       if(c.s>=CHUNK_STREAK_GOAL){ c.box=Math.min((c.box||1)+1, CHUNK_SRS_DAYS.length-1); }   // 복습 성공 → 간격 확장
       else { c.s++; if(c.s>=CHUNK_STREAK_GOAL){ c.box=(c.f>0)?1:2; } }                        // 졸업: 새(무오답)면 3일, 틀린적 있으면 1일
@@ -8799,19 +8802,19 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       c.f=(c.f||0)+1;                                                                          // 누적 오답(약점 판별용)
     }
     c.seen = Date.now();   // 마지막으로 푼 시각
-    setChunkCell(cat, idx, c);
+    setChunkCell(cat, idx, c, st);
   }
   // 마지막으로 푼 시각(없으면 null)
-  function chunkSeenAt(cat, idx){
-    var v = chunkProgress[cat] && chunkProgress[cat][idx];
+  function chunkSeenAt(cat, idx, st){ st=st||chunkStore;
+    var v = st.map[cat] && st.map[cat][idx];
     return (v && typeof v==='object' && v.seen) || null;
   }
-  function chunkCatStats(cat){
+  function chunkCatStats(cat, st){
     var arr=CHUNK_DATA[cat].chunks, learned=0, prog=0;
     for(var i=0;i<arr.length;i++){
-      var s=Math.min(chunkStreak(cat,i), CHUNK_STREAK_GOAL);
+      var s=Math.min(chunkStreak(cat,i,st), CHUNK_STREAK_GOAL);
       prog += s/CHUNK_STREAK_GOAL;                 // 부분 진행(맞힐 때마다 증가)
-      if(chunkStreak(cat,i)>=CHUNK_STREAK_GOAL) learned++;
+      if(chunkStreak(cat,i,st)>=CHUNK_STREAK_GOAL) learned++;
     }
     return {learned:learned, total:arr.length, progress:prog};
   }
@@ -10143,20 +10146,18 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     });
   }
   // 이 카드에 쓸 예문 결정.
-  // 학습 단계(미졸업)는 대표 예문 고정, 복습(졸업 후)은 CHUNK_EX10에서 로테이션.
-  // 채점 시 streak이 바뀌어도 카드에 표시된 예문이 유지되도록 item에 캐시한다.
+  // 매 카드마다 CHUNK_EX10 풀에서 무작위 예문 → 어휘는 매번 바뀌고, 표현(청크)만 빈칸으로 입력.
+  // 카드당 한 번 뽑아 item에 캐시(표시·채점·발음이 일치하도록).
   function chunkRepFor(ch, cat, item){
     if(item && item._rep!==undefined) return item._rep;
     var rep=null;
-    if(item && chunkStreak(cat, item.idx)>=CHUNK_STREAK_GOAL){
-      var pool=(window.CHUNK_EX10 && CHUNK_EX10[ch.en]) || null;
-      if(pool && pool.length){
-        var e=pool[Math.floor(Math.random()*pool.length)];
-        var blank=(ch.en.indexOf('~')<0 && e.en.toLowerCase().indexOf(ch.en.toLowerCase())>=0) ? ch.en : null;
-        rep={ en:e.en, ko:e.ko, blank:blank };
-      }
+    var pool=(window.CHUNK_EX10 && CHUNK_EX10[ch.en]) || null;
+    if(pool && pool.length){
+      var e=pool[Math.floor(Math.random()*pool.length)];
+      var blank=(ch.en.indexOf('~')<0 && e.en.toLowerCase().indexOf(ch.en.toLowerCase())>=0) ? ch.en : null;
+      rep={ en:e.en, ko:e.ko, blank:blank };
     }
-    if(!rep) rep=chunkRep(ch);
+    if(!rep) rep=chunkRep(ch);   // 예문 풀이 없는 고정 표현(반응 등)은 대표 예문
     if(item) item._rep=rep;
     return rep;
   }
@@ -10169,98 +10170,21 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     }
     else { el.textContent = ch.ko; }
   }
-  // 1단계(첫 노출): 단어 타일을 순서대로 탭해 문장 완성. 틀린 타일은 흔들리고 되돌아감.
-  // 기존 nav(말하기/정답 버튼)와 호환되도록 host._fillMic/_fillAns를 노출한다.
-  function renderChunkTiles(host, en, onDone){
-    host.innerHTML='';
-    var card=document.createElement('div'); card.className='fill-wrap';
-    var words=en.split(/\s+/).filter(Boolean);
-    // 구두점(? . ! , 따옴표 등)은 어순 힌트가 되므로 타일·배치 중에는 떼고, 완성 후에만 원문으로 보여준다
-    function bareOf(w){ var b=w.replace(/^["'“”‘’(]+/,'').replace(/["'“”‘’)?.!,;:]+$/,''); return b||w; }
-    var bare=words.map(bareOf);
-    var ans=document.createElement('div'); ans.className='tile-answer';
-    var pool=document.createElement('div'); pool.className='tile-pool';
-    var hint=document.createElement('div'); hint.className='fill-tap'; hint.textContent='단어를 순서대로 탭해 문장을 완성하세요';
-    var placedN=0, done=false, usedHelp=false;
-    function addChip(w){ var chip=document.createElement('span'); chip.className='tile-chip'; chip.textContent=w; ans.appendChild(chip); }
-    function finish(){
-      if(done) return; done=true;
-      ans.innerHTML=''; words.forEach(addChip);   // 완성 → 구두점 포함 원문으로 표시
-      var correct=!usedHelp;
-      hint.textContent = correct ? '정답! 🎉  아래 Next로 넘어가세요' : '정답을 확인했어요 · Next로 넘어가세요';
-      if(host._fillMic) host._fillMic.disabled=true;
-      if(host._fillAns) host._fillAns.disabled=true;
-      onDone(correct?'ok':'no');
-    }
-    function completeAll(){
-      placedN=words.length;
-      Array.prototype.forEach.call(pool.children, function(c){ c.disabled=true; c.classList.add('placed'); });
-    }
-    function place(btn, i){
-      if(done) return;
-      if(bare[i]!==bare[placedN]){     // 순서 오류 → 흔들고 되돌림 (타이핑의 오타와 동일하게 관대)
-        btn.classList.add('wrong'); setTimeout(function(){ btn.classList.remove('wrong'); }, 350);
-        playTick(true); return;
-      }
-      playTick(false);
-      btn.disabled=true; btn.classList.add('placed');
-      addChip(bare[placedN]); placedN++;
-      if(placedN===words.length) finish();
-    }
-    var order=words.map(function(w,i){ return i; });
-    for(var k=order.length-1;k>0;k--){ var j=Math.floor(Math.random()*(k+1)); var t=order[k]; order[k]=order[j]; order[j]=t; }
-    order.forEach(function(i){
-      var b=document.createElement('button'); b.className='tile-btn'; b.textContent=bare[i];
-      b.addEventListener('click', function(){ place(b, i); });
-      pool.appendChild(b);
-    });
-    card.appendChild(ans); card.appendChild(pool); card.appendChild(hint);
-    host.appendChild(card);
-    // 숨은 정답 버튼: nav의 '정답'이 프록시 클릭 → 자동 완성 + 오답 처리
-    var ansBtn=document.createElement('button'); ansBtn.style.display='none';
-    ansBtn.addEventListener('click', function(){ if(done) return; usedHelp=true; completeAll(); finish(); });
-    host.appendChild(ansBtn); host._fillAns=ansBtn;
-    // 숨은 말하기 버튼: 문장 전체를 말하면 통과
-    var micRec=null;
-    var micBtn=document.createElement('button'); micBtn.style.display='none';
-    micBtn.addEventListener('click', function(){
-      if(done) return;
-      var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-      if(!SR){ hint.textContent='이 브라우저는 음성 입력을 지원하지 않아요.'; return; }
-      if(micRec){ try{ micRec.stop(); }catch(e){} micRec=null; return; }
-      micRec=new SR(); micRec.lang='en-US'; micRec.interimResults=false; micRec.continuous=false;
-      micRec.onstart=function(){ hint.textContent='지금 문장을 말하세요'; };
-      micRec.onresult=function(e){ var txt=''; for(var i=0;i<e.results.length;i++) txt+=e.results[i][0].transcript;
-        if(spokenHasAnswer(txt, words)){ completeAll(); finish(); }
-        else { hint.textContent='“'+txt+'” — 다시 시도'; } };
-      micRec.onerror=function(ev){ hint.textContent=(ev.error==='not-allowed')?'마이크 권한을 허용해 주세요.':'인식 실패, 다시 시도'; };
-      micRec.onend=function(){ micRec=null; };
-      try{ micRec.start(); }catch(e){}
-    });
-    host.appendChild(micBtn); host._fillMic=micBtn;
-  }
   function chunkFillInto(area, ch, cat, item, onGraded, exHost){
     area.innerHTML='';
     var exTarget = exHost || area;   // 예시는 문제카드 안(exHost)에 작게
     var rep = chunkRepFor(ch, cat, item);
     var fillEn = (rep && rep.en) ? rep.en : ch.en;
-    var streak = chunkStreak(cat, item.idx);
-    var isReview = streak>=CHUNK_STREAK_GOAL;
     if(item.graded==null){
       var done=function(grade){
         onGraded(grade);
         chunkExamplesInto(exTarget, ch, item);   // 정답 직후 카드 안에 예시 노출
       };
-      if(!isReview){
-        // 학습 단계(streak 0·1): 단어 타일 어순 배열
-        renderChunkTiles(area, fillEn, done);
-      } else {
-        // 복습 단계(졸업 후): 빈칸 타이핑
-        var fillOpts = {noHint:true, noButtons:true};
-        if(rep && rep.blank){ fillOpts.blankSub = rep.blank; }
-        else { fillOpts.blankAll = true; }
-        renderCefrFill(area, fillEn, done, fillOpts);
-      }
+      // 항상 빈칸 타이핑(또는 말하기): 어휘는 이미 채워져 있고 표현(청크)만 입력
+      var fillOpts = {noHint:true, noButtons:true};
+      if(rep && rep.blank){ fillOpts.blankSub = rep.blank; }
+      else { fillOpts.blankAll = true; }
+      renderCefrFill(area, fillEn, done, fillOpts);
     } else {
       var enRow=document.createElement('div'); enRow.style.display='flex'; enRow.style.alignItems='center'; enRow.style.justifyContent='center'; enRow.style.gap='8px';
       var en=document.createElement('div'); en.className='chunk-en'; en.textContent=fillEn;
