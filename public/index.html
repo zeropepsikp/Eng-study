@@ -864,7 +864,6 @@
       </div>
     </div>
     <div id="chunk-card-wrap"></div>
-    <div id="chunk-menu-reset-slot"></div>
   </div>
 
   <!-- DRILL PANEL (청크 기반 대화 연습) -->
@@ -7384,13 +7383,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     try{ if(activePanel==='study') startLevel(); }catch(e){}
   }
   function clearObjInPlace(o){ Object.keys(o).forEach(function(k){ delete o[k]; }); }
-  // 2a) 청크 학습 메뉴 — 현재 카테고리만
-  function resetChunkCategoryData(){
-    var cat=curChunkCat;
-    if(chunkProgress[cat]){ delete chunkProgress[cat]; saveChunkProgress(); }
-    try{ if(activePanel==='chunks') openChunkCat(cat); }catch(e){}
-  }
-  // 2b) 청크 학습 메뉴 — 전체
+  // 청크 학습 전체 초기화 (통계 > 청크에서 사용)
   function resetChunkMenuData(){
     clearObjInPlace(chunkProgress); saveChunkProgress();
     try{ if(activePanel==='chunks') openChunkCat(curChunkCat); }catch(e){}
@@ -7417,15 +7410,6 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     if(ls) ls.appendChild(buildResetControl({
       label:'↺ 레벨 학습 진행도 초기화', run:resetLevelMenuData,
       tip:'레벨 학습의 모든 정답 기록·복습 스케줄(진행도)을 지워요. A1~C2 전 레벨이 초기화됩니다. 청크·오늘의 학습에는 영향 없어요.' }));
-    var cs=$('chunk-menu-reset-slot');
-    if(cs){
-      cs.appendChild(buildResetControl({
-        label:'↺ 이 카테고리 초기화', run:resetChunkCategoryData,
-        tip:'지금 보고 있는 카테고리(표현 묶음)의 청크 진행도만 지워요. 다른 카테고리·오늘의 학습에는 영향 없어요.' }));
-      cs.appendChild(buildResetControl({
-        label:'↺ 청크 학습 전체 초기화', run:resetChunkMenuData,
-        tip:'청크 학습의 모든 정답 기록·복습 스케줄(진행도)을 지워요. 전 카테고리가 초기화됩니다. 레벨·오늘의 학습에는 영향 없어요.' }));
-    }
   })();
   (function(){
     var t=$('expr-toggle'), chips=$('chips'), arrow=$('ej-arrow');
@@ -10572,6 +10556,11 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       renderStats();
     });
     resetBox.appendChild(rb); wrap.appendChild(resetBox);
+
+    // 청크 학습 전체 초기화 (전 카테고리)
+    wrap.appendChild(buildResetControl({
+      label:'↺ 청크 학습 전체 초기화', run:function(){ resetChunkMenuData(); renderStats(); },
+      tip:'청크 학습의 모든 정답 기록·복습 스케줄(진행도)을 지워요. 전 카테고리가 초기화됩니다. 레벨·오늘의 학습에는 영향 없어요.' }));
   }
 
   function renderDaily(wrap){
