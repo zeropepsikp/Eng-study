@@ -575,7 +575,7 @@
   .opt-switch.on::after{left:22px;}
   /* 메뉴별 데이터 초기화 버튼 (최하단) */
   .menu-reset-box{margin:22px 0 6px;text-align:center;}
-  .menu-reset-row{display:flex;align-items:center;justify-content:center;gap:8px;}
+  .menu-reset-row{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;}
   .menu-reset-btn{border:1px solid var(--coral);color:var(--coral);background:transparent;
     border-radius:999px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;}
   .menu-reset-btn.armed{background:var(--coral);color:#fff;}
@@ -842,7 +842,6 @@
 
     <button class="expr-jump" id="expr-toggle"><span class="ej-arrow" id="ej-arrow">▶</span> Expressions in this level (tap to expand)</button>
     <div class="chips" id="chips" style="display:none;"></div>
-    <div id="level-menu-reset-slot"></div>
   </div>
 
   <!-- CHUNKS SUBTABS (카테고리 탭만, 전체 폭 사용) -->
@@ -7376,12 +7375,6 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     row.appendChild(b); row.appendChild(q); box.appendChild(row); box.appendChild(tip);
     return box;
   }
-  // 1) 레벨 학습 메뉴: 레벨 성취도(정답기록·복습 스케줄) 전체
-  function resetLevelMenuData(){
-    STATS.resetStats(); levelState={};
-    try{ buildLevelSubtabs(); }catch(e){}
-    try{ if(activePanel==='study') startLevel(); }catch(e){}
-  }
   function clearObjInPlace(o){ Object.keys(o).forEach(function(k){ delete o[k]; }); }
   // 청크 학습 전체 초기화 (통계 > 청크에서 사용)
   function resetChunkMenuData(){
@@ -7405,12 +7398,6 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     try{ openTodayChunk(true); }catch(e){}
     try{ if(activePanel==='today' && todayMode==='chunk') renderToday(); }catch(e){}
   }
-  (function(){
-    var ls=$('level-menu-reset-slot');
-    if(ls) ls.appendChild(buildResetControl({
-      label:'↺ 레벨 학습 진행도 초기화', run:resetLevelMenuData,
-      tip:'레벨 학습의 모든 정답 기록·복습 스케줄(진행도)을 지워요. A1~C2 전 레벨이 초기화됩니다. 청크·오늘의 학습에는 영향 없어요.' }));
-  })();
   (function(){
     var t=$('expr-toggle'), chips=$('chips'), arrow=$('ej-arrow');
     if(t){ t.addEventListener('click',function(){
@@ -10105,16 +10092,20 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     exHead.appendChild(exLab); exHead.appendChild(exRf); exBlock.appendChild(exHead); exBlock.appendChild(exList); paintEx();
     host.appendChild(exBlock);
   }
-  // 청크 빈칸 채우기(CEFR와 동일, 단 힌트 없음·전부 빈칸). graded면 정답+예시 표시.
+  // 빈칸으로 만들 '표현' 조각을 예문 안에서 찾아 반환. 표현 뒤 구두점(. ? ! , 등)은 떼고 매칭한다.
+  // (예: 청크 "Good point." 는 예문 "Good point, I hadn't ..." 안의 "Good point" 만 빈칸)
+  function chunkBlankKey(chunkEn, exEn){
+    if(!chunkEn || chunkEn.indexOf('~')>=0) return null;
+    var key = chunkEn.replace(/[.?!,;:]+$/,'').trim();
+    if(!key) return null;
+    return (exEn.toLowerCase().indexOf(key.toLowerCase())>=0) ? key : null;
+  }
+  // 청크 빈칸 채우기(CEFR와 동일, 단 힌트 없음). graded면 정답+예시 표시.
   // 청크의 대표 예문(rep)을 찾아 { en, ko(마킹), blank } 형태로 돌려준다. 없으면 null.
   function chunkRep(ch){
     if(!ch || !window.CHUNK_REP) return null;
     var r = CHUNK_REP[ch.en]; if(!r || !r.en) return null;
-    var blank = r.blank;
-    if(blank===undefined){
-      var k = ch.en;
-      blank = (k.indexOf('~')<0 && r.en.toLowerCase().indexOf(k.toLowerCase())>=0) ? k : null;
-    }
+    var blank = (r.blank!==undefined) ? r.blank : chunkBlankKey(ch.en, r.en);
     return { en:r.en, ko:r.ko, blank:blank };
   }
   // { } 로 감싼 내용어는 기본색, 나머지(문법)는 파랑으로 칠한다.
@@ -10138,8 +10129,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     var pool=(window.CHUNK_EX10 && CHUNK_EX10[ch.en]) || null;
     if(pool && pool.length){
       var e=pool[Math.floor(Math.random()*pool.length)];
-      var blank=(ch.en.indexOf('~')<0 && e.en.toLowerCase().indexOf(ch.en.toLowerCase())>=0) ? ch.en : null;
-      rep={ en:e.en, ko:e.ko, blank:blank };
+      rep={ en:e.en, ko:e.ko, blank:chunkBlankKey(ch.en, e.en) };
     }
     if(!rep) rep=chunkRep(ch);   // 예문 풀이 없는 고정 표현(반응 등)은 대표 예문
     if(item) item._rep=rep;
@@ -10544,23 +10534,22 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     });
     wrap.appendChild(list);
 
-    // 이 카테고리 진행 초기화
-    var resetBox=document.createElement('div'); resetBox.className='stats-reset-box';
-    var rb=document.createElement('button'); rb.className='stats-reset'; rb.textContent='Reset '+d.name+' progress';
-    var armed=false, armTimer=null;
-    rb.addEventListener('click',function(){
-      if(!armed){ armed=true; rb.textContent='Tap again to reset'; rb.classList.add('armed');
-        armTimer=setTimeout(function(){ armed=false; rb.textContent='Reset '+d.name+' progress'; rb.classList.remove('armed'); },4000); return; }
-      clearTimeout(armTimer); armed=false;
-      if(chunkProgress[cat]){ delete chunkProgress[cat]; saveChunkProgress(); }
-      renderStats();
-    });
-    resetBox.appendChild(rb); wrap.appendChild(resetBox);
-
-    // 청크 학습 전체 초기화 (전 카테고리)
-    wrap.appendChild(buildResetControl({
-      label:'↺ 청크 학습 전체 초기화', run:function(){ resetChunkMenuData(); renderStats(); },
-      tip:'청크 학습의 모든 정답 기록·복습 스케줄(진행도)을 지워요. 전 카테고리가 초기화됩니다. 레벨·오늘의 학습에는 영향 없어요.' }));
+    // 초기화 버튼 — 카테고리 / 전체, 같은 줄·같은 디자인
+    var resetBox=document.createElement('div'); resetBox.className='menu-reset-box';
+    var row=document.createElement('div'); row.className='menu-reset-row';
+    var catLabel='↺ 카테고리 초기화';
+    var bCat=document.createElement('button'); bCat.className='menu-reset-btn'; bCat.textContent=catLabel;
+    armReset(bCat, catLabel, function(){ if(chunkProgress[cat]){ delete chunkProgress[cat]; saveChunkProgress(); } renderStats(); });
+    var allLabel='↺ 전체 초기화';
+    var bAll=document.createElement('button'); bAll.className='menu-reset-btn'; bAll.textContent=allLabel;
+    armReset(bAll, allLabel, function(){ resetChunkMenuData(); renderStats(); });
+    var q=document.createElement('button'); q.className='help-icon'; q.type='button'; q.setAttribute('aria-label','초기화 설명'); q.textContent='?';
+    var tip=document.createElement('div'); tip.className='reset-tip';
+    tip.textContent='카테고리 초기화: 지금 보고 있는 카테고리만. 전체 초기화: 모든 카테고리. 둘 다 청크 학습 진행도만 지우고 레벨·오늘의 학습에는 영향 없어요.';
+    q.addEventListener('click', function(ev){ ev.stopPropagation(); tip.classList.toggle('show'); });
+    row.appendChild(bCat); row.appendChild(bAll); row.appendChild(q);
+    resetBox.appendChild(row); resetBox.appendChild(tip);
+    wrap.appendChild(resetBox);
   }
 
   function renderDaily(wrap){
