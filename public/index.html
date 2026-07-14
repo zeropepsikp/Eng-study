@@ -627,6 +627,8 @@
     background:var(--border2);margin-left:3px;vertical-align:middle;}
   .chunk-streak .dot.on{background:var(--indigo);}
   .chunk-ko{font-size:21px;font-weight:700;line-height:1.4;margin:4px 0 6px;}
+  /* 문제 예문 아래: 배워야 하는 표현(청크의 한국어 라벨) — 작고 연하게 */
+  .chunk-expr{font-size:12.5px;font-weight:600;color:var(--text3);line-height:1.4;margin:-2px 0 4px;}
   .chunk-en{font-size:25px;font-weight:800;line-height:1.45;padding:6px 0;}
   .chunk-en .chunk-blank, .cstat-en .chunk-blank{opacity:.4;font-weight:600;}
   /* 청크 문법 힌트 (? 아이콘 + 툴팁) */
@@ -8028,6 +8030,8 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     var koRow=document.createElement('div'); koRow.className='ko-row'; koRow.appendChild(cko);
     if(item.graded!=null){ var rpx=chunkRepFor(ch, cat, item); koRow.appendChild(spkBtn((rpx && rpx.en)||ch.en,'mini')); }
     body.appendChild(clab); body.appendChild(koRow);
+    var exprLab=document.createElement('div'); exprLab.className='chunk-expr'; exprLab.textContent='표현 · '+ch.ko;
+    body.appendChild(exprLab);
     card.appendChild(body);
     wrap.appendChild(card);
 
@@ -10221,6 +10225,8 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     var koRow=document.createElement('div'); koRow.className='ko-row'; koRow.appendChild(cko);
     if(item.graded!=null){ var rpx=chunkRepFor(ch, cat, item); koRow.appendChild(spkBtn((rpx && rpx.en)||ch.en,'mini')); }
     body.appendChild(clab); body.appendChild(koRow);
+    var exprLab=document.createElement('div'); exprLab.className='chunk-expr'; exprLab.textContent='표현 · '+ch.ko;
+    body.appendChild(exprLab);
     card.appendChild(body);
     wrap.appendChild(card);
 
