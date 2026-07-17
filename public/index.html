@@ -851,6 +851,11 @@
     <div class="subtabs" id="chunk-subtabs"></div>
   </div>
 
+  <!-- CORE VERBS SUBTABS (동사 카테고리 탭) -->
+  <div class="chunk-subtabs-row" id="core-subtabs-row">
+    <div class="subtabs" id="core-subtabs"></div>
+  </div>
+
   <!-- DRILL SUBTABS (카테고리 탭) -->
   <div class="chunk-subtabs-row" id="drill-subtabs-row">
     <div class="subtabs" id="drill-subtabs"></div>
@@ -865,6 +870,17 @@
       </div>
     </div>
     <div id="chunk-card-wrap"></div>
+  </div>
+
+  <!-- CORE VERBS PANEL (핵심 동사 활용) -->
+  <div class="panel" id="panel-core">
+    <div class="chunk-head" id="core-head">
+      <div class="chunk-prog-wrap">
+        <div class="chunk-prog-bar"><div class="chunk-fill" id="core-fill"></div></div>
+        <div class="chunk-prog-label" id="core-prog-label"></div>
+      </div>
+    </div>
+    <div id="core-card-wrap"></div>
   </div>
 
   <!-- DRILL PANEL (청크 기반 대화 연습) -->
@@ -946,6 +962,10 @@
   <button class="bn-item" data-sec="chunks">
     <span class="bn-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="4" width="8" height="6" rx="2" fill="currentColor" opacity="0.7"/><rect x="13" y="4" width="8" height="6" rx="2" fill="currentColor" opacity="0.3"/><rect x="3" y="14" width="8" height="6" rx="2" fill="currentColor" opacity="0.3"/><rect x="13" y="14" width="8" height="6" rx="2" fill="currentColor" opacity="0.7"/></svg></span>
     <span class="bn-lab">Chunks</span>
+  </button>
+  <button class="bn-item" data-sec="core">
+    <span class="bn-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13 2.5 5 13.2h5l-1 8.3 8-10.7h-5l1-8.3z" fill="currentColor" opacity="0.85"/></svg></span>
+    <span class="bn-lab">Verbs</span>
   </button>
   <button class="bn-item" data-sec="tutor">
     <span class="bn-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="8" r="4" fill="currentColor" opacity="0.55"/><path d="M4 20c0-3.6 3.6-6 8-6s8 2.4 8 6" fill="currentColor" opacity="0.2"/><circle cx="18" cy="6" r="3" fill="currentColor"/></svg></span>
@@ -3431,6 +3451,10 @@ Object.assign(window.HL_MAP, {"선호: I prefer A to B / I'm really into ~":{"en
 var CHUNK_GAP_ADD = {"2":[{"en":"It's","ko":"이거 ~야 / ~하다 (서술)","ex":[]},{"en":"There is","ko":"~ 있어 (존재)","ex":[]},{"en":"It sounds like","ko":"~인 것 같네 (들어 보니)","ex":[]},{"en":"It must be","ko":"분명 ~일 거야 (강한 추측)","ex":[]},{"en":"I've never","ko":"나 한 번도 ~한 적 없어","ex":[]},{"en":"I've already","ko":"나 이미 ~했어","ex":[]},{"en":"I should have","ko":"나 ~했어야 했는데 (후회)","ex":[]}],"3":[{"en":"How many","ko":"몇 개/몇 명 ~?","ex":[]},{"en":"How often","ko":"얼마나 자주 ~?","ex":[]},{"en":"right?","ko":"~ 맞지? / 그렇지? (확인)","ex":[]},{"en":"isn't it?","ko":"~ 그렇지 않아? (확인)","ex":[]},{"en":"I was wondering if","ko":"혹시 ~할 수 있을까 해서 (정중)","ex":[]}],"5":[{"en":"more ~ than","ko":"~보다 더 ~한 (비교)","ex":[]},{"en":"the most","ko":"가장 ~한 / 제일 ~ (최상급)","ex":[]},{"en":"either ~ or","ko":"~ 아니면 ~ (둘 중 하나)","ex":[]},{"en":"usually","ko":"보통 ~ / 대개","ex":[]}]};
 for(var _gc in CHUNK_GAP_ADD){ if(CHUNK_DATA[_gc]) CHUNK_DATA[_gc].chunks = CHUNK_DATA[_gc].chunks.concat(CHUNK_GAP_ADD[_gc]); }
 window.CHUNK_DATA = CHUNK_DATA;
+// ===== CORE VERBS (핵심 동사 활용) 데이터 =====
+var CORE_DATA = {"1":{"name":"get","abbr":"get","ko":"기본동사 get 활용","blurb":"쉬운 동사 get으로 이렇게 많은 걸 표현해요.","color":"info","chunks":[{"en":"get up","ko":"일어나다 / 기상하다","ex":[{"en":"I get up at six every day.","ko":"난 매일 6시에 일어나."},{"en":"Get up, you're gonna be late!","ko":"일어나, 너 늦겠어!"}]},{"en":"get ready","ko":"준비하다","ex":[{"en":"I need to get ready fast.","ko":"나 빨리 준비해야 해."},{"en":"Get ready, we're leaving now.","ko":"준비해, 우리 지금 나가."}]},{"en":"get back","ko":"돌아오다","ex":[{"en":"I'll get back by noon.","ko":"나 정오까지 돌아올게."},{"en":"When will you get back?","ko":"너 언제 돌아와?"}]},{"en":"get lost","ko":"길을 잃다 / 꺼져","ex":[{"en":"Don't get lost on the way.","ko":"오는 길에 길 잃지 마."},{"en":"We might get lost around here.","ko":"우리 여기서 길 잃을 수도 있어."}]},{"en":"get it","ko":"이해하다","ex":[{"en":"I get it now, thanks.","ko":"이제 이해했어, 고마워."},{"en":"Do you get it or not?","ko":"너 이해한 거야 아니야?"}]},{"en":"get out","ko":"나가다","ex":[{"en":"Get out of here right now!","ko":"당장 여기서 나가!"},{"en":"I want to get out early today.","ko":"나 오늘 일찍 나가고 싶어."}]},{"en":"get in","ko":"타다 / 들어가다","ex":[{"en":"Get in the car, quick!","ko":"차에 타, 빨리!"},{"en":"How did you get in here?","ko":"너 여기 어떻게 들어왔어?"}]},{"en":"get along","ko":"잘 지내다","ex":[{"en":"We get along really well.","ko":"우리 진짜 잘 지내."},{"en":"Do you get along with him?","ko":"너 걔랑 잘 지내?"}]},{"en":"get rid of","ko":"~을 없애다","ex":[{"en":"We need to get rid of this.","ko":"우리 이거 없애야 해."},{"en":"Let's get rid of the old couch.","ko":"저 낡은 소파 좀 버리자."}]},{"en":"get over","ko":"극복하다 / 넘기다","ex":[{"en":"You'll get over it soon.","ko":"너 금방 괜찮아질 거야."},{"en":"I can't get over how good it is.","ko":"이거 진짜 너무 좋아서 놀랐어."}]},{"en":"get home","ko":"집에 도착하다","ex":[{"en":"I get home around seven.","ko":"난 7시쯤 집에 와."},{"en":"Call me when you get home.","ko":"집에 도착하면 전화해."}]},{"en":"get better","ko":"나아지다","ex":[{"en":"I hope you get better soon.","ko":"얼른 나았으면 좋겠어."},{"en":"Things will get better, trust me.","ko":"다 나아질 거야, 믿어."}]},{"en":"get married","ko":"결혼하다","ex":[{"en":"They get married next month.","ko":"걔네 다음 달에 결혼해."},{"en":"We want to get married someday.","ko":"우리 언젠가 결혼하고 싶어."}]},{"en":"get going","ko":"출발하다 / 서두르다","ex":[{"en":"Let's get going, we're late.","ko":"출발하자, 우리 늦었어."},{"en":"I should get going now.","ko":"나 이제 가봐야겠다."}]},{"en":"get some sleep","ko":"잠 좀 자다","ex":[{"en":"You need to get some sleep.","ko":"너 잠 좀 자야 해."},{"en":"Let's get some sleep now.","ko":"이제 잠 좀 자자."}]},{"en":"get a job","ko":"일자리를 구하다","ex":[{"en":"He wants to get a job.","ko":"걔 취직하고 싶어 해."},{"en":"I need to get a job soon.","ko":"나 곧 일자리 구해야 해."}]}]},"2":{"name":"take","abbr":"take","ko":"기본동사 take 활용","blurb":"쉬운 동사 take로 이렇게 많은 걸 표현해요.","color":"purple","chunks":[{"en":"take care","ko":"조심하다 / 잘 지내","ex":[{"en":"Take care of yourself, okay?","ko":"몸 잘 챙겨, 알았지?"},{"en":"Take care, see you soon.","ko":"잘 지내, 곧 봐."}]},{"en":"take off","ko":"이륙하다 / 벗다","ex":[{"en":"The plane will take off soon.","ko":"비행기 곧 이륙할 거야."},{"en":"Take off your shoes here.","ko":"여기서 신발 벗어."}]},{"en":"take a break","ko":"휴식하다","ex":[{"en":"Let's take a break now.","ko":"우리 이제 좀 쉬자."},{"en":"You should take a break.","ko":"너 좀 쉬어야 해."}]},{"en":"take a look","ko":"한번 보다","ex":[{"en":"Take a look at this.","ko":"이거 한번 봐봐."},{"en":"Let me take a look first.","ko":"내가 먼저 한번 볼게."}]},{"en":"take out","ko":"꺼내다 / 내다 버리다","ex":[{"en":"Take out the trash, please.","ko":"쓰레기 좀 내다 버려줘."},{"en":"Let's take out some cash.","ko":"우리 현금 좀 뽑자."}]},{"en":"take it easy","ko":"진정해 / 쉬엄쉬엄해","ex":[{"en":"Just take it easy today.","ko":"오늘은 그냥 쉬엄쉬엄해."},{"en":"Take it easy, no rush.","ko":"진정해, 급할 거 없어."}]},{"en":"take turns","ko":"번갈아 하다","ex":[{"en":"Let's take turns driving.","ko":"우리 번갈아 운전하자."},{"en":"We take turns cooking dinner.","ko":"우리 번갈아 저녁 해."}]},{"en":"take a nap","ko":"낮잠 자다","ex":[{"en":"I want to take a nap.","ko":"나 낮잠 자고 싶어."},{"en":"Take a nap if you're tired.","ko":"피곤하면 낮잠 좀 자."}]},{"en":"take a picture","ko":"사진 찍다","ex":[{"en":"Can you take a picture for us?","ko":"우리 사진 좀 찍어줄래?"},{"en":"Let's take a picture here.","ko":"여기서 사진 찍자."}]},{"en":"take time","ko":"시간이 걸리다 / 천천히 하다","ex":[{"en":"It might take time to heal.","ko":"낫는 데 시간이 걸릴 수도 있어."},{"en":"Take time to decide, okay?","ko":"천천히 생각하고 정해, 알았지?"}]},{"en":"take a shower","ko":"샤워하다","ex":[{"en":"I need to take a shower.","ko":"나 샤워해야 해."},{"en":"Take a shower before bed.","ko":"자기 전에 샤워해."}]},{"en":"take notes","ko":"필기하다","ex":[{"en":"Take notes during the class.","ko":"수업 때 필기해."},{"en":"I always take notes in meetings.","ko":"난 회의 때 항상 필기해."}]},{"en":"take a walk","ko":"산책하다","ex":[{"en":"Let's take a walk outside.","ko":"밖에 나가서 산책하자."},{"en":"I take a walk every evening.","ko":"난 매일 저녁 산책해."}]},{"en":"take a seat","ko":"앉다","ex":[{"en":"Please take a seat here.","ko":"여기 앉으세요."},{"en":"Take a seat, we'll start soon.","ko":"앉아, 곧 시작할 거야."}]},{"en":"take part","ko":"참여하다","ex":[{"en":"I want to take part too.","ko":"나도 참여하고 싶어."},{"en":"Will you take part in it?","ko":"너 거기 참여할 거야?"}]},{"en":"take a chance","ko":"한번 해보다 / 도전하다","ex":[{"en":"Just take a chance on it.","ko":"그냥 한번 도전해봐."},{"en":"Sometimes you take a chance.","ko":"가끔은 모험도 해봐야지."}]}]},"3":{"name":"make","abbr":"make","ko":"기본동사 make 활용","blurb":"쉬운 동사 make로 이렇게 많은 걸 표현해요.","color":"green","chunks":[{"en":"make sure","ko":"확실히 하다 / 꼭 ~하다","ex":[{"en":"Make sure to lock the door.","ko":"문 꼭 잠가."},{"en":"I'll make sure it's done.","ko":"내가 확실히 끝내놓을게."}]},{"en":"make sense","ko":"말이 되다 / 이해가 가다","ex":[{"en":"That doesn't make sense to me.","ko":"그거 나한텐 말이 안 돼."},{"en":"Does it make sense now?","ko":"이제 이해가 돼?"}]},{"en":"make money","ko":"돈을 벌다","ex":[{"en":"He wants to make money fast.","ko":"걔 빨리 돈 벌고 싶어 해."},{"en":"You can make money online.","ko":"온라인으로 돈 벌 수 있어."}]},{"en":"make a mistake","ko":"실수하다","ex":[{"en":"Don't make a mistake this time.","ko":"이번엔 실수하지 마."},{"en":"Everyone can make a mistake.","ko":"누구나 실수할 수 있어."}]},{"en":"make friends","ko":"친구를 사귀다","ex":[{"en":"It's hard to make friends here.","ko":"여기선 친구 사귀기 힘들어."},{"en":"She can make friends easily.","ko":"걘 친구 쉽게 사귀어."}]},{"en":"make a decision","ko":"결정하다","ex":[{"en":"You need to make a decision.","ko":"너 결정해야 해."},{"en":"Let's make a decision now.","ko":"이제 결정하자."}]},{"en":"make dinner","ko":"저녁을 만들다","ex":[{"en":"I'll make dinner tonight.","ko":"오늘 저녁은 내가 할게."},{"en":"Can you make dinner today?","ko":"오늘 저녁 네가 해줄래?"}]},{"en":"make a call","ko":"전화하다","ex":[{"en":"I need to make a call.","ko":"나 전화 한 통 해야 해."},{"en":"Let me make a call first.","ko":"나 먼저 전화 한 통 할게."}]},{"en":"make a plan","ko":"계획을 세우다","ex":[{"en":"Let's make a plan for it.","ko":"그거 계획 좀 세우자."},{"en":"We should make a plan first.","ko":"우리 먼저 계획을 세워야 해."}]},{"en":"make time","ko":"시간을 내다","ex":[{"en":"You should make time for rest.","ko":"너 쉴 시간도 좀 내야 해."},{"en":"I'll make time for you.","ko":"너를 위해 시간 낼게."}]},{"en":"make progress","ko":"진전을 이루다","ex":[{"en":"We make progress every day.","ko":"우린 매일 조금씩 나아가."},{"en":"You're starting to make progress.","ko":"너 이제 진전이 보이기 시작해."}]},{"en":"make noise","ko":"시끄럽게 하다","ex":[{"en":"Don't make noise at night.","ko":"밤에 시끄럽게 하지 마."},{"en":"The kids make noise a lot.","ko":"애들이 엄청 시끄럽게 해."}]},{"en":"make a difference","ko":"차이를 만들다 / 변화를 주다","ex":[{"en":"You can make a difference here.","ko":"너가 여기서 변화를 만들 수 있어."},{"en":"Small things make a difference.","ko":"작은 것들이 차이를 만들어."}]},{"en":"make up your mind","ko":"결심하다 / 마음을 정하다","ex":[{"en":"Make up your mind already!","ko":"이제 좀 마음 정해!"},{"en":"You need to make up your mind.","ko":"너 마음을 정해야 해."}]},{"en":"make a wish","ko":"소원을 빌다","ex":[{"en":"Close your eyes and make a wish.","ko":"눈 감고 소원 빌어."},{"en":"Make a wish before you blow.","ko":"불기 전에 소원 빌어."}]},{"en":"make room","ko":"공간을 내다 / 자리를 내다","ex":[{"en":"Make room for one more, please.","ko":"한 명 더 앉게 자리 좀 내줘."},{"en":"Can you make room over here?","ko":"여기 자리 좀 내줄 수 있어?"}]}]},"4":{"name":"put","abbr":"put","ko":"기본동사 put 활용","blurb":"쉬운 동사 put으로 이렇게 많은 걸 표현해요.","color":"amber","chunks":[{"en":"put on","ko":"(옷 등을) 입다 / 걸치다","ex":[{"en":"Put on your jacket, it's cold.","ko":"재킷 입어, 추워."},{"en":"She put on her shoes and left.","ko":"걔 신발 신고 나갔어."}]},{"en":"put off","ko":"미루다 / 연기하다","ex":[{"en":"Don't put off your homework.","ko":"숙제 미루지 마."},{"en":"We put off the meeting again.","ko":"우리 회의 또 미뤘어."}]},{"en":"put away","ko":"치우다 / 정리하다","ex":[{"en":"Put away your toys now.","ko":"장난감 지금 치워."},{"en":"I put away the dishes already.","ko":"나 접시 벌써 다 치웠어."}]},{"en":"put up with","ko":"참다 / 견디다","ex":[{"en":"I can't put up with this noise.","ko":"이 소음 못 참겠어."},{"en":"How do you put up with him?","ko":"너 걔를 어떻게 견뎌?"}]},{"en":"put down","ko":"내려놓다","ex":[{"en":"Put down your phone at dinner.","ko":"밥 먹을 땐 폰 내려놔."},{"en":"He put down the box gently.","ko":"걔가 상자 살살 내려놨어."}]},{"en":"put back","ko":"제자리에 놓다","ex":[{"en":"Put back the book, please.","ko":"그 책 제자리에 놔줘."},{"en":"I put back everything I moved.","ko":"내가 옮긴 거 다 도로 놨어."}]},{"en":"put together","ko":"조립하다 / 합쳐 만들다","ex":[{"en":"Let's put together a quick plan.","ko":"우리 간단한 계획 하나 짜자."},{"en":"He put together the shelf alone.","ko":"걔 혼자 선반 조립했어."}]},{"en":"put out","ko":"(불을) 끄다 / 내놓다","ex":[{"en":"They put out the fire fast.","ko":"걔네 불 금방 껐어."},{"en":"Please put out the trash tonight.","ko":"오늘 밤에 쓰레기 좀 내놔."}]},{"en":"put up","ko":"붙이다 / 세우다","ex":[{"en":"Let's put up the decorations now.","ko":"이제 장식 달자."},{"en":"They put up a new sign.","ko":"걔네 새 간판 걸었어."}]},{"en":"put in","ko":"넣다 / 들이다","ex":[{"en":"I'll put in a good word.","ko":"내가 잘 얘기해 줄게."},{"en":"Put in your password here.","ko":"여기에 비밀번호 넣어."}]},{"en":"put aside","ko":"제쳐두다 / 따로 모으다","ex":[{"en":"Let's put aside our differences.","ko":"우리 서로 다른 건 접어두자."},{"en":"I put aside some money monthly.","ko":"나 매달 돈 좀 따로 모아."}]},{"en":"put it on","ko":"그거 입다 / 틀다","ex":[{"en":"Put it on, it's cold outside.","ko":"그거 입어, 밖에 추워."},{"en":"Can you put it on for me?","ko":"그거 좀 틀어줄래?"}]},{"en":"put an end to","ko":"~을 끝내다","ex":[{"en":"Let's put an end to this.","ko":"이거 이제 끝내자."},{"en":"We put an end to the fight.","ko":"우리 그 싸움 끝냈어."}]},{"en":"put it away","ko":"그거 치우다","ex":[{"en":"Put it away when you're done.","ko":"다 쓰면 그거 치워."},{"en":"Please put it away now.","ko":"지금 그거 좀 치워."}]},{"en":"put on weight","ko":"살이 찌다","ex":[{"en":"I put on weight this winter.","ko":"나 이번 겨울에 살쪘어."},{"en":"Don't put on weight over holidays.","ko":"연휴에 살찌지 마."}]},{"en":"put your feet up","ko":"편히 쉬다","ex":[{"en":"Come put your feet up.","ko":"와서 좀 편히 쉬어."},{"en":"Just put your feet up tonight.","ko":"오늘 밤엔 그냥 푹 쉬어."}]}]},"5":{"name":"come","abbr":"come","ko":"기본동사 come 활용","blurb":"쉬운 동사 come으로 이렇게 많은 걸 표현해요.","color":"pink","chunks":[{"en":"come on","ko":"어서 / 힘내 / 자자","ex":[{"en":"Come on, we're late!","ko":"빨리, 우리 늦었어!"},{"en":"Come on, you can do it.","ko":"힘내, 넌 할 수 있어."}]},{"en":"come over","ko":"놀러 오다 / 들르다","ex":[{"en":"Come over to my place tonight.","ko":"오늘 밤 우리 집으로 와."},{"en":"Can you come over later?","ko":"이따 올 수 있어?"}]},{"en":"come up with","ko":"생각해내다 / 떠올리다","ex":[{"en":"Come up with a better idea.","ko":"더 나은 아이디어 좀 생각해봐."},{"en":"Can you come up with something?","ko":"뭐 좀 생각해낼 수 있어?"}]},{"en":"come back","ko":"돌아오다","ex":[{"en":"Come back soon, okay?","ko":"금방 돌아와, 알겠지?"},{"en":"I'll come back after lunch.","ko":"점심 먹고 돌아올게."}]},{"en":"come along","ko":"같이 가다 / 함께하다","ex":[{"en":"Come along, it'll be fun.","ko":"같이 가자, 재밌을 거야."},{"en":"Do you want to come along?","ko":"너도 같이 갈래?"}]},{"en":"come across","ko":"우연히 마주치다 / 발견하다","ex":[{"en":"Did you come across my keys?","ko":"내 열쇠 혹시 봤어?"},{"en":"I come across weird stuff online.","ko":"나 온라인에서 이상한 거 자주 봐."}]},{"en":"come in","ko":"들어오다","ex":[{"en":"Come in, the door's open.","ko":"들어와, 문 열려 있어."},{"en":"Please come in and sit down.","ko":"들어와서 앉으세요."}]},{"en":"come out","ko":"나오다","ex":[{"en":"Come out and play with us.","ko":"나와서 우리랑 놀자."},{"en":"The stars come out at night.","ko":"밤에 별이 나와."}]},{"en":"come here","ko":"이리 와","ex":[{"en":"Come here for a second.","ko":"잠깐 이리 와봐."},{"en":"Come here, I'll show you.","ko":"이리 와, 보여줄게."}]},{"en":"come home","ko":"집에 오다","ex":[{"en":"Come home early tonight, please.","ko":"오늘 밤엔 일찍 집에 와."},{"en":"I'll come home right after work.","ko":"일 끝나고 바로 집에 갈게."}]},{"en":"come down","ko":"내려오다","ex":[{"en":"Come down, dinner is ready.","ko":"내려와, 밥 다 됐어."},{"en":"Prices come down after holidays.","ko":"연휴 지나면 가격이 내려가."}]},{"en":"come by","ko":"잠깐 들르다","ex":[{"en":"Come by whenever you want.","ko":"언제든 편할 때 들러."},{"en":"Can you come by tomorrow?","ko":"내일 잠깐 들를 수 있어?"}]},{"en":"come with me","ko":"나랑 같이 가다","ex":[{"en":"Come with me for a walk.","ko":"나랑 산책 가자."},{"en":"Do you want to come with me?","ko":"나랑 같이 갈래?"}]},{"en":"come around","ko":"놀러 들르다","ex":[{"en":"Come around anytime this week.","ko":"이번 주 아무 때나 들러."},{"en":"Feel free to come around.","ko":"편하게 놀러 와."}]},{"en":"come first","ko":"우선이다 / 가장 먼저다","ex":[{"en":"You always come first to me.","ko":"나한텐 늘 네가 우선이야."},{"en":"Family should come first.","ko":"가족이 우선이어야 해."}]},{"en":"come true","ko":"이루어지다","ex":[{"en":"Dreams come true if you try.","ko":"노력하면 꿈은 이루어져."},{"en":"May your wishes come true.","ko":"네 소원이 이루어지길."}]}]},"6":{"name":"go","abbr":"go","ko":"기본동사 go 활용","blurb":"쉬운 동사 go로 이렇게 많은 걸 표현해요.","color":"coral","chunks":[{"en":"go on","ko":"계속해 / 어서 해","ex":[{"en":"Go on, I'm listening.","ko":"계속해, 나 듣고 있어."},{"en":"Please go on with your story.","ko":"얘기 계속해봐."}]},{"en":"go out","ko":"나가다 / 외출하다","ex":[{"en":"Let's go out for dinner.","ko":"저녁 먹으러 나가자."},{"en":"Do you want to go out tonight?","ko":"오늘 밤에 나갈래?"}]},{"en":"go over","ko":"검토하다 / 훑어보다","ex":[{"en":"Let's go over the plan again.","ko":"계획 다시 한번 훑어보자."},{"en":"Can we go over this once more?","ko":"이거 한 번만 더 볼 수 있어?"}]},{"en":"go through","ko":"살펴보다 / 겪다","ex":[{"en":"Let's go through it step by step.","ko":"하나씩 차근차근 살펴보자."},{"en":"I'll go through the list now.","ko":"지금 목록 훑어볼게."}]},{"en":"go ahead","ko":"먼저 해 / 진행해","ex":[{"en":"Go ahead, I'm right behind you.","ko":"먼저 가, 바로 뒤에 있어."},{"en":"Go ahead and start without me.","ko":"나 빼고 먼저 시작해."}]},{"en":"go back","ko":"돌아가다","ex":[{"en":"Let's go back home now.","ko":"이제 집에 돌아가자."},{"en":"I need to go back inside.","ko":"나 다시 안으로 들어가야 해."}]},{"en":"go for it","ko":"한번 해봐 / 도전해","ex":[{"en":"Just go for it, you'll be fine.","ko":"그냥 해봐, 잘될 거야."},{"en":"Go for it, don't hesitate.","ko":"도전해, 망설이지 마."}]},{"en":"go away","ko":"저리 가 / 사라지다","ex":[{"en":"Go away, I need some space.","ko":"저리 가, 나 좀 혼자 있고 싶어."},{"en":"Please go away for now.","ko":"일단 좀 비켜줘."}]},{"en":"go home","ko":"집에 가다","ex":[{"en":"Let's go home, I'm tired.","ko":"집에 가자, 나 피곤해."},{"en":"I want to go home now.","ko":"나 지금 집에 가고 싶어."}]},{"en":"go up","ko":"올라가다 / 오르다","ex":[{"en":"Prices always go up in summer.","ko":"여름엔 항상 물가가 올라."},{"en":"Let's go up to the roof.","ko":"옥상으로 올라가자."}]},{"en":"go down","ko":"내려가다","ex":[{"en":"Let's go down to the lobby.","ko":"로비로 내려가자."},{"en":"The price won't go down.","ko":"가격이 안 내려가."}]},{"en":"go with","ko":"어울리다 / ~로 정하다","ex":[{"en":"This tie doesn't go with that.","ko":"이 넥타이 저거랑 안 어울려."},{"en":"I'll go with the red one.","ko":"난 빨간 걸로 할게."}]},{"en":"go easy","ko":"살살해 / 적당히 해","ex":[{"en":"Go easy on him, he's new.","ko":"걔한테 살살해, 신입이야."},{"en":"Go easy on the salt.","ko":"소금 적당히 넣어."}]},{"en":"go get","ko":"가서 가져오다 / 하러 가다","ex":[{"en":"Go get some rest, okay?","ko":"가서 좀 쉬어, 알겠지?"},{"en":"Let's go get some coffee.","ko":"커피 마시러 가자."}]},{"en":"go around","ko":"돌아다니다 / 두루 돌다","ex":[{"en":"There's enough to go around.","ko":"다들 나눠 가질 만큼 충분해."},{"en":"Let's go around the block.","ko":"동네 한 바퀴 돌자."}]},{"en":"go for a walk","ko":"산책하러 가다","ex":[{"en":"Let's go for a walk.","ko":"우리 산책하러 가자."},{"en":"Do you want to go for a walk?","ko":"산책 갈래?"}]}]},"7":{"name":"give","abbr":"give","ko":"기본동사 give 활용","blurb":"쉬운 동사 give로 이렇게 많은 걸 표현해요.","color":"slate","chunks":[{"en":"give up","ko":"포기하다","ex":[{"en":"Don't give up now.","ko":"지금 포기하지 마."},{"en":"I'll never give up.","ko":"난 절대 포기 안 해."}]},{"en":"give up on","ko":"~을 단념하다","ex":[{"en":"Don't give up on me.","ko":"나 포기하지 마."},{"en":"I won't give up on you.","ko":"난 널 포기 안 해."}]},{"en":"give back","ko":"돌려주다","ex":[{"en":"Please give back my pen.","ko":"내 펜 좀 돌려줘."},{"en":"Can you give back the book?","ko":"그 책 돌려줄래?"}]},{"en":"give away","ko":"거저 주다","ex":[{"en":"Don't give away the secret.","ko":"비밀 누설하지 마."},{"en":"They give away free samples.","ko":"거기 무료 샘플 나눠줘."}]},{"en":"give in","ko":"굴복하다","ex":[{"en":"Don't give in to him.","ko":"걔한테 지지 마."},{"en":"I won't give in easily.","ko":"난 쉽게 안 굽혀."}]},{"en":"give out","ko":"나눠주다","ex":[{"en":"They give out free food.","ko":"거기 공짜 음식 나눠줘."},{"en":"Let's give out these flyers.","ko":"이 전단지 나눠주자."}]},{"en":"give it a try","ko":"한번 시도하다","ex":[{"en":"Just give it a try.","ko":"그냥 한번 해봐."},{"en":"Give it a try first.","ko":"일단 한번 해봐."}]},{"en":"give it a shot","ko":"한번 해보다","ex":[{"en":"Let's give it a shot.","ko":"한번 해보자."},{"en":"Give it a shot today.","ko":"오늘 한번 해봐."}]},{"en":"give me a hand","ko":"도와주다","ex":[{"en":"Can you give me a hand?","ko":"나 좀 도와줄래?"},{"en":"Give me a hand here.","ko":"여기 좀 도와줘."}]},{"en":"give me a call","ko":"전화하다","ex":[{"en":"Give me a call later.","ko":"이따 전화해."},{"en":"Give me a call tonight.","ko":"오늘 밤에 전화해."}]},{"en":"give me a break","ko":"좀 봐줘","ex":[{"en":"Give me a break, please.","ko":"좀 봐줘, 제발."},{"en":"Come on, give me a break.","ko":"아, 좀 봐줘."}]},{"en":"give me a ride","ko":"태워주다","ex":[{"en":"Can you give me a ride?","ko":"나 좀 태워줄래?"},{"en":"Give me a ride home.","ko":"집까지 태워줘."}]},{"en":"give it to me","ko":"나한테 줘","ex":[{"en":"Just give it to me.","ko":"그냥 나 줘."},{"en":"Give it to me now.","ko":"지금 나 줘."}]},{"en":"give it a chance","ko":"기회를 주다","ex":[{"en":"Just give it a chance.","ko":"일단 기회를 줘봐."},{"en":"Give it a chance first.","ko":"먼저 기회를 줘봐."}]},{"en":"give me a hug","ko":"안아주다","ex":[{"en":"Give me a hug.","ko":"나 안아줘."},{"en":"Come give me a hug.","ko":"와서 안아줘."}]},{"en":"give it back","ko":"돌려주다","ex":[{"en":"Give it back now.","ko":"지금 돌려줘."},{"en":"Please give it back.","ko":"제발 돌려줘."}]}]},"8":{"name":"keep","abbr":"keep","ko":"기본동사 keep 활용","blurb":"쉬운 동사 keep으로 이렇게 많은 걸 표현해요.","color":"info","chunks":[{"en":"keep going","ko":"계속하다","ex":[{"en":"Just keep going.","ko":"그냥 계속해."},{"en":"Keep going, you're close.","ko":"계속해, 거의 다 왔어."}]},{"en":"keep up","ko":"따라가다","ex":[{"en":"Keep up the good work.","ko":"계속 잘해."},{"en":"Try to keep up.","ko":"따라오려고 해봐."}]},{"en":"keep in mind","ko":"명심하다","ex":[{"en":"Keep in mind it's late.","ko":"늦었다는 거 명심해."},{"en":"Please keep in mind.","ko":"꼭 명심해."}]},{"en":"keep an eye on","ko":"지켜보다","ex":[{"en":"Keep an eye on my bag.","ko":"내 가방 좀 봐줘."},{"en":"Keep an eye on him.","ko":"걔 좀 지켜봐."}]},{"en":"keep it up","ko":"계속 잘하다","ex":[{"en":"Keep it up!","ko":"계속 잘해!"},{"en":"You're doing great, keep it up.","ko":"잘하고 있어, 계속해."}]},{"en":"keep away from","ko":"멀리하다","ex":[{"en":"Keep away from the dog.","ko":"그 개한테서 떨어져."},{"en":"Keep away from trouble.","ko":"말썽 피하고 다녀."}]},{"en":"keep track of","ko":"파악하다","ex":[{"en":"Keep track of your money.","ko":"돈 관리 잘해."},{"en":"I keep track of everything.","ko":"난 다 기록해 둬."}]},{"en":"keep quiet","ko":"조용히 하다","ex":[{"en":"Please keep quiet.","ko":"조용히 좀 해."},{"en":"Keep quiet in here.","ko":"여기선 조용히 해."}]},{"en":"keep calm","ko":"침착하다","ex":[{"en":"Keep calm and relax.","ko":"침착하게 마음 놔."},{"en":"Just keep calm.","ko":"그냥 침착해."}]},{"en":"keep in touch","ko":"연락하고 지내다","ex":[{"en":"Let's keep in touch.","ko":"연락하고 지내자."},{"en":"Keep in touch, okay?","ko":"연락하고 지내, 알았지?"}]},{"en":"keep out","ko":"들어가지 않다","ex":[{"en":"Keep out of my room.","ko":"내 방에 들어오지 마."},{"en":"Keep out, it's private.","ko":"들어오지 마, 사적인 곳이야."}]},{"en":"keep off","ko":"가까이 가지 않다","ex":[{"en":"Keep off the grass.","ko":"잔디밭에 들어가지 마."},{"en":"Keep off my desk.","ko":"내 책상 건들지 마."}]},{"en":"keep on","ko":"계속하다","ex":[{"en":"Keep on trying.","ko":"계속 노력해."},{"en":"Just keep on walking.","ko":"그냥 계속 걸어."}]},{"en":"keep it down","ko":"조용히 하다","ex":[{"en":"Keep it down, please.","ko":"조용히 좀 해."},{"en":"Guys, keep it down.","ko":"얘들아, 좀 조용히 해."}]},{"en":"keep me posted","ko":"계속 알려주다","ex":[{"en":"Keep me posted, okay?","ko":"계속 알려줘, 응?"},{"en":"Please keep me posted.","ko":"계속 알려줘."}]},{"en":"keep your promise","ko":"약속을 지키다","ex":[{"en":"Keep your promise to me.","ko":"나랑 한 약속 지켜."},{"en":"Please keep your promise.","ko":"제발 약속 지켜."}]}]},"9":{"name":"turn","abbr":"turn","ko":"기본동사 turn 활용","blurb":"쉬운 동사 turn으로 이렇게 많은 걸 표현해요.","color":"purple","chunks":[{"en":"turn on","ko":"켜다","ex":[{"en":"Turn on the light.","ko":"불 켜."},{"en":"Can you turn on the TV?","ko":"TV 좀 켜줄래?"}]},{"en":"turn off","ko":"끄다","ex":[{"en":"Turn off the light.","ko":"불 꺼."},{"en":"Please turn off the TV.","ko":"TV 좀 꺼줘."}]},{"en":"turn up","ko":"소리를 키우다","ex":[{"en":"Turn up the volume.","ko":"볼륨 키워."},{"en":"Can you turn up the music?","ko":"음악 소리 좀 키워줄래?"}]},{"en":"turn down","ko":"소리를 줄이다","ex":[{"en":"Turn down the music.","ko":"음악 소리 줄여."},{"en":"Please turn down the volume.","ko":"볼륨 좀 줄여줘."}]},{"en":"turn around","ko":"돌아서다","ex":[{"en":"Turn around and look.","ko":"돌아서서 봐."},{"en":"Please turn around slowly.","ko":"천천히 돌아봐."}]},{"en":"turn out","ko":"~로 밝혀지다","ex":[{"en":"It'll turn out fine.","ko":"잘 될 거야."},{"en":"Things always turn out okay.","ko":"결국엔 다 잘 풀려."}]},{"en":"turn in","ko":"제출하다","ex":[{"en":"Turn in your homework.","ko":"숙제 제출해."},{"en":"Please turn in the form.","ko":"서류 좀 제출해줘."}]},{"en":"turn left","ko":"좌회전하다","ex":[{"en":"Turn left at the corner.","ko":"모퉁이에서 좌회전해."},{"en":"Turn left here, please.","ko":"여기서 왼쪽으로 가줘."}]},{"en":"turn right","ko":"우회전하다","ex":[{"en":"Turn right at the light.","ko":"신호등에서 우회전해."},{"en":"Turn right up ahead.","ko":"저 앞에서 오른쪽으로 가."}]},{"en":"turn over","ko":"뒤집다","ex":[{"en":"Turn over the page.","ko":"페이지 넘겨."},{"en":"Please turn over the card.","ko":"카드 좀 뒤집어봐."}]},{"en":"turn back","ko":"되돌아가다","ex":[{"en":"Let's turn back now.","ko":"이제 돌아가자."},{"en":"We can't turn back.","ko":"우린 돌아갈 수 없어."}]},{"en":"turn away","ko":"외면하다","ex":[{"en":"Don't turn away from me.","ko":"날 외면하지 마."},{"en":"They turn away latecomers.","ko":"늦은 사람은 돌려보내."}]},{"en":"turn the page","ko":"페이지를 넘기다","ex":[{"en":"Turn the page, please.","ko":"페이지 좀 넘겨줘."},{"en":"Let's turn the page now.","ko":"이제 페이지 넘기자."}]},{"en":"turn it on","ko":"그거 켜다","ex":[{"en":"Turn it on, please.","ko":"그거 좀 켜줘."},{"en":"Can you turn it on?","ko":"그거 켜줄래?"}]},{"en":"turn it off","ko":"그거 끄다","ex":[{"en":"Turn it off now.","ko":"지금 그거 꺼."},{"en":"Please turn it off.","ko":"그거 좀 꺼줘."}]},{"en":"turn it up","ko":"그거 소리 키우다","ex":[{"en":"Turn it up a bit.","ko":"소리 조금만 키워."},{"en":"Can you turn it up?","ko":"소리 좀 키워줄래?"}]}]},"10":{"name":"look","abbr":"look","ko":"기본동사 look 활용","blurb":"쉬운 동사 look으로 이렇게 많은 걸 표현해요.","color":"green","chunks":[{"en":"look for","ko":"~을 찾다","ex":[{"en":"Look for a cheaper option.","ko":"더 싼 걸로 찾아봐."},{"en":"Let's look for it together.","ko":"같이 찾아보자."}]},{"en":"look after","ko":"~을 돌보다","ex":[{"en":"Look after the kids.","ko":"애들 좀 봐줘."},{"en":"Can you look after my dog?","ko":"내 강아지 좀 봐줄래?"}]},{"en":"look up","ko":"(정보를) 찾아보다","ex":[{"en":"Look up the word online.","ko":"그 단어 인터넷에 찾아봐."},{"en":"Let me look up the address.","ko":"주소 좀 찾아볼게."}]},{"en":"look forward to","ko":"~을 기대하다","ex":[{"en":"I look forward to it.","ko":"그거 기대돼."},{"en":"We look forward to your visit.","ko":"네가 오길 기대할게."}]},{"en":"look out","ko":"조심하다","ex":[{"en":"Look out for cars.","ko":"차 조심해."},{"en":"Look out, it's slippery!","ko":"조심해, 미끄러워!"}]},{"en":"look around","ko":"둘러보다","ex":[{"en":"Let's look around the store.","ko":"가게 좀 둘러보자."},{"en":"Feel free to look around.","ko":"편하게 둘러봐."}]},{"en":"look into","ko":"~을 알아보다","ex":[{"en":"I'll look into it.","ko":"내가 알아볼게."},{"en":"Can you look into the problem?","ko":"그 문제 좀 알아봐 줄래?"}]},{"en":"look like","ko":"~처럼 보이다","ex":[{"en":"You look like your dad.","ko":"너 아빠 닮았다."},{"en":"It doesn't look like rain.","ko":"비 올 것 같진 않아."}]},{"en":"look good","ko":"좋아 보이다","ex":[{"en":"You look good today.","ko":"너 오늘 좋아 보인다."},{"en":"These shoes look good on you.","ko":"이 신발 너한테 잘 어울려."}]},{"en":"look great","ko":"멋져 보이다","ex":[{"en":"You look great!","ko":"너 완전 멋지다!"},{"en":"The plans look great to me.","ko":"그 계획 내 생각엔 완전 좋아."}]},{"en":"look back","ko":"되돌아보다","ex":[{"en":"Don't look back now.","ko":"이제 뒤돌아보지 마."},{"en":"Let's look back on this someday.","ko":"언젠가 이걸 돌아보자."}]},{"en":"look over","ko":"~을 검토하다","ex":[{"en":"Can you look over this?","ko":"이거 좀 봐줄래?"},{"en":"Look over my essay, please.","ko":"내 에세이 좀 검토해 줘."}]},{"en":"look through","ko":"~을 훑어보다","ex":[{"en":"Look through these files.","ko":"이 파일들 좀 훑어봐."},{"en":"Let me look through it first.","ko":"내가 먼저 훑어볼게."}]},{"en":"look down on","ko":"~을 무시하다","ex":[{"en":"Don't look down on others.","ko":"남을 무시하지 마."},{"en":"People look down on him.","ko":"사람들이 걔를 무시해."}]},{"en":"look tired","ko":"피곤해 보이다","ex":[{"en":"You look tired today.","ko":"너 오늘 피곤해 보인다."},{"en":"You look tired, get some rest.","ko":"피곤해 보여, 좀 쉬어."}]},{"en":"look nice","ko":"좋아/예뻐 보이다","ex":[{"en":"You look nice today!","ko":"너 오늘 멋지다!"},{"en":"Those flowers look nice.","ko":"그 꽃들 예쁘다."}]}]},"11":{"name":"bring","abbr":"bring","ko":"기본동사 bring 활용","blurb":"쉬운 동사 bring으로 이렇게 많은 걸 표현해요.","color":"amber","chunks":[{"en":"bring up","ko":"(화제를) 꺼내다","ex":[{"en":"Don't bring up the past.","ko":"옛날 얘기 꺼내지 마."},{"en":"Why bring up that now?","ko":"왜 지금 그걸 꺼내?"}]},{"en":"bring back","ko":"다시 가져오다/돌려주다","ex":[{"en":"Bring back my book.","ko":"내 책 돌려줘."},{"en":"Can you bring back some milk?","ko":"우유 좀 사 올래?"}]},{"en":"bring along","ko":"데려오다/가져오다","ex":[{"en":"Bring along your friend.","ko":"친구 데려와."},{"en":"You can bring along snacks.","ko":"간식 가져와도 돼."}]},{"en":"bring it on","ko":"덤벼/한번 해보자","ex":[{"en":"Bring it on!","ko":"덤벼!"},{"en":"Okay, bring it on then.","ko":"좋아, 그럼 한번 해보자."}]},{"en":"bring together","ko":"~을 모으다/화합시키다","ex":[{"en":"Let's bring together the team.","ko":"팀을 하나로 모으자."},{"en":"Music can bring together everyone.","ko":"음악은 모두를 하나로 만들어."}]},{"en":"bring down","ko":"~을 낮추다/침울하게 하다","ex":[{"en":"Don't bring down the mood.","ko":"분위기 망치지 마."},{"en":"That will bring down costs.","ko":"그러면 비용이 낮아질 거야."}]},{"en":"bring in","ko":"들여오다/데려오다","ex":[{"en":"Bring in the chairs.","ko":"의자 좀 들여와."},{"en":"Let's bring in some help.","ko":"도움을 좀 구하자."}]},{"en":"bring over","ko":"(~로) 가져오다/데려오다","ex":[{"en":"Bring over your laptop.","ko":"네 노트북 가져와."},{"en":"Can you bring over dinner?","ko":"저녁 좀 가져다줄래?"}]},{"en":"bring out","ko":"꺼내다/끌어내다","ex":[{"en":"Bring out the cake!","ko":"케이크 꺼내와!"},{"en":"Bring out your best.","ko":"네 최고를 보여줘."}]},{"en":"bring home","ko":"집에 가져오다","ex":[{"en":"Bring home some bread.","ko":"빵 좀 사 와."},{"en":"I'll bring home dinner.","ko":"내가 저녁 사 갈게."}]},{"en":"bring about","ko":"~을 초래하다/일으키다","ex":[{"en":"This will bring about change.","ko":"이건 변화를 가져올 거야."},{"en":"It may bring about problems.","ko":"그건 문제를 일으킬 수도 있어."}]},{"en":"bring forward","ko":"(일정을) 앞당기다","ex":[{"en":"Let's bring forward the meeting.","ko":"회의를 앞당기자."},{"en":"Can we bring forward the date?","ko":"날짜를 앞당길 수 있을까?"}]},{"en":"bring on","ko":"~을 오게 하다/어서 와","ex":[{"en":"Bring on the weekend!","ko":"주말아 어서 와!"},{"en":"Bring on summer!","ko":"여름아 빨리 와!"}]},{"en":"bring around","ko":"가져다주다/데려오다","ex":[{"en":"Bring around the car.","ko":"차 좀 가져와."},{"en":"Can you bring around dessert?","ko":"디저트 좀 가져다줄래?"}]},{"en":"bring joy","ko":"기쁨을 주다","ex":[{"en":"You bring joy to me.","ko":"넌 나한테 기쁨을 줘."},{"en":"Puppies bring joy to everyone.","ko":"강아지는 모두에게 기쁨을 줘."}]},{"en":"bring luck","ko":"행운을 가져다주다","ex":[{"en":"May it bring luck to you.","ko":"그게 너한테 행운을 가져다주길."},{"en":"This charm will bring luck.","ko":"이 부적이 행운을 가져다줄 거야."}]}]},"12":{"name":"run","abbr":"run","ko":"기본동사 run 활용","blurb":"쉬운 동사 run으로 이렇게 많은 걸 표현해요.","color":"pink","chunks":[{"en":"run out of","ko":"~이 다 떨어지다","ex":[{"en":"We run out of milk fast.","ko":"우리 우유 금방 떨어져."},{"en":"Don't run out of gas.","ko":"기름 떨어지지 않게 해."}]},{"en":"run into","ko":"우연히 마주치다/맞닥뜨리다","ex":[{"en":"Try not to run into him.","ko":"걔랑 안 마주치게 해봐."},{"en":"You might run into trouble.","ko":"너 곤란해질 수도 있어."}]},{"en":"run away","ko":"도망치다","ex":[{"en":"Don't run away from me.","ko":"나한테서 도망치지 마."},{"en":"Let's run away together!","ko":"우리 같이 도망가자!"}]},{"en":"run late","ko":"늦다","ex":[{"en":"I always run late.","ko":"난 항상 늦어."},{"en":"Don't run late again.","ko":"또 늦지 마."}]},{"en":"run errands","ko":"볼일을 보다/심부름하다","ex":[{"en":"I need to run errands.","ko":"나 볼일 좀 봐야 해."},{"en":"Let's run errands together.","ko":"같이 볼일 보러 가자."}]},{"en":"run by","ko":"잠깐 들르다","ex":[{"en":"I'll run by later.","ko":"나중에 잠깐 들를게."},{"en":"Can you run by the shop?","ko":"가게 좀 들러줄래?"}]},{"en":"run around","ko":"뛰어다니다","ex":[{"en":"Kids love to run around.","ko":"애들은 뛰어다니는 걸 좋아해."},{"en":"Let's run around the park.","ko":"공원에서 좀 뛰어다니자."}]},{"en":"run over","ko":"(차로) 치다/훑어보다","ex":[{"en":"Don't run over the cat!","ko":"고양이 치지 마!"},{"en":"Can you run over the plan?","ko":"그 계획 좀 훑어봐 줄래?"}]},{"en":"run through","ko":"~을 죽 훑어보다/연습하다","ex":[{"en":"Let's run through it once.","ko":"한 번 쭉 해보자."},{"en":"Run through your lines.","ko":"네 대사 연습해."}]},{"en":"run out","ko":"다 떨어지다/바닥나다","ex":[{"en":"We might run out soon.","ko":"우리 곧 다 떨어질 수도 있어."},{"en":"Don't run out now.","ko":"지금 떨어지면 안 돼."}]},{"en":"run off","ko":"도망가다/급히 떠나다","ex":[{"en":"Don't run off alone.","ko":"혼자 도망가지 마."},{"en":"The kids run off fast.","ko":"애들이 금방 도망가."}]},{"en":"run for","ko":"~에 출마하다/향해 달리다","ex":[{"en":"I might run for mayor.","ko":"나 시장에 출마할까 봐."},{"en":"Run for cover!","ko":"얼른 몸 피해!"}]},{"en":"run wild","ko":"제멋대로 날뛰다","ex":[{"en":"Let the kids run wild.","ko":"애들 좀 맘껏 놀게 둬."},{"en":"Don't let ideas run wild.","ko":"상상이 너무 나가게 두지 마."}]},{"en":"run low","ko":"부족해지다","ex":[{"en":"We run low on cash.","ko":"우리 현금이 부족해."},{"en":"Batteries run low fast.","ko":"배터리가 금방 닳아."}]},{"en":"run a bath","ko":"목욕물을 받다","ex":[{"en":"Let me run a bath.","ko":"나 목욕물 받을게."},{"en":"Can you run a bath?","ko":"목욕물 좀 받아줄래?"}]},{"en":"run the show","ko":"책임지고 운영하다","ex":[{"en":"You run the show now.","ko":"이제 네가 책임자야."},{"en":"Let them run the show.","ko":"걔네가 알아서 하게 둬."}]}]}};
+window.CORE_DATA = CORE_DATA;
+
 if(LEVEL_DATA[2]) LEVEL_DATA[2].exprs.push({"pattern":"조언하기: You should ~ / You'd better ~ / You might want to ~","ko":"~하는 게 좋아 (상대에게 조언)","desc":"상대에게 권하는 틀. 'You should ~'(~하는 게 좋아), 'You'd better ~'(안 그러면 곤란할 때 경고조), 'You might want to ~'(부드럽게 권유). 뒤엔 동사원형.","bank":[{"en":"You should get more sleep before the exam.","lit":"너는 시험 전에 잠을 더 자는 게 좋아.","free":"시험 전에 잠 좀 더 자는 게 좋아."},{"en":"You should talk to your boss about the schedule.","lit":"너는 일정에 대해 상사에게 말하는 게 좋아.","free":"일정 문제 상사한테 얘기해 보는 게 좋아."},{"en":"You should try the soup here, it's amazing.","lit":"너는 여기 수프를 먹어 보는 게 좋아, 정말 맛있어.","free":"여기 수프 한번 먹어 봐, 진짜 맛있어."},{"en":"You'd better leave now or you'll miss the train.","lit":"너는 지금 떠나는 게 좋아, 안 그러면 기차를 놓칠 거야.","free":"지금 출발해, 안 그럼 기차 놓쳐."},{"en":"You'd better not tell her about the surprise party.","lit":"너는 깜짝 파티에 대해 그녀에게 말하지 않는 게 좋아.","free":"깜짝 파티 얘기 그 애한테 하면 안 돼."},{"en":"You'd better save some money for emergencies.","lit":"너는 비상시를 위해 돈을 좀 모아두는 게 좋아.","free":"비상금은 좀 모아두는 게 좋아, 안 그럼 곤란해."},{"en":"You might want to book the hotel early this time.","lit":"너는 이번엔 호텔을 일찍 예약하는 게 좋을지도 몰라.","free":"이번엔 호텔 좀 일찍 예약하는 게 어때."},{"en":"You might want to check the weather before you head out.","lit":"너는 나가기 전에 날씨를 확인하는 게 좋을지도 몰라.","free":"나가기 전에 날씨 한번 보는 게 좋을걸."},{"en":"You might want to see a doctor about that cough.","lit":"너는 그 기침에 대해 의사를 만나보는 게 좋을지도 몰라.","free":"그 기침 병원 한번 가보는 게 좋겠어."},{"en":"You should call your mom, she's been worried.","lit":"너는 엄마에게 전화하는 게 좋아, 엄마가 걱정하고 계셔.","free":"엄마한테 전화드려, 계속 걱정하셔."}]}, {"pattern":"바람·감정: I hope ~ / I'm afraid ~ / I'm worried that ~","ko":"~하면 좋겠어 / ~할까 봐 걱정돼","desc":"내 바람과 걱정을 꺼내는 틀. 'I hope (that) 주어+동사'(~하면 좋겠다), 'I'm afraid 주어+동사'(유감/걱정), 'I'm worried that ~'(~할까 봐 걱정).","bank":[{"en":"I hope you feel better soon.","lit":"나는 네가 곧 나아지기를 바라.","free":"빨리 나았으면 좋겠다."},{"en":"I hope the weather is nice for the trip.","lit":"나는 여행 동안 날씨가 좋기를 바라.","free":"여행 가는 동안 날씨 좋았으면 좋겠어."},{"en":"I hope we can meet up again next month.","lit":"나는 우리가 다음 달에 다시 만날 수 있기를 바라.","free":"다음 달에 또 만날 수 있으면 좋겠다."},{"en":"I'm afraid I can't make it to the party tonight.","lit":"나는 오늘 밤 파티에 갈 수 없을 것 같아 유감이야.","free":"미안한데 오늘 밤 파티는 못 갈 것 같아."},{"en":"I'm afraid the store is already closed.","lit":"나는 그 가게가 이미 문을 닫았을까 봐 걱정돼.","free":"아쉽지만 그 가게 벌써 문 닫은 것 같은데."},{"en":"I'm afraid we took a wrong turn back there.","lit":"나는 우리가 아까 길을 잘못 들었을까 봐 걱정돼.","free":"아무래도 우리 아까 길 잘못 든 것 같아."},{"en":"I'm worried that he won't pass the test.","lit":"나는 그가 시험에 통과하지 못할까 봐 걱정돼.","free":"걔가 시험에 떨어질까 봐 걱정돼."},{"en":"I'm worried that we're spending too much money.","lit":"나는 우리가 돈을 너무 많이 쓰고 있을까 봐 걱정돼.","free":"우리 돈 너무 많이 쓰는 것 같아서 걱정돼."},{"en":"I'm worried that she's working too hard these days.","lit":"나는 그녀가 요즘 너무 무리하고 있을까 봐 걱정돼.","free":"걔 요즘 너무 무리하는 것 같아서 걱정돼."},{"en":"I hope this medicine helps with your headache.","lit":"나는 이 약이 네 두통에 도움이 되기를 바라.","free":"이 약이 두통에 좀 들었으면 좋겠다."}]}, {"pattern":"되묻기·확인: Sorry? / Could you say that again? / How do you say ~ in English?","ko":"다시 말해 줄래요? / ~ 영어로 뭐예요?","desc":"못 알아들었을 때 자연스럽게 다시 묻고 확인하는 표현. 회화가 막힐 때 가장 먼저 쓰는 구조.","bank":[{"en":"Sorry? I didn't catch what you said.","lit":"뭐라고요? 방금 하신 말을 못 알아들었어요.","free":"네? 방금 뭐라고 하셨죠?"},{"en":"Sorry? Could you speak a little louder?","lit":"뭐라고요? 조금 더 크게 말해 주실래요?","free":"네? 조금만 크게 말해 주실래요?"},{"en":"Could you say that again, please?","lit":"다시 한 번 말해 주실래요?","free":"다시 한 번만 말해 주실래요?"},{"en":"Could you say that again more slowly?","lit":"좀 더 천천히 다시 말해 주실래요?","free":"좀 천천히 다시 말해 주실래요?"},{"en":"How do you say 'gamsahamnida' in English?","lit":"'감사합니다'를 영어로 어떻게 말해요?","free":"'감사합니다'는 영어로 뭐예요?"},{"en":"How do you say this word in English?","lit":"이 단어를 영어로 어떻게 말해요?","free":"이 단어 영어로 뭐라고 해요?"},{"en":"Sorry, what was that again?","lit":"죄송한데, 방금 그게 뭐였죠?","free":"죄송한데, 방금 뭐라고요?"},{"en":"Could you repeat the last part?","lit":"마지막 부분을 다시 말해 주실래요?","free":"마지막 부분만 다시 말해 주실래요?"},{"en":"How do you say this dish in English?","lit":"이 음식을 영어로 어떻게 말해요?","free":"이 음식 영어로 뭐라고 해요?"},{"en":"Sorry? I'm not sure I understood that.","lit":"뭐라고요? 제가 그걸 이해했는지 잘 모르겠어요.","free":"네? 제가 잘 이해 못 한 것 같아요."}]});
 if(LEVEL_DATA[3]) LEVEL_DATA[3].exprs.push({"pattern":"What if + 주어 + 동사? (가정해서 묻기)","ko":"~하면 어떡하지? / ~하면 어때?","desc":"가정 상황을 꺼내 묻는 틀. 걱정('비 오면 어떡해?')이나 제안('지금 가면 어때?') 둘 다 된다. 뒤엔 평서문 어순.","bank":[{"en":"What if it rains during the picnic?","lit":"소풍 도중에 비가 오면 어떡하지?","free":"소풍 가는데 비 오면 어떡해?"},{"en":"What if we miss the last bus home?","lit":"우리가 집에 가는 마지막 버스를 놓치면 어떡하지?","free":"집 가는 막차 놓치면 어떡해?"},{"en":"What if the interview goes badly?","lit":"면접이 잘 안 되면 어떡하지?","free":"면접 망치면 어떡하지?"},{"en":"What if we just order pizza tonight?","lit":"우리 오늘 밤 그냥 피자를 시키면 어때?","free":"우리 오늘 그냥 피자 시키면 어때?"},{"en":"What if you take a day off this week?","lit":"네가 이번 주에 하루 쉬면 어때?","free":"너 이번 주에 하루 쉬면 어때?"},{"en":"What if I forget my lines on stage?","lit":"내가 무대에서 대사를 까먹으면 어떡하지?","free":"나 무대에서 대사 까먹으면 어떡해?"},{"en":"What if we meet at the cafe instead?","lit":"우리 대신 그 카페에서 만나면 어때?","free":"우리 그냥 카페에서 만나면 어때?"},{"en":"What if the package gets lost in the mail?","lit":"소포가 배송 중에 분실되면 어떡하지?","free":"택배가 오다가 없어지면 어떡해?"},{"en":"What if we save up and travel next year?","lit":"우리 돈을 모아서 내년에 여행 가면 어때?","free":"우리 돈 모아서 내년에 여행 가면 어때?"},{"en":"What if she doesn't like the gift?","lit":"그녀가 그 선물을 좋아하지 않으면 어떡하지?","free":"걔가 선물 안 좋아하면 어떡하지?"}]}, {"pattern":"솔직·강조 서두: To be honest ~ / In my opinion ~ / The thing is ~","ko":"솔직히 ~ / 내 생각엔 ~ / 사실은 말이야","desc":"본론을 꺼내기 전 태도를 깔아주는 서두. 'To be honest'(솔직히), 'In my opinion'(내 생각엔), 'The thing is'(사실/문제는). 뒤에 하고 싶은 문장을 붙인다.","bank":[{"en":"To be honest, I didn't really enjoy the movie.","lit":"솔직히, 나는 그 영화가 별로 재미없었어.","free":"솔직히 그 영화 별로였어."},{"en":"To be honest, I forgot all about the meeting.","lit":"솔직히, 나는 그 회의를 완전히 잊고 있었어.","free":"솔직히 그 회의 완전 까먹고 있었어."},{"en":"To be honest, the food was a little too salty.","lit":"솔직히, 음식이 조금 너무 짰어.","free":"솔직히 음식이 좀 짰어."},{"en":"In my opinion, we should leave earlier next time.","lit":"내 생각엔, 우리가 다음엔 더 일찍 출발하는 게 좋아.","free":"내 생각엔 다음엔 좀 더 일찍 나가는 게 좋아."},{"en":"In my opinion, this apartment is too expensive.","lit":"내 생각엔, 이 아파트는 너무 비싸.","free":"내 생각엔 이 집 너무 비싸."},{"en":"In my opinion, the second plan is much safer.","lit":"내 생각엔, 두 번째 계획이 훨씬 더 안전해.","free":"내 생각엔 두 번째 안이 훨씬 안전해."},{"en":"The thing is, I already promised to help my sister.","lit":"사실은, 나는 이미 여동생을 도와주기로 약속했어.","free":"사실은 내가 이미 동생 도와주기로 했거든."},{"en":"The thing is, we don't have enough time today.","lit":"문제는, 우리가 오늘 시간이 충분하지 않다는 거야.","free":"근데 문제는 오늘 시간이 부족하다는 거야."},{"en":"The thing is, I'm not very good with money.","lit":"사실은, 나는 돈 관리를 잘 못해.","free":"사실 내가 돈 관리를 좀 못해."},{"en":"To be honest, I'm a little nervous about the trip.","lit":"솔직히, 나는 그 여행에 대해 조금 긴장돼.","free":"솔직히 이번 여행 좀 긴장돼."}]});
 if(LEVEL_DATA[4]) LEVEL_DATA[4].exprs.push({"pattern":"임박·예정 뉘앙스: be about to ~ / be supposed to ~ / be planning to ~","ko":"막 ~하려던 참 / ~하기로 되어 있어 / ~할 계획이야","desc":"단순 미래보다 결을 살린 예정 표현. 'be about to'(막 ~하려는 찰나), 'be supposed to'(~하기로 되어 있다/원래 그래야 한다), 'be planning to'(~할 계획이다).","bank":[{"en":"I was about to call you when you texted.","lit":"나는 네가 문자했을 때 막 너에게 전화하려던 참이었어.","free":"너 문자 왔을 때 나 막 전화하려던 참이었어."},{"en":"We're about to leave, so hurry up.","lit":"우리는 막 떠나려는 참이니까 서둘러.","free":"우리 지금 막 나가려던 참이니까 빨리 와."},{"en":"The movie is about to start, let's find our seats.","lit":"영화가 막 시작하려는 참이니까 자리를 찾자.","free":"영화 막 시작하려고 해, 자리 찾자."},{"en":"You're supposed to wear a helmet on the site.","lit":"너는 현장에서 헬멧을 쓰기로 되어 있어.","free":"현장에선 원래 헬멧 써야 돼."},{"en":"We're supposed to meet the client at noon.","lit":"우리는 정오에 고객을 만나기로 되어 있어.","free":"우리 정오에 고객 만나기로 돼 있어."},{"en":"You weren't supposed to tell anyone about this.","lit":"너는 이것에 대해 아무에게도 말하지 않기로 되어 있었어.","free":"너 이거 원래 아무한테도 말하면 안 됐잖아."},{"en":"I'm planning to study abroad next year.","lit":"나는 내년에 해외에서 공부할 계획이야.","free":"나 내년에 해외에서 공부할 계획이야."},{"en":"We're planning to move to a bigger place soon.","lit":"우리는 곧 더 큰 집으로 이사할 계획이야.","free":"우리 곧 더 큰 집으로 이사할 계획이야."},{"en":"She's planning to start her own business this fall.","lit":"그녀는 이번 가을에 자기 사업을 시작할 계획이야.","free":"걔 이번 가을에 자기 사업 시작할 계획이래."},{"en":"I was supposed to finish the report by today.","lit":"나는 오늘까지 보고서를 끝내기로 되어 있었어.","free":"나 원래 오늘까지 보고서 끝냈어야 했는데."}]});
@@ -5348,7 +5372,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   function setFileStatusCb(cb){ onFileStatus = cb; }
   function notify(msg, ok){ if(onFileStatus) onFileStatus(msg, ok); }
   // 전체 백업 대상(레벨 통계 + 청크 진행 + 오늘 학습 + 옵션). 도메인 이전 시 이걸로 통째 옮긴다.
-  var BACKUP_KEYS = ['eng_flashcards_stats_v1','eng_flashcards_reallife_on','eng_flashcards_today_v1','eng_chunks_progress_v1'];
+  var BACKUP_KEYS = ['eng_flashcards_stats_v1','eng_flashcards_reallife_on','eng_flashcards_today_v1','eng_chunks_progress_v1','eng_core_progress_v1'];
   function serialize(){
     var ls = {};
     BACKUP_KEYS.forEach(function(k){ try{ var v=localStorage.getItem(k); if(v!=null) ls[k]=v; }catch(e){} });
@@ -5462,7 +5486,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     var dk = todayKey();
     var d = store.daily[dk] = store.daily[dk] || {ok:0, meh:0, no:0};
     if(grade==='ok') d.ok++; else if(grade==='meh') d.meh++; else if(grade==='no') d.no++;
-    var sk = (source==='chunk') ? 'c' : 'l';
+    var sk = (source==='chunk') ? 'c' : (source==='core' ? 'v' : 'l');
     var sb = d[sk] = d[sk] || {ok:0, meh:0, no:0};
     if(grade==='ok') sb.ok++; else if(grade==='meh') sb.meh++; else if(grade==='no') sb.no++;
   }
@@ -5973,7 +5997,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     todayBuilt = false; todayDeck = []; todayPos = 0;
     cefrPool = []; cefrOrder = []; cefrIdx = 0; cefrSolved = 0;   // CEFR 풀 초기화
     if(todayStageLv > NUM_LEVELS) todayStageLv = 1;
-    if(todayMode!=='chunk'){ startTodayFresh(); saveTodaySession(); }
+    if(todayMode==='level'){ startTodayFresh(); saveTodaySession(); }
     if(activePanel==='study') openLevel(curLevel);
     else if(activePanel==='today') openToday();
     switchPanel();
@@ -6080,12 +6104,14 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     else if(sec==='study'){ activePanel='study'; }
     else if(sec==='drill'){ activePanel='drill'; }
     else if(sec==='chunks'){ activePanel='chunks'; }
+    else if(sec==='core'){ activePanel='core'; }
     else if(sec==='tutor'){ activePanel='tutor'; }
     else if(sec==='settings'){ activePanel = settingsSub; }
     switchPanel();
     if(sec==='today') openToday();
     else if(sec==='study') openLevel(curLevel);
     else if(sec==='chunks') openChunkCat(curChunkCat);
+    else if(sec==='core') openCoreCat(curCoreCat);
     else if(sec==='tutor') openTutor();
     else if(sec==='drill') openDrill();
     else if(sec==='settings'){ if(settingsSub==='options') renderOptions(); else if(settingsSub==='stats') renderStats(); }
@@ -6137,7 +6163,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
 
   // 오늘의 학습 모드: 'chunk'(기본) | 'level'
   var TODAY_MODE_KEY = 'eng_today_mode';
-  var todayMode = (function(){ try{ return localStorage.getItem(TODAY_MODE_KEY)==='level' ? 'level' : 'chunk'; }catch(e){ return 'chunk'; } })();
+  var todayMode = (function(){ try{ var v=localStorage.getItem(TODAY_MODE_KEY); return (v==='level'||v==='core') ? v : 'chunk'; }catch(e){ return 'chunk'; } })();
   // 오늘의 학습 레벨 모드: 어느 단계(레벨)에서 30문제를 낼지
   var TODAY_STAGE_KEY = 'eng_today_stage';
   var todayStageLv = (function(){ try{ var v=parseInt(localStorage.getItem(TODAY_STAGE_KEY),10); return (v>=1)?v:1; }catch(e){ return 1; } })();
@@ -6157,13 +6183,13 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       host.appendChild(b);
     })(lv); }
   }
-  function setTodayMode(m){ todayMode = (m==='level')?'level':'chunk'; try{ localStorage.setItem(TODAY_MODE_KEY, todayMode); }catch(e){} }
+  function setTodayMode(m){ todayMode = (m==='level')?'level':(m==='core'?'core':'chunk'); try{ localStorage.setItem(TODAY_MODE_KEY, todayMode); }catch(e){} }
   // 오늘의 학습 헤더 우측: 레벨/청크 전환 토글
   function buildTodayModeToggle(){
     var slot=$('speak-toggle-slot'); if(!slot) return;
     slot.innerHTML='';
     var seg=document.createElement('div'); seg.className='today-mode-seg';
-    [['chunk','Chunks'],['level','Levels']].forEach(function(m){
+    [['chunk','Chunks'],['core','Verbs'],['level','Levels']].forEach(function(m){
       var b=document.createElement('button');
       b.className='tm-btn'+(todayMode===m[0]?' on':'');
       b.textContent=m[1];
@@ -6171,6 +6197,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
         if(todayMode===m[0]) return;
         setTodayMode(m[0]);
         if(todayMode==='chunk'){ if(!todayChunkDeck.length) openTodayChunk(false); }
+        else if(todayMode==='core'){ if(!todayCoreDeck.length) openTodayCore(false); }
         else { if(!todayBuilt || !todayDeck.length){ if(!loadTodaySession()) startTodayFresh(); } }
         renderToday();
       });
@@ -6186,6 +6213,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     $('panel-stats').classList.toggle('show', activePanel==='stats');
     $('panel-options').classList.toggle('show', activePanel==='options');
     $('panel-chunks').classList.toggle('show', activePanel==='chunks');
+    var pcore=$('panel-core'); if(pcore) pcore.classList.toggle('show', activePanel==='core');
     var pt=$('panel-tutor'); if(pt) pt.classList.toggle('show', activePanel==='tutor');
     var pdr=$('panel-drill'); if(pdr) pdr.classList.toggle('show', activePanel==='drill');
     // 서브탭 표시 여부
@@ -6194,10 +6222,13 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     var dsub=$('drill-subtabs-row'); if(dsub) dsub.classList.toggle('show', section==='drill');
     var chs=$('chunk-subtabs-row'); if(chs) chs.classList.toggle('show', section==='chunks');
     var cInner=$('chunk-subtabs'); if(cInner) cInner.classList.add('show');
+    var cores=$('core-subtabs-row'); if(cores) cores.classList.toggle('show', section==='core');
+    var coreInner=$('core-subtabs'); if(coreInner) coreInner.classList.add('show');
     var sh=$('study-head'); if(sh) sh.style.display = (section==='study') ? 'flex' : 'none';
     buildLevelSubtabs();
     buildSettingsSubtabs();
     buildChunkSubtabs();
+    buildCoreSubtabs();
     buildDrillSubtabs();
     buildSpeakToggle();
     buildBottomNav();
@@ -7835,6 +7866,11 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       renderToday();
       return;
     }
+    if(todayMode==='core'){
+      if(!todayCoreDeck.length) openTodayCore(false);
+      renderToday();
+      return;
+    }
     buildPresetRow();
     if(cefrFill()){
       if(!cefrPool.length){ if(!loadTodaySession() || !cefrPool.length){ startCefrToday(); return; } }
@@ -7847,6 +7883,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   }
   (function(){ var rb=document.getElementById('today-reset'); if(rb) rb.addEventListener('click',function(){
     if(todayMode==='chunk'){ openTodayChunk(true); renderToday(); }
+    else if(todayMode==='core'){ openTodayCore(true); renderToday(); }
     else startTodayFresh();
   }); })();
   // 추가로 n문제 더 (목표만 늘리고, 진행하며 실시간으로 한 개씩 뽑음)
@@ -8075,6 +8112,155 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     wrap.appendChild(nav);
   }
 
+  // ===== 오늘의 학습 (핵심동사) — 청크와 동일 구조, todayCoreStore 로 완전 분리 =====
+  var TODAY_CORE_KEY = 'eng_today_core_v1';
+  var todayCoreSet = [], todayCoreQueue = [], todayCorePos = 0, todayCoreDeck = [], todayCoreDeckPos = 0;
+  function allCoreRefs(){
+    var refs=[];
+    for(var c in CORE_DATA){ var arr=CORE_DATA[c].chunks; for(var i=0;i<arr.length;i++) refs.push({cat:c, idx:i}); }
+    return refs;
+  }
+  function buildTodayCoreSet(force){
+    var n=todayChunkCount();   // 하루 목표 개수는 공통
+    var day = STATS.todayKey ? STATS.todayKey() : '';
+    if(!force){
+      try{
+        var saved=JSON.parse(localStorage.getItem(TODAY_CORE_KEY)||'null');
+        if(saved && saved.day===day && saved.count===n && saved.set && saved.set.length){ todayCoreSet=saved.set; return; }
+      }catch(e){}
+    }
+    var refs=allCoreRefs();
+    var due=refs.filter(function(r){ return chunkIsDue(r.cat,r.idx,todayCoreStore); });
+    var unmastered=refs.filter(function(r){ return chunkStreak(r.cat,r.idx,todayCoreStore)<CHUNK_STREAK_GOAL; });
+    shuffleArr(due); shuffleArr(unmastered);
+    var pool = due.concat(unmastered);
+    if(pool.length<n){ var rest=refs.filter(function(r){ return !chunkNeedsWork(r.cat,r.idx,todayCoreStore); }); shuffleArr(rest); pool=pool.concat(rest); }
+    todayCoreSet = pool.slice(0, Math.min(n, pool.length));
+    try{ localStorage.setItem(TODAY_CORE_KEY, JSON.stringify({day:day, count:n, set:todayCoreSet})); }catch(e){}
+  }
+  function buildTodayCoreQueue(){
+    todayCoreQueue=[]; todayCorePos=0;
+    var pending=todayCoreSet.filter(function(r){ return chunkNeedsWork(r.cat,r.idx,todayCoreStore); });
+    shuffleArr(pending);
+    pending.forEach(function(r,nn){ todayCoreQueue.push({cat:r.cat, idx:r.idx, dueAt:nn}); });
+  }
+  function pullNextTodayCore(){
+    var live=todayCoreQueue.filter(function(q){ return q.force || chunkNeedsWork(q.cat,q.idx,todayCoreStore); });
+    if(!live.length) return null;
+    live.sort(function(a,b){ return a.dueAt-b.dueAt; });
+    var pick=null;
+    for(var i=0;i<live.length;i++){ if(live[i].dueAt<=todayCorePos){ pick=live[i]; break; } }
+    if(!pick) pick=live[0];
+    todayCoreQueue=todayCoreQueue.filter(function(q){ return q!==pick; });
+    return {cat:pick.cat, idx:pick.idx, flipped:false, graded:null, result:null, input:''};
+  }
+  function scheduleTodayCoreAgain(cat, idx, correct){ todayCoreQueue.push({cat:cat, idx:idx, dueAt: todayCorePos + (correct?5:3)}); }
+  function openTodayCore(force){
+    buildTodayCoreSet(force);
+    buildTodayCoreQueue();
+    todayCoreDeck=[]; todayCoreDeckPos=0;
+    var first=pullNextTodayCore();
+    if(first) todayCoreDeck.push(first);
+  }
+  function todayCoreSetStats(){
+    var learned=0, prog=0, total=todayCoreSet.length;
+    todayCoreSet.forEach(function(r){
+      var s=Math.min(chunkStreak(r.cat,r.idx,todayCoreStore), CHUNK_STREAK_GOAL);
+      prog += s/CHUNK_STREAK_GOAL;
+      if(s>=CHUNK_STREAK_GOAL) learned++;
+    });
+    return {learned:learned, total:total, progress:prog};
+  }
+  function applyTodayCoreGrade(item, ch, grade){
+    item.graded=grade;
+    if(!item._counted){ item._counted=true; STATS.recordDaily(grade, 'core'); }  // 오늘의 학습 통계(핵심동사)
+    chunkApplySrs(item.cat, item.idx, grade==='ok', todayCoreStore);
+    if(chunkNeedsWork(item.cat, item.idx, todayCoreStore)){ scheduleTodayCoreAgain(item.cat, item.idx, grade==='ok'); }
+  }
+  function renderTodayCore(){
+    var wrap=$('today-card-wrap'); if(!wrap) return;
+    var presetRow=$('preset-row'); if(presetRow) presetRow.style.display='none';
+    var hi=$('today-help'); if(hi) hi.style.display='none';
+    if(!todayCoreDeck.length) openTodayCore(false);
+    var st=todayCoreSetStats();
+    $('today-prog').textContent = '핵심동사 · '+st.learned+' / '+st.total+' mastered';
+    var cntInfo=$('today-count'); if(cntInfo) cntInfo.textContent='';
+    $('today-fill').style.width = (st.total? (st.progress/st.total*100):0)+'%';
+    var item=todayCoreDeck[todayCoreDeckPos]||null;
+    if(!item){
+      wrap.innerHTML='';
+      var done=document.createElement('div'); done.className='today-done';
+      done.innerHTML='<div class="big">오늘 세트 완료! 🎉</div><div class="sub">'+st.total+'개 표현을 모두 자동화했어요.</div>';
+      var more=document.createElement('div'); more.className='today-more';
+      var fresh=document.createElement('button'); fresh.className='today-again'; fresh.textContent='↻ 새 세트';
+      fresh.addEventListener('click',function(){ openTodayCore(true); renderToday(); });
+      more.appendChild(fresh); done.appendChild(more); wrap.appendChild(done);
+      $('today-fill').style.width='100%';
+      return;
+    }
+    var cat=item.cat, d=CORE_DATA[cat], ch=d.chunks[item.idx];
+    var col=colorVars(d.color);
+    $('today-fill').style.background = col.fg;
+    var streak=chunkStreak(cat, item.idx, todayCoreStore);
+    wrap.innerHTML='';
+    var card=document.createElement('div'); card.className='chunk-card'; card.style.borderColor=col.fg;
+    if(item._seenSnap===undefined) item._seenSnap = chunkSeenAt(cat, item.idx, todayCoreStore);
+    card.appendChild(seenBadge(item._seenSnap));
+    var tag=document.createElement('div'); tag.className='chunk-tag'; tag.style.color=col.fg;
+    tag.textContent=d.name + (streak>=CHUNK_STREAK_GOAL ? ' · ↻ 복습' : '');
+    var sk=document.createElement('div'); sk.className='chunk-streak';
+    var skLab=document.createElement('span'); skLab.textContent='streak'; sk.appendChild(skLab);
+    for(var s=0;s<CHUNK_STREAK_GOAL;s++){ var dot=document.createElement('span'); dot.className='dot'+(s<streak?' on':''); if(s<streak) dot.style.background=col.fg; sk.appendChild(dot); }
+    card.appendChild(tag); card.appendChild(sk);
+    var body=document.createElement('div'); body.style.width='100%';
+    var clab=document.createElement('div'); clab.className='chunk-side'; clab.style.color=col.fg; clab.textContent='Korean';
+    var cko=document.createElement('div'); cko.className='chunk-ko'; paintChunkKo(cko, ch, cat, item);
+    var koRow=document.createElement('div'); koRow.className='ko-row'; koRow.appendChild(cko);
+    if(item.graded!=null){ var rpx=chunkRepFor(ch, cat, item); koRow.appendChild(spkBtn((rpx && rpx.en)||ch.en,'mini')); }
+    body.appendChild(clab); body.appendChild(koRow);
+    var exprLab=document.createElement('div'); exprLab.className='chunk-expr'; exprLab.textContent='표현 · '+ch.ko;
+    body.appendChild(exprLab);
+    card.appendChild(body); wrap.appendChild(card);
+    var gr=document.createElement('div'); gr.className='grade-row'; gr.style.marginTop='14px'; gr.style.display='block';
+    wrap.appendChild(gr);
+    var pv=document.createElement('button'); pv.textContent='← Prev'; pv.disabled=(todayCoreDeckPos<=0);
+    pv.addEventListener('click',function(){ if(todayCoreDeckPos>0){ todayCoreDeckPos--; renderTodayCore(); } });
+    var nx=document.createElement('button'); nx.className='listen'; nx.textContent='Next →'; nx.disabled=(item.graded==null);
+    nx.addEventListener('click',function(){
+      if(item.graded==null) return;
+      if(todayCoreDeckPos >= todayCoreDeck.length-1){
+        todayCorePos++;
+        var nextItem=pullNextTodayCore();
+        if(nextItem){ todayCoreDeck.push(nextItem); todayCoreDeckPos++; }
+        else { todayCoreDeckPos=todayCoreDeck.length; }
+      } else { todayCoreDeckPos++; }
+      renderTodayCore();
+    });
+    var micExt=document.createElement('button'); micExt.innerHTML='🎤 말하기';
+    var ansExt=document.createElement('button'); ansExt.textContent='정답'; ansExt.style.color='var(--info)';
+    if(item.graded!=null){ micExt.disabled=true; ansExt.disabled=true; }
+    chunkFillInto(gr, ch, cat, item, function(grade){
+      if(item.graded!=null) return;
+      applyTodayCoreGrade(item, ch, grade); item.result=grade;
+      nx.disabled=false; micExt.disabled=true; ansExt.disabled=true;
+      var rep=chunkRepFor(ch, cat, item);
+      koRow.appendChild(spkBtn((rep && rep.en) || ch.en,'mini'));
+      speak((rep && rep.en) || ch.en, 'en');
+    }, body);
+    micExt.addEventListener('click',function(){ if(gr._fillMic && !gr._fillMic.disabled) gr._fillMic.click(); });
+    ansExt.addEventListener('click',function(){ if(gr._fillAns && !gr._fillAns.disabled) gr._fillAns.click(); });
+    var nav=document.createElement('div'); nav.className='nav';
+    nav.appendChild(pv); nav.appendChild(micExt); nav.appendChild(ansExt); nav.appendChild(nx);
+    wrap.appendChild(nav);
+  }
+  function resetTodayCoreData(){
+    clearObjInPlace(todayCoreProgress); saveTodayCoreProgress();
+    try{ localStorage.removeItem(TODAY_CORE_KEY); }catch(e){}
+    todayCoreSet=[]; todayCoreDeck=[]; todayCoreDeckPos=0;
+    try{ openTodayCore(true); }catch(e){}
+    try{ if(activePanel==='today' && todayMode==='core') renderToday(); }catch(e){}
+  }
+
   function renderTodayHeader(){
     var done = STATS.todayCount();
     var completed = todayCorrect>=todayTarget;
@@ -8157,6 +8343,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     buildTodayModeToggle();
     buildTodayStageRow();
     if(todayMode==='chunk'){ renderTodayChunk(); return; }
+    if(todayMode==='core'){ renderTodayCore(); return; }
     var presetRow=$('preset-row'); if(presetRow) presetRow.style.display='none';   // 단계 선택으로 대체
     var hi=$('today-help'); if(hi) hi.style.display='none';
     var wrap=$('today-card-wrap');
@@ -8331,6 +8518,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   var statsSub = 'daily';       // 'daily' | 'overall' | 'chunks'
   var dailySrc = 'l';           // 오늘의 학습 통계 내부: 'l'=레벨 | 'c'=청크
   var statsChunkCat = '1';      // 통계 > Chunks 에서 펼쳐진 카테고리
+  var statsCoreCat = '1';       // 통계 > Verbs 에서 펼쳐진 카테고리
   var lvCollapsed = {};         // 레벨별 접힘 상태
   function pct(x){ return Math.round(x*100); }
   function accColor(acc){
@@ -8343,7 +8531,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     wrap.innerHTML='';
     // 하위 메뉴
     var subRow=document.createElement('div'); subRow.className='stats-sub';
-    [['daily','Today'],['overall','Levels'],['chunks','Chunks']].forEach(function(s){
+    [['daily','Today'],['overall','Levels'],['chunks','Chunks'],['core','Verbs']].forEach(function(s){
       var b=document.createElement('button'); b.className='ssub'+(statsSub===s[0]?' on':''); b.textContent=s[1];
       b.addEventListener('click',function(){ statsSub=s[0]; renderStats(); });
       subRow.appendChild(b);
@@ -8351,6 +8539,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     wrap.appendChild(subRow);
     if(statsSub==='daily'){ renderDaily(wrap); return; }
     if(statsSub==='chunks'){ renderChunkStats(wrap); return; }
+    if(statsSub==='core'){ renderCoreStats(wrap); return; }
     renderOverall(wrap);
   }
 
@@ -10130,12 +10319,16 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   function chunkRepFor(ch, cat, item){
     if(item && item._rep!==undefined) return item._rep;
     var rep=null;
-    var pool=(window.CHUNK_EX10 && CHUNK_EX10[ch.en]) || null;
+    var pool=(window.CHUNK_EX10 && CHUNK_EX10[ch.en]) || null;   // 1순위: EX10 풀
     if(pool && pool.length){
       var e=pool[Math.floor(Math.random()*pool.length)];
       rep={ en:e.en, ko:e.ko, blank:chunkBlankKey(ch.en, e.en) };
     }
-    if(!rep) rep=chunkRep(ch);   // 예문 풀이 없는 고정 표현(반응 등)은 대표 예문
+    if(!rep) rep=chunkRep(ch);   // 2순위: 대표 예문(CHUNK_REP)
+    if(!rep && ch.ex && ch.ex.length){   // 3순위: 엔트리 자체 예문(핵심동사 등 EX10/REP 없는 도메인)
+      var e2=ch.ex[Math.floor(Math.random()*ch.ex.length)];
+      rep={ en:e2.en, ko:e2.ko, blank:chunkBlankKey(ch.en, e2.en) };
+    }
     if(item) item._rep=rep;
     return rep;
   }
@@ -10278,6 +10471,153 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     if(chunkNeedsWork(cat, item.idx)){
       scheduleChunkAgain(item.idx, grade==='ok');
     }
+  }
+
+  // ============================================================
+  // CORE VERBS 엔진 (핵심 동사 활용) — 청크 엔진과 동일 구조.
+  // SRS 셀 헬퍼(chunkStreak 등: store 파라미터)와 렌더 헬퍼(chunkFillInto/chunkRepFor/
+  // paintChunkKo/chunkExamplesInto: 데이터 무관)를 그대로 재사용하고, 데이터/저장소/DOM만 분리.
+  // ============================================================
+  var CORE_PROG_KEY = 'eng_core_progress_v1';         // 핵심동사 메뉴 진행도
+  var TODAY_CORE_PROG_KEY = 'eng_today_core_prog_v1'; // 오늘의 학습(핵심동사) 진행도 — 완전 분리
+  var coreProgress = loadProg(CORE_PROG_KEY);
+  var todayCoreProgress = loadProg(TODAY_CORE_PROG_KEY);
+  function saveCoreProgress(){ try{ localStorage.setItem(CORE_PROG_KEY, JSON.stringify(coreProgress)); }catch(e){} }
+  function saveTodayCoreProgress(){ try{ localStorage.setItem(TODAY_CORE_PROG_KEY, JSON.stringify(todayCoreProgress)); }catch(e){} }
+  var coreStore = { map:coreProgress, save:saveCoreProgress };
+  var todayCoreStore = { map:todayCoreProgress, save:saveTodayCoreProgress };
+
+  var curCoreCat = 1;
+  function coreCatStats(cat, st){
+    st = st || coreStore;
+    var arr=CORE_DATA[cat].chunks, learned=0, prog=0;
+    for(var i=0;i<arr.length;i++){
+      var s=Math.min(chunkStreak(cat,i,st), CHUNK_STREAK_GOAL);
+      prog += s/CHUNK_STREAK_GOAL;
+      if(chunkStreak(cat,i,st)>=CHUNK_STREAK_GOAL) learned++;
+    }
+    return {learned:learned, total:arr.length, progress:prog};
+  }
+  function coreOverallMastery(){
+    var learned=0, total=0;
+    for(var c in CORE_DATA){ var s=coreCatStats(c); learned+=s.learned; total+=s.total; }
+    return {learned:learned, total:total};
+  }
+  // --- 메뉴 큐/덱 ---
+  var coreQueue=[], corePos=0, coreDeck=[], coreDeckPos=0;
+  function coreCurItem(){ return coreDeck[coreDeckPos]||null; }
+  function buildCoreQueue(cat){
+    coreQueue=[]; corePos=0;
+    var arr=CORE_DATA[cat].chunks, pending=[];
+    for(var i=0;i<arr.length;i++){ if(chunkNeedsWork(cat,i,coreStore)) pending.push(i); }
+    for(var k=pending.length-1;k>0;k--){ var j=Math.floor(Math.random()*(k+1)); var t=pending[k]; pending[k]=pending[j]; pending[j]=t; }
+    pending.forEach(function(idx,n){ coreQueue.push({idx:idx, dueAt:n}); });
+  }
+  function pullNextCore(){
+    var live=coreQueue.filter(function(q){ return chunkNeedsWork(curCoreCat,q.idx,coreStore); });
+    if(!live.length) return null;
+    live.sort(function(a,b){ return a.dueAt-b.dueAt; });
+    var pick=null;
+    for(var i=0;i<live.length;i++){ if(live[i].dueAt<=corePos){ pick=live[i]; break; } }
+    if(!pick) pick=live[0];
+    coreQueue=coreQueue.filter(function(q){ return q!==pick; });
+    return {idx:pick.idx, flipped:false, graded:null, result:null, input:''};
+  }
+  function scheduleCoreAgain(idx, correct){ coreQueue.push({idx:idx, dueAt: corePos + (correct?5:3)}); }
+  function buildCoreSubtabs(){
+    var host=$('core-subtabs'); if(!host) return;
+    host.innerHTML='';
+    for(var c in CORE_DATA){ (function(c){
+      var b=document.createElement('button');
+      b.className='subtab'+(activePanel==='core' && String(curCoreCat)===String(c) ? ' active':'');
+      b.textContent=CORE_DATA[c].abbr || CORE_DATA[c].name;
+      b.title=CORE_DATA[c].ko;
+      b.addEventListener('click',function(){ activePanel='core'; section='core'; openCoreCat(c); switchPanel(); });
+      host.appendChild(b);
+    })(c); }
+  }
+  function openCoreCat(cat){
+    curCoreCat=cat; buildCoreQueue(cat);
+    coreDeck=[]; coreDeckPos=0;
+    var first=pullNextCore(); if(first) coreDeck.push(first);
+    renderCore();
+  }
+  function applyCoreGrade(item, ch, grade){
+    item.graded=grade; var cat=curCoreCat;
+    chunkApplySrs(cat, item.idx, grade==='ok', coreStore);
+    if(chunkNeedsWork(cat, item.idx, coreStore)){ scheduleCoreAgain(item.idx, grade==='ok'); }
+  }
+  function renderCore(){
+    var wrap=$('core-card-wrap'); if(!wrap) return;
+    var cat=curCoreCat, d=CORE_DATA[cat];
+    var st=coreCatStats(cat);
+    var col=colorVars(d.color);
+    var pctFill=st.progress/st.total*100;
+    $('core-fill').style.width=pctFill+'%';
+    $('core-fill').style.background = pctFill>0 ? col.fg : 'transparent';
+    $('core-prog-label').textContent = d.name+' · '+st.learned+' / '+st.total+' mastered  ·  '+d.ko;
+    var item=coreCurItem();
+    if(!item){
+      wrap.innerHTML='';
+      var done=document.createElement('div'); done.className='chunk-cat-done';
+      done.innerHTML='<div class="big">All mastered! 🎉</div><div class="sub">이 동사의 표현 '+st.total+'개를 모두 자동화했어요.<br>한 번 더 돌려볼까요?</div>';
+      var again=document.createElement('button'); again.className='chunk-again'; again.textContent='↻ Review all again';
+      again.addEventListener('click',function(){ var arr=CORE_DATA[cat].chunks; for(var i=0;i<arr.length;i++){ setChunkStreak(cat,i,Math.max(0,CHUNK_STREAK_GOAL-1),coreStore); } openCoreCat(cat); });
+      done.appendChild(again); wrap.appendChild(done); return;
+    }
+    var ch=d.chunks[item.idx];
+    var streak=chunkStreak(cat, item.idx, coreStore);
+    wrap.innerHTML='';
+    var card=document.createElement('div'); card.className='chunk-card'; card.style.borderColor=col.fg;
+    if(item._seenSnap===undefined) item._seenSnap=chunkSeenAt(cat,item.idx,coreStore);
+    card.appendChild(seenBadge(item._seenSnap));
+    var tag=document.createElement('div'); tag.className='chunk-tag'; tag.style.color=col.fg;
+    tag.textContent=d.name + (streak>=CHUNK_STREAK_GOAL ? ' · ↻ 복습' : '');
+    var sk=document.createElement('div'); sk.className='chunk-streak';
+    var skLab=document.createElement('span'); skLab.textContent='streak'; sk.appendChild(skLab);
+    for(var s=0;s<CHUNK_STREAK_GOAL;s++){ var dot=document.createElement('span'); dot.className='dot'+(s<streak?' on':''); if(s<streak) dot.style.background=col.fg; sk.appendChild(dot); }
+    card.appendChild(tag); card.appendChild(sk);
+    var body=document.createElement('div'); body.style.width='100%';
+    var clab=document.createElement('div'); clab.className='chunk-side'; clab.style.color=col.fg; clab.textContent='Korean';
+    var cko=document.createElement('div'); cko.className='chunk-ko'; paintChunkKo(cko, ch, cat, item);
+    var koRow=document.createElement('div'); koRow.className='ko-row'; koRow.appendChild(cko);
+    if(item.graded!=null){ var rpx=chunkRepFor(ch, cat, item); koRow.appendChild(spkBtn((rpx&&rpx.en)||ch.en,'mini')); }
+    body.appendChild(clab); body.appendChild(koRow);
+    var exprLab=document.createElement('div'); exprLab.className='chunk-expr'; exprLab.textContent='표현 · '+ch.ko;
+    body.appendChild(exprLab);
+    card.appendChild(body); wrap.appendChild(card);
+    var gr=document.createElement('div'); gr.className='grade-row'; gr.style.marginTop='14px'; gr.style.display='block';
+    wrap.appendChild(gr);
+    var pv=document.createElement('button'); pv.textContent='← Prev'; pv.disabled=(coreDeckPos<=0);
+    pv.addEventListener('click',function(){ if(coreDeckPos>0){ coreDeckPos--; renderCore(); } });
+    var nx=document.createElement('button'); nx.className='listen'; nx.textContent='Next →'; nx.disabled=(item.graded==null);
+    nx.addEventListener('click',function(){
+      if(item.graded==null) return;
+      if(coreDeckPos>=coreDeck.length-1){ corePos++; var nextItem=pullNextCore(); if(nextItem){ coreDeck.push(nextItem); coreDeckPos++; } else { coreDeckPos=coreDeck.length; } }
+      else { coreDeckPos++; }
+      renderCore();
+    });
+    var micExt=document.createElement('button'); micExt.innerHTML='🎤 말하기';
+    var ansExt=document.createElement('button'); ansExt.textContent='정답'; ansExt.style.color='var(--info)';
+    if(item.graded!=null){ micExt.disabled=true; ansExt.disabled=true; }
+    chunkFillInto(gr, ch, cat, item, function(grade){
+      if(item.graded!=null) return;
+      applyCoreGrade(item, ch, grade); item.result=grade;
+      nx.disabled=false; micExt.disabled=true; ansExt.disabled=true;
+      var rep=chunkRepFor(ch, cat, item);
+      koRow.appendChild(spkBtn((rep&&rep.en)||ch.en,'mini'));
+      speak((rep&&rep.en)||ch.en, 'en');
+    }, body);
+    micExt.addEventListener('click',function(){ if(gr._fillMic && !gr._fillMic.disabled) gr._fillMic.click(); });
+    ansExt.addEventListener('click',function(){ if(gr._fillAns && !gr._fillAns.disabled) gr._fillAns.click(); });
+    var nav=document.createElement('div'); nav.className='nav';
+    nav.appendChild(pv); nav.appendChild(micExt); nav.appendChild(ansExt); nav.appendChild(nx);
+    wrap.appendChild(nav);
+  }
+  // 청크 메뉴와 동일 정책: 메뉴 학습은 일별 통계 기록 안 함(오늘의 학습만 기록)
+  function resetCoreMenuData(){
+    clearObjInPlace(coreProgress); saveCoreProgress();
+    try{ if(activePanel==='core') openCoreCat(curCoreCat); }catch(e){}
   }
 
   function renderExportImport(wrap){
@@ -10558,26 +10898,108 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     wrap.appendChild(resetBox);
   }
 
+  // 통계 > Verbs (핵심동사) — renderChunkStats 와 동일 구조, CORE_DATA/coreStore 사용
+  function renderCoreStats(wrap){
+    var ov=coreOverallMastery();
+    var note=document.createElement('div'); note.className='acc-note';
+    note.innerHTML='동사를 고르고, 각 카드를 눌러 한국어 → 영어를 확인하세요(발음 자동 재생). Mastered = <b>4회 연속 즉답</b>.';
+    wrap.appendChild(note);
+    var sum=document.createElement('div'); sum.className='cstat-summary';
+    sum.innerHTML='전체 <b>'+ov.learned+' / '+ov.total+'</b> 표현 자동화 완료.';
+    wrap.appendChild(sum);
+    var cats=document.createElement('div'); cats.className='cstat-cats';
+    for(var c in CORE_DATA){ (function(c){
+      var d=CORE_DATA[c]; var st=coreCatStats(c); var col=colorVars(d.color);
+      var b=document.createElement('button');
+      var on = String(statsCoreCat)===String(c);
+      b.className='cstat-cat'+(on?' on':'');
+      if(on){ b.style.background=col.fg; }
+      b.innerHTML=escHtml(d.abbr || d.name)+' <span class="cc-frac">'+st.learned+'/'+st.total+'</span>';
+      b.addEventListener('click',function(){ statsCoreCat=c; renderStats(); });
+      cats.appendChild(b);
+    })(c); }
+    wrap.appendChild(cats);
+    var cat=statsCoreCat, d=CORE_DATA[cat];
+    var list=document.createElement('div');
+    d.chunks.forEach(function(ch, idx){
+      var streak=chunkStreak(cat, idx, coreStore);
+      var item=document.createElement('div'); item.className='cstat-item';
+      var txt=document.createElement('div'); txt.className='cstat-txt';
+      item.appendChild(txt);
+      var flipped=false;
+      function paint(){
+        txt.innerHTML='';
+        if(!flipped){
+          item.classList.add('cstat-front');
+          var sideL=document.createElement('div'); sideL.className='cstat-side'; sideL.textContent='Korean';
+          var ko=document.createElement('div'); ko.className='cstat-ko'; ko.textContent=ch.ko;
+          txt.appendChild(sideL); txt.appendChild(ko);
+        } else {
+          item.classList.remove('cstat-front');
+          var sideL2=document.createElement('div'); sideL2.className='cstat-side'; sideL2.style.color=colorVars(d.color).fg; sideL2.textContent='English';
+          var en=document.createElement('div'); en.className='cstat-en'; en.textContent=ch.en;
+          en.appendChild(spkBtn(ch.en,'small'));
+          txt.appendChild(sideL2); txt.appendChild(en);
+        }
+      }
+      paint();
+      var stat=document.createElement('div'); stat.className='cstat-status';
+      var badge=document.createElement('span');
+      if(streak>=CHUNK_STREAK_GOAL){ badge.className='cstat-badge done'; badge.textContent='MASTERED'; }
+      else if(streak>0){ badge.className='cstat-badge prog'; badge.textContent='IN PROGRESS'; }
+      else { badge.className='cstat-badge new'; badge.textContent='NOT YET'; }
+      stat.appendChild(badge);
+      var dots=document.createElement('div'); dots.className='cstat-dots';
+      for(var s=0;s<CHUNK_STREAK_GOAL;s++){ var dot=document.createElement('span'); dot.className='d'+(s<streak?' on':''); dots.appendChild(dot); }
+      stat.appendChild(dots);
+      item.appendChild(stat);
+      item.addEventListener('click',function(ev){
+        if(ev.target.closest('button')) return;
+        var wasFront = !flipped;
+        flipped=!flipped; paint();
+        if(wasFront) speak(ch.en,'en');
+      });
+      list.appendChild(item);
+    });
+    wrap.appendChild(list);
+    // 초기화 — 동사(카테고리) / 전체, 같은 줄·같은 디자인
+    var resetBox=document.createElement('div'); resetBox.className='menu-reset-box';
+    var row=document.createElement('div'); row.className='menu-reset-row';
+    var catLabel='↺ 이 동사 초기화';
+    var bCat=document.createElement('button'); bCat.className='menu-reset-btn'; bCat.textContent=catLabel;
+    armReset(bCat, catLabel, function(){ if(coreProgress[cat]){ delete coreProgress[cat]; saveCoreProgress(); } renderStats(); });
+    var allLabel='↺ 전체 초기화';
+    var bAll=document.createElement('button'); bAll.className='menu-reset-btn'; bAll.textContent=allLabel;
+    armReset(bAll, allLabel, function(){ resetCoreMenuData(); renderStats(); });
+    var q=document.createElement('button'); q.className='help-icon'; q.type='button'; q.setAttribute('aria-label','초기화 설명'); q.textContent='?';
+    var tip=document.createElement('div'); tip.className='reset-tip';
+    tip.textContent='이 동사 초기화: 지금 보고 있는 동사만. 전체 초기화: 모든 동사. 둘 다 핵심동사 학습 진행도만 지우고 레벨·청크·오늘의 학습에는 영향 없어요.';
+    q.addEventListener('click', function(ev){ ev.stopPropagation(); tip.classList.toggle('show'); });
+    row.appendChild(bCat); row.appendChild(bAll); row.appendChild(q);
+    resetBox.appendChild(row); resetBox.appendChild(tip);
+    wrap.appendChild(resetBox);
+  }
+
   function renderDaily(wrap){
-    // 내부 서브탭: 레벨 / 청크
+    // 내부 서브탭: 레벨 / 청크 / 핵심동사
     var seg=document.createElement('div'); seg.className='today-mode-seg'; seg.style.margin='2px 0 12px';
-    [['l','Levels'],['c','Chunks']].forEach(function(m){
+    [['l','Levels'],['c','Chunks'],['v','Verbs']].forEach(function(m){
       var b=document.createElement('button'); b.className='tm-btn'+(dailySrc===m[0]?' on':''); b.textContent=m[1];
       b.addEventListener('click',function(){ if(dailySrc===m[0])return; dailySrc=m[0]; renderStats(); });
       seg.appendChild(b);
     });
     wrap.appendChild(seg);
 
-    var srcName = (dailySrc==='c') ? '청크' : '레벨';
-    // 오늘의 학습(레벨/청크) 각각만 초기화 — 진행도(레벨·청크 메뉴 데이터)는 안 건드림
+    var srcName = (dailySrc==='c') ? '청크' : (dailySrc==='v' ? '핵심동사' : '레벨');
+    // 오늘의 학습(레벨/청크/핵심동사) 각각만 초기화 — 메뉴 진행도는 안 건드림
     function todayResetBtn(){
-      var isChunk = (dailySrc==='c');
-      var tip = isChunk
-        ? '오늘의 학습(청크)의 오늘 세트를 새로 뽑아요. 청크 학습 진행도와 통계 기록은 그대로예요.'
-        : '오늘의 학습(레벨)의 오늘 세트를 새로 시작하고 적응 난이도를 B2로 되돌려요. 레벨 학습 진행도와 통계 기록은 그대로예요.';
+      var run, tip;
+      if(dailySrc==='c'){ run=resetTodayChunkData; tip='오늘의 학습(청크)의 오늘 세트를 새로 뽑아요. 청크 학습 진행도와 통계 기록은 그대로예요.'; }
+      else if(dailySrc==='v'){ run=resetTodayCoreData; tip='오늘의 학습(핵심동사)의 오늘 세트를 새로 뽑아요. 핵심동사 학습 진행도와 통계 기록은 그대로예요.'; }
+      else { run=resetTodayLevelData; tip='오늘의 학습(레벨)의 오늘 세트를 새로 시작하고 적응 난이도를 B2로 되돌려요. 레벨 학습 진행도와 통계 기록은 그대로예요.'; }
       return buildResetControl({
         label:'↺ 오늘의 학습('+srcName+') 초기화',
-        run: (isChunk ? resetTodayChunkData : resetTodayLevelData),
+        run: run,
         tip: tip,
         done: function(b){ b.textContent='✓ 초기화됨'; setTimeout(function(){ b.textContent='↺ 오늘의 학습('+srcName+') 초기화'; }, 1500); }
       });
