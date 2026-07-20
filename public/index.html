@@ -629,6 +629,9 @@
   .chunk-ko{font-size:21px;font-weight:700;line-height:1.4;margin:4px 0 6px;}
   /* 문제 예문 아래: 배워야 하는 표현(청크의 한국어 라벨) — 작고 연하게 */
   .chunk-expr{font-size:12.5px;font-weight:600;color:var(--text3);line-height:1.4;margin:-2px 0 4px;}
+  /* 헷갈리는 짝 비교 힌트 (정답 공개 후) */
+  .chunk-confuse{font-size:12px;color:var(--text2);line-height:1.55;margin-top:10px;text-align:left;
+    background:var(--surface2);border-radius:10px;padding:8px 11px;}
   .chunk-en{font-size:25px;font-weight:800;line-height:1.45;padding:6px 0;}
   .chunk-en .chunk-blank, .cstat-en .chunk-blank{opacity:.4;font-weight:600;}
   /* 청크 문법 힌트 (? 아이콘 + 툴팁) */
@@ -8963,6 +8966,64 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   //  · localStorage에 카테고리별 진행(streak) 저장.
   // ============================================================
   var CHUNK_STREAK_GOAL = 2;            // 연속 N회 즉답 → 졸업
+  // ============================================================
+  //  청크 카테고리 재구성 v2
+  //  ① 중복 반응 제거  ② 필수 패턴 추가  ③ 질문 분리(요청·제안) · 기초 접속사 정리 · 일상 카테고리 신설
+  // ============================================================
+  (function(){
+    var D=window.CHUNK_DATA; if(!D || D[7]) return;
+    function rm(cat, ens){ var s={}; ens.forEach(function(e){s[e]=1;}); D[cat].chunks=D[cat].chunks.filter(function(ch){ return !s[ch.en]; }); }
+    // ① 중복 반응 제거 (남긴 것: What a relief. / That makes sense. / It's up to you.)
+    rm(4, ["That's a relief.","Up to you.","Makes sense."]);
+    // ③ 기초 단독 접속사 정리 — 문장 안에서 자연 습득되는 단어들
+    rm(5, ["but","so","if","when","before","after"]);
+    // ② 새 패턴 — 의도
+    D[1].chunks.push(
+      {en:"I'd better", ko:"나 ~해야겠다 (안 그러면 곤란)", ex:[{en:"I'd better get going now.",ko:"나 이제 가봐야겠다."},{en:"I'd better call her back.",ko:"걔한테 다시 전화해야겠다."},{en:"I'd better not be late again.",ko:"또 늦으면 안 되겠다."}]},
+      {en:"I forgot to", ko:"나 ~하는 거 깜빡했어", ex:[{en:"I forgot to lock the door.",ko:"문 잠그는 거 깜빡했어."},{en:"I forgot to bring my charger.",ko:"충전기 챙기는 거 깜빡했어."},{en:"I forgot to text you back.",ko:"너한테 답장하는 거 깜빡했어."}]},
+      {en:"I can't help", ko:"~하지 않을 수가 없어 (자꾸 하게 돼)", ex:[{en:"I can't help laughing at this.",ko:"이거 보면 웃음을 참을 수가 없어."},{en:"I can't help thinking about it.",ko:"자꾸 그 생각이 나."},{en:"I can't help it.",ko:"나도 어쩔 수가 없어."}]},
+      {en:"I'm looking forward to", ko:"나 ~ 기대돼", ex:[{en:"I'm looking forward to the weekend.",ko:"주말이 기대돼."},{en:"I'm looking forward to seeing you.",ko:"너 만나는 거 기대돼."},{en:"I'm looking forward to the trip.",ko:"이번 여행 기대돼."}]},
+      {en:"I'm used to", ko:"나 ~에 익숙해", ex:[{en:"I'm used to waking up early.",ko:"난 일찍 일어나는 거에 익숙해."},{en:"I'm used to the noise now.",ko:"이젠 그 소음에 익숙해."},{en:"I'm used to eating alone.",ko:"난 혼자 밥 먹는 거 익숙해."}]}
+    );
+    // ② 새 패턴 — 질문
+    D[3].chunks.push(
+      {en:"What happened?", ko:"무슨 일 있었어? / 어떻게 된 거야?", ex:[{en:"What happened? You look upset.",ko:"무슨 일이야? 너 안 좋아 보여."},{en:"What happened to your phone?",ko:"네 폰 어떻게 된 거야?"},{en:"What happened after I left?",ko:"나 가고 나서 무슨 일 있었어?"}]},
+      {en:"Guess what?", ko:"있잖아! (놀라운 소식 꺼낼 때)", ex:[{en:"Guess what? I got the job!",ko:"있잖아, 나 그 회사 붙었어!"},{en:"Guess what? We're getting married.",ko:"있잖아, 우리 결혼해."},{en:"Guess what happened today.",ko:"오늘 무슨 일 있었게."}]}
+    );
+    // ③ 질문 카테고리 분리 → 6: 요청·제안·부탁
+    var REQ=["Can you","Could you","Can I","Could I","Do you want to","Would you like to","How about","Why don't you","Why don't we","Do you mind if","Can I get","Should I","Is it okay if I","Would you mind","We could","We should","Shall we","Shall I","Would you rather","I'd appreciate it if","I was wondering if","Can you tell me","Let me know","Can you explain"];
+    var rs={}; REQ.forEach(function(e){rs[e]=1;});
+    var reqChunks=D[3].chunks.filter(function(ch){ return rs[ch.en]; });
+    D[3].chunks=D[3].chunks.filter(function(ch){ return !rs[ch.en]; });
+    D[3].abbr="Q&A"; D[3].ko="질문·확인 (정보)";
+    D[6]={name:"Requests", abbr:"Ask", ko:"요청·제안·부탁", blurb:"부탁하고 제안해서 상대를 움직이는 틀이에요.", color:"purple", chunks:reqChunks};
+    // ③ 새 카테고리 — 일상·시간
+    D[7]={name:"Daily", abbr:"Daily", ko:"일상·시간 표현", blurb:"약속·이동·시간 얘기에 매일 쓰는 표현이에요.", color:"pink", chunks:[
+      {en:"I'm on my way", ko:"나 가는 중이야", ex:[{en:"I'm on my way home.",ko:"나 집에 가는 중이야."},{en:"I'm on my way, five minutes.",ko:"가고 있어, 5분이면 돼."},{en:"I'm on my way to work.",ko:"출근하는 길이야."}]},
+      {en:"I'm running late", ko:"나 좀 늦을 것 같아", ex:[{en:"Sorry, I'm running late.",ko:"미안, 나 좀 늦어."},{en:"I'm running late for the meeting.",ko:"회의에 좀 늦을 것 같아."},{en:"Start without me, I'm running late.",ko:"먼저 시작해, 나 늦어."}]},
+      {en:"It takes", ko:"~하는 데 (시간이) 걸려", ex:[{en:"It takes an hour by bus.",ko:"버스로 한 시간 걸려."},{en:"It takes time to get better.",ko:"나아지는 덴 시간이 걸려."},{en:"It takes ten minutes on foot.",ko:"걸어서 10분 걸려."}]},
+      {en:"so far", ko:"지금까지는", ex:[{en:"So far, so good.",ko:"지금까지는 괜찮아."},{en:"I like it so far.",ko:"지금까지는 마음에 들어."},{en:"No problems so far.",ko:"아직까진 문제없어."}]},
+      {en:"for now", ko:"일단은 / 당분간은", ex:[{en:"This will do for now.",ko:"일단은 이걸로 됐어."},{en:"Let's leave it here for now.",ko:"일단 여기까지 하자."},{en:"For now, let's wait and see.",ko:"당분간은 지켜보자."}]},
+      {en:"at first", ko:"처음엔", ex:[{en:"At first, I didn't like it.",ko:"처음엔 별로였어."},{en:"It was hard at first.",ko:"처음엔 힘들었어."},{en:"At first I thought it was a joke.",ko:"처음엔 농담인 줄 알았어."}]}
+    ]};
+  })();
+  // 헷갈리는 짝 힌트 — 정답 공개 후 카드에 한 줄로 표시
+  var CHUNK_CONFUSE = {
+    "I used to":"I'm used to(~에 익숙해)와 구분 — I used to는 '예전엔 ~했었다(지금은 아님)'",
+    "I'm used to":"I used to(예전엔 ~했었다)와 구분 — I'm used to는 '~에 익숙하다'",
+    "even though":"even if(설령 ~라도·가정)와 구분 — even though는 '실제로 ~인데도(사실)'",
+    "even if":"even though(~인데도·사실)와 구분 — even if는 '설령 ~라도(가정)'",
+    "in case":"if(~라면·조건)와 구분 — in case는 '~할까 봐 미리(대비)'",
+    "I forgot to":"Don't forget to(~하는 거 잊지 마)의 1인칭 짝 — 내가 깜빡했을 땐 I forgot to",
+    "Don't forget to":"I forgot to(나 ~ 깜빡했어)와 짝으로 기억",
+    "I'd better":"You'd better(너 ~하는 게 좋을걸·경고)와 구분 — 내 다짐엔 I'd better",
+    "You'd better":"I'd better(나 ~해야겠다·다짐)와 구분 — 상대에게 경고조 조언",
+    "It seems like":"근거가 다른 삼형제 — seems(정황상)·looks(보기에)·sounds(듣기에)",
+    "It looks like":"근거가 다른 삼형제 — looks(보기에)·seems(정황상)·sounds(듣기에)",
+    "It sounds like":"근거가 다른 삼형제 — sounds(듣기에)·seems(정황상)·looks(보기에)",
+    "Do you mind if":"대답 주의 — 허락할 땐 No(싫지 않아요), 'No, go ahead'",
+    "Would you mind":"대답 주의 — 승낙은 'Not at all'"
+  };
   var CHUNK_PROG_KEY = 'eng_chunks_progress_v1';        // 청크 학습 메뉴 진행도
   var TODAY_CHUNK_PROG_KEY = 'eng_today_chunk_prog_v1'; // 오늘의 학습(청크) 진행도 — 완전 분리
   var curChunkCat = 1;
@@ -8974,6 +9035,18 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   // 청크 진행도 저장소 래퍼 — 기본은 메뉴 스토어, 오늘의 학습은 todayChunkStore 를 넘겨 완전 분리한다.
   var chunkStore = { map:chunkProgress, save:saveChunkProgress };
   var todayChunkStore = { map:todayChunkProgress, save:saveTodayChunkProgress };
+  // 카테고리 재구성 v2로 인덱스가 바뀐 카테고리(3·4·5)의 진행도를 1회 초기화.
+  // (1·2는 끝에 추가만 되어 그대로 유지 · 6·7은 신규)
+  (function(){
+    var K='eng_chunks_layout_v2';
+    try{ if(localStorage.getItem(K)) return; }catch(e){}
+    [chunkStore, todayChunkStore].forEach(function(st){
+      ['3','4','5'].forEach(function(c){ if(st.map[c]) delete st.map[c]; });
+      st.save();
+    });
+    try{ localStorage.removeItem('eng_today_chunk_v1'); }catch(e){}   // 옛 인덱스로 저장된 오늘 세트 폐기
+    try{ localStorage.setItem(K,'1'); }catch(e){}
+  })();
   // ---- 청크 SRS (망각 곡선 복습): 졸업 후 box 간격으로 재등장 ----
   var CHUNK_SRS_DAYS = [0, 1, 3, 7, 14, 30, 60];
   var CHUNK_DAY_MS = 24*60*60*1000;
@@ -10398,6 +10471,12 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     }
     else { el.textContent = ch.ko; }
   }
+  // 헷갈리는 짝이 있는 표현이면 정답 공개 후 비교 힌트 한 줄
+  function chunkConfuseInto(host, ch){
+    var n = window.CHUNK_CONFUSE && CHUNK_CONFUSE[ch.en]; if(!n) return;
+    var d=document.createElement('div'); d.className='chunk-confuse'; d.textContent='🔀 '+n;
+    host.appendChild(d);
+  }
   function chunkFillInto(area, ch, cat, item, onGraded, exHost){
     area.innerHTML='';
     var exTarget = exHost || area;   // 예시는 문제카드 안(exHost)에 작게
@@ -10407,6 +10486,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       var done=function(grade){
         onGraded(grade);
         chunkExamplesInto(exTarget, ch, item);   // 정답 직후 카드 안에 예시 노출
+        chunkConfuseInto(exTarget, ch);
       };
       // 문장 전체 타이핑(또는 말하기): 예시 어휘까지 포함해 통째로 입력
       renderCefrFill(area, fillEn, done, {noHint:true, noButtons:true, blankAll:true});
@@ -10417,6 +10497,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       enRow.appendChild(en); enRow.appendChild(spkBtn(fillEn,'mini'));
       area.appendChild(enRow);
       chunkExamplesInto(exTarget, ch, item);
+      chunkConfuseInto(exTarget, ch);
     }
   }
   function renderChunk(){
