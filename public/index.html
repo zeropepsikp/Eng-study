@@ -5637,6 +5637,11 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   // 레벨 세트: 'classic'(기존) | 'cefr'(CEFR A1~C2). 옵션 스위치로 전환.
   var LEVEL_SET_KEY = 'eng_level_set';
   var LEVEL_SETS = { classic: window.LEVEL_DATA, cefr: window.CEFR_LEVELS || {} };
+  // 표현별 예문을 대표 3개로 축소. 앞쪽(저작 순서)을 유지해 레벨 난이도에 맞는 문장 길이를 보존한다
+  // (청크처럼 짧은 순 선별 X — 상위 레벨은 긴 문장 그대로).
+  (function(){ [LEVEL_SETS.classic, LEVEL_SETS.cefr].forEach(function(set){ if(!set) return;
+    for(var lv in set){ (set[lv].exprs||[]).forEach(function(e){ if(e.bank && e.bank.length>3) e.bank=e.bank.slice(0,3); }); }
+  }); })();
   var levelSet = 'cefr';   // CEFR 전용 (기존 레벨 학습 제거)
   try{ localStorage.setItem(LEVEL_SET_KEY, 'cefr'); }catch(e){}
   var LEVEL_DATA = LEVEL_SETS.cefr || window.LEVEL_DATA;
@@ -6520,7 +6525,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       graded = true; buildLevelSubtabs();
       speak(q.en,'en');
       var nb2=$('next-btn'); if(nb2){ nb2.disabled=false; nb2.textContent='Next →'; }  // 정답 시 활성화
-    });
+    }, {blankAll:true});
     var nb=$('next-btn'); if(nb){ nb.disabled=true; nb.textContent='Next →'; }   // 정답 전엔 비활성
     updateProgress();
   }
@@ -7533,8 +7538,11 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       if(!raw) return false;
       var p = JSON.parse(raw);
       // CEFR 적응형 세션 복원 (구버전 고정풀·약점복습 세션은 무시하고 새로 시작)
+      // 예문 3개 축소 이전에 저장된 세션은 bank 인덱스가 범위를 벗어날 수 있음 → 새로 시작
+      function validRef(it){ var d=it&&LEVEL_DATA[it.lv]; var e=d&&d.exprs[it.ei]; return !!(e&&e.bank&&e.bank[it.bi]); }
       if(cefrFill() && p && p.cefr && p.cefr.pool && p.cefr.pool.length && p.set===levelSet
          && !p.cefr.weak && p.cefr.alv!==undefined){
+        if(!p.cefr.pool.every(validRef)) return false;
         cefrPool=p.cefr.pool; cefrOrder=p.cefr.order||cefrPool.map(function(_,i){return i;});
         cefrIdx=p.cefr.idx||0; cefrSolved=p.cefr.solved||0; todayTarget=p.target||30; todayBuilt=true;
         todayLevelWeakMode=false;
@@ -7543,6 +7551,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
         return true;
       }
       if(!p || !p.deck || !p.deck.length) return false;
+      if(!p.deck.every(validRef)) return false;
       todayDeck = p.deck; todayPos = p.pos||0; todayTarget = p.target||30; todayCorrect = p.correct||0;
       startPreset = p.preset || 'intro'; reviewQueue = p.review || []; todayBuilt = true;
       return true;
@@ -8328,7 +8337,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       $('today-prog').textContent = cefrSolved+' / '+target+' 맞힘  ·  '+modeLab;
       $('today-fill').style.width=Math.round(cefrSolved/target*100)+'%';
       speak(q.en,'en');
-    });
+    }, {blankAll:true});
 
     var nav=document.createElement('div'); nav.className='nav';
     var pv=document.createElement('button'); pv.textContent='← Prev'; pv.disabled=(cefrIdx<=0);
