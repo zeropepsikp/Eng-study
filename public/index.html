@@ -7945,25 +7945,47 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     return refs;
   }
   function shuffleArr(a){ for(var k=a.length-1;k>0;k--){ var j=Math.floor(Math.random()*(k+1)); var t=a[k]; a[k]=a[j]; a[j]=t; } return a; }
-  // 오늘의 세트 구성: 카테고리 무관 랜덤 N개(아직 졸업 안 한 것 우선). 하루 단위로 고정.
+  // 오늘의 학습(청크) 신규 카드 하루 상한 (0~30, 5개 단위, 기본 10)
+  var TODAY_CHUNK_NEW_KEY = 'eng_today_chunk_new_cap';
+  function todayChunkNewCap(){
+    var v; try{ v=parseInt(localStorage.getItem(TODAY_CHUNK_NEW_KEY),10); }catch(e){}
+    if(v==null || isNaN(v)) v=10;
+    v=Math.round(v/5)*5; if(v<0) v=0; if(v>30) v=30;
+    return v;
+  }
+  function setTodayChunkNewCap(n){
+    n=Math.round(n/5)*5; if(n<0) n=0; if(n>30) n=30;
+    try{ localStorage.setItem(TODAY_CHUNK_NEW_KEY, String(n)); }catch(e){}
+  }
+  // 오늘의 세트 구성 = 밀린 복습 전부 + 어제 하다 만 것 + 신규(상한 개수까지). 하루 단위로 고정.
+  // 복습이 밀리면 신규가 자연히 줄어 다음날 복습 폭탄을 막는다.
   function buildTodayChunkSet(force){
-    var n=todayChunkCount();
+    var n=todayChunkCount(), newCap=todayChunkNewCap();
     var day = STATS.todayKey ? STATS.todayKey() : '';
     if(!force){
       try{
         var saved=JSON.parse(localStorage.getItem(TODAY_CHUNK_KEY)||'null');
-        if(saved && saved.day===day && saved.count===n && saved.set && saved.set.length){ todayChunkSet=saved.set; return; }
+        if(saved && saved.day===day && saved.count===n && saved.ncap===newCap && saved.set && saved.set.length){ todayChunkSet=saved.set; return; }
       }catch(e){}
     }
     var refs=allChunkRefs();
-    // 복습 시점 지난 졸업 청크 먼저, 그 다음 미졸업 — 둘 다 부족하면 전체에서(복습) · 오늘의 학습 전용 진행도 기준
-    var due=refs.filter(function(r){ return chunkIsDue(r.cat,r.idx,todayChunkStore); });
-    var unmastered=refs.filter(function(r){ return chunkStreak(r.cat,r.idx,todayChunkStore)<CHUNK_STREAK_GOAL; });
-    shuffleArr(due); shuffleArr(unmastered);
-    var pool = due.concat(unmastered);
-    if(pool.length<n){ var rest=refs.filter(function(r){ return !chunkNeedsWork(r.cat,r.idx,todayChunkStore); }); shuffleArr(rest); pool=pool.concat(rest); }
-    todayChunkSet = pool.slice(0, Math.min(n, pool.length));
-    try{ localStorage.setItem(TODAY_CHUNK_KEY, JSON.stringify({day:day, count:n, set:todayChunkSet})); }catch(e){}
+    var due=[], inprog=[], fresh=[];
+    refs.forEach(function(r){
+      var c=chunkCell(r.cat,r.idx,todayChunkStore);
+      if(c.s>=CHUNK_STREAK_GOAL){ if(chunkIsDue(r.cat,r.idx,todayChunkStore)) due.push(r); }   // 복습 시점 도래
+      else if(c.seen) inprog.push(r);                                                          // 진행 중(미졸업·본 적 있음)
+      else fresh.push(r);                                                                      // 신규(본 적 없음)
+    });
+    shuffleArr(due); shuffleArr(inprog); shuffleArr(fresh);
+    var pool = due.concat(inprog);                       // 복습·진행중은 전부 (밀린 복습은 의무)
+    var slots = Math.max(0, n - pool.length);
+    pool = pool.concat(fresh.slice(0, Math.min(newCap, slots)));
+    if(!pool.length){                                    // 전부 마스터·복습 없음 → 앞당겨 복습으로 채움
+      var rest=refs.filter(function(r){ return !chunkNeedsWork(r.cat,r.idx,todayChunkStore); });
+      shuffleArr(rest); pool=rest.slice(0, Math.min(n, rest.length));
+    }
+    todayChunkSet = pool;
+    try{ localStorage.setItem(TODAY_CHUNK_KEY, JSON.stringify({day:day, count:n, ncap:newCap, set:todayChunkSet})); }catch(e){}
   }
   function buildTodayChunkQueue(){
     todayChunkQueue=[]; todayChunkPos=0;
@@ -7983,7 +8005,8 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     return {cat:pick.cat, idx:pick.idx, flipped:false, graded:null, result:null, input:''};
   }
   function scheduleTodayChunkAgain(cat, idx, correct){
-    todayChunkQueue.push({cat:cat, idx:idx, dueAt: todayChunkPos + (correct?5:3)});
+    // 오답은 6문제 뒤(단기기억 회피), 정답 재확인은 5문제 뒤
+    todayChunkQueue.push({cat:cat, idx:idx, dueAt: todayChunkPos + (correct?5:6)});
   }
   function openTodayChunk(force){
     todayChunkWeakMode=false;
@@ -7996,9 +8019,10 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   // ---- 🔥 약점 복습 (청크): 누적 오답 많은 순으로 즉석 세트 ----
   var todayChunkWeakMode=false;
   function weakChunkRefs(){
+    // 오늘의 학습 전용 진행도(todayChunkStore)의 누적 오답 기준 — 메뉴 저장소와 분리
     var out=[];
     for(var c in CHUNK_DATA){ var arr=CHUNK_DATA[c].chunks;
-      for(var i=0;i<arr.length;i++){ var f=chunkCell(c,i).f||0; if(f>0) out.push({cat:c, idx:i, f:f}); } }
+      for(var i=0;i<arr.length;i++){ var f=chunkCell(c,i,todayChunkStore).f||0; if(f>0) out.push({cat:c, idx:i, f:f}); } }
     out.sort(function(a,b){ return b.f-a.f; });
     return out;
   }
@@ -8163,7 +8187,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     todayCoreQueue=todayCoreQueue.filter(function(q){ return q!==pick; });
     return {cat:pick.cat, idx:pick.idx, flipped:false, graded:null, result:null, input:''};
   }
-  function scheduleTodayCoreAgain(cat, idx, correct){ todayCoreQueue.push({cat:cat, idx:idx, dueAt: todayCorePos + (correct?5:3)}); }
+  function scheduleTodayCoreAgain(cat, idx, correct){ todayCoreQueue.push({cat:cat, idx:idx, dueAt: todayCorePos + (correct?5:6)}); }
   function openTodayCore(force){
     buildTodayCoreSet(force);
     buildTodayCoreQueue();
@@ -8740,6 +8764,28 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     ctrl.appendChild(minus); ctrl.appendChild(num); ctrl.appendChild(plus);
     row.appendChild(txt); row.appendChild(ctrl);
     wrap.appendChild(row);
+
+    // ---- 오늘의 학습(청크) 신규 카드 상한 ----
+    var row2=document.createElement('div'); row2.className='opt-row';
+    var txt2=document.createElement('div'); txt2.className='opt-text';
+    var t2=document.createElement('div'); t2.className='opt-title'; t2.textContent='오늘의 학습(청크) 신규 카드 상한';
+    var d2=document.createElement('div'); d2.className='opt-desc';
+    d2.textContent='하루에 새로 배우는 표현 수의 상한이에요. 밀린 복습은 항상 전부 포함되고, 남는 자리만 신규로 채워요. 5개 단위로 0~30개. (기본 10개)';
+    txt2.appendChild(t2); txt2.appendChild(d2);
+    var ctrl2=document.createElement('div'); ctrl2.style.display='flex'; ctrl2.style.alignItems='center'; ctrl2.style.gap='10px'; ctrl2.style.flex='0 0 auto';
+    var minus2=document.createElement('button'); minus2.className='mini-btn'; minus2.textContent='−';
+    var num2=document.createElement('div'); num2.style.minWidth='34px'; num2.style.textAlign='center'; num2.style.fontWeight='700'; num2.textContent=String(todayChunkNewCap());
+    var plus2=document.createElement('button'); plus2.className='mini-btn'; plus2.textContent='+';
+    function apply2(v){
+      setTodayChunkNewCap(v); num2.textContent=String(todayChunkNewCap());
+      openTodayChunk(true);
+      if(activePanel==='today') renderToday();
+    }
+    minus2.addEventListener('click',function(){ apply2(todayChunkNewCap()-5); });
+    plus2.addEventListener('click',function(){ apply2(todayChunkNewCap()+5); });
+    ctrl2.appendChild(minus2); ctrl2.appendChild(num2); ctrl2.appendChild(plus2);
+    row2.appendChild(txt2); row2.appendChild(ctrl2);
+    wrap.appendChild(row2);
   }
 
   function renderSpeakModeOption(wrap){
@@ -8968,10 +9014,12 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     var c=chunkCell(cat, idx, st);
     if(ok){
       if(c.s>=CHUNK_STREAK_GOAL){ c.box=Math.min((c.box||1)+1, CHUNK_SRS_DAYS.length-1); }   // 복습 성공 → 간격 확장
-      else { c.s++; if(c.s>=CHUNK_STREAK_GOAL){ c.box=(c.f>0)?1:2; } }                        // 졸업: 새(무오답)면 3일, 틀린적 있으면 1일
+      else { c.s++; if(c.s>=CHUNK_STREAK_GOAL){ c.box = (c.box>0) ? c.box : ((c.f>0)?1:2); } } // 재졸업: 소프트 리셋된 간격에서 재개 / 첫 졸업: 무오답 3일·오답경험 1일
       if(c.s>=CHUNK_STREAK_GOAL) c.due=Date.now()+CHUNK_SRS_DAYS[c.box]*CHUNK_DAY_MS;
     } else {
-      c.s=0; c.box=0; delete c.due;                                                           // 오답 → 처음부터
+      // 오답 → streak은 처음부터. 단, 이미 키워둔 복습 간격은 2단계만 하락(소프트 리셋 · 최소 1일)
+      if(c.s>=CHUNK_STREAK_GOAL || c.box>0){ c.box=Math.max(1,(c.box||1)-2); }
+      c.s=0; delete c.due;
       c.f=(c.f||0)+1;                                                                          // 누적 오답(약점 판별용)
     }
     c.seen = Date.now();   // 마지막으로 푼 시각
@@ -9023,8 +9071,8 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   }
 
   function scheduleChunkAgain(idx, correct){
-    // 맞으면 5문제 뒤, 틀리면 3문제 뒤 재등장 (기억 곡선 간격)
-    var gap = correct ? 5 : 3;
+    // 맞으면 5문제 뒤, 틀리면 6문제 뒤 재등장 (직전 정답 문장의 단기기억이 빠진 뒤 다시 시도)
+    var gap = correct ? 5 : 6;
     chunkQueue.push({idx:idx, dueAt: chunkPos + gap});
   }
 
@@ -10529,7 +10577,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     coreQueue=coreQueue.filter(function(q){ return q!==pick; });
     return {idx:pick.idx, flipped:false, graded:null, result:null, input:''};
   }
-  function scheduleCoreAgain(idx, correct){ coreQueue.push({idx:idx, dueAt: corePos + (correct?5:3)}); }
+  function scheduleCoreAgain(idx, correct){ coreQueue.push({idx:idx, dueAt: corePos + (correct?5:6)}); }
   function buildCoreSubtabs(){
     var host=$('core-subtabs'); if(!host) return;
     host.innerHTML='';
