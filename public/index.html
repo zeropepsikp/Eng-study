@@ -7951,13 +7951,15 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   // 오늘의 학습(청크) 신규 카드 하루 상한 (0~30, 5개 단위, 기본 10)
   var TODAY_CHUNK_NEW_KEY = 'eng_today_chunk_new_cap';
   function todayChunkNewCap(){
-    var v; try{ v=parseInt(localStorage.getItem(TODAY_CHUNK_NEW_KEY),10); }catch(e){}
-    if(v==null || isNaN(v)) v=10;
-    v=Math.round(v/5)*5; if(v<0) v=0; if(v>30) v=30;
+    // 미설정 = 제한 없음 → 목표 개수까지 신규로 채움 (옵션에서 낮추면 그때부터 신규를 조인다)
+    var raw; try{ raw=localStorage.getItem(TODAY_CHUNK_NEW_KEY); }catch(e){}
+    if(raw==null || raw==='') return todayChunkCount();
+    var v=parseInt(raw,10); if(isNaN(v)) return todayChunkCount();
+    v=Math.round(v/5)*5; if(v<0) v=0; if(v>150) v=150;
     return v;
   }
   function setTodayChunkNewCap(n){
-    n=Math.round(n/5)*5; if(n<0) n=0; if(n>30) n=30;
+    n=Math.round(n/5)*5; if(n<0) n=0; if(n>150) n=150;
     try{ localStorage.setItem(TODAY_CHUNK_NEW_KEY, String(n)); }catch(e){}
   }
   // 오늘의 세트 구성 = 밀린 복습 전부 + 어제 하다 만 것 + 신규(상한 개수까지). 하루 단위로 고정.
@@ -8757,6 +8759,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     var plus=document.createElement('button'); plus.className='mini-btn'; plus.textContent='+';
     function apply(n){
       setTodayChunkCount(n); num.textContent=String(todayChunkCount());
+      if(typeof num2!=='undefined' && num2) num2.textContent=String(todayChunkNewCap());  // 상한 미설정 시 목표 개수 따라감
       openTodayChunk(true);                                  // 청크 세트 새로 구성
       cefrPool=[]; cefrOrder=[]; cefrIdx=0; cefrSolved=0;    // 레벨(적응형) 세트도 새 목표로 재시작
       saveTodaySession();                                    // 저장된 옛 세트(옛 목표)가 복원되지 않도록 갱신
@@ -8773,7 +8776,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     var txt2=document.createElement('div'); txt2.className='opt-text';
     var t2=document.createElement('div'); t2.className='opt-title'; t2.textContent='오늘의 학습(청크) 신규 카드 상한';
     var d2=document.createElement('div'); d2.className='opt-desc';
-    d2.textContent='하루에 새로 배우는 표현 수의 상한이에요. 밀린 복습은 항상 전부 포함되고, 남는 자리만 신규로 채워요. 5개 단위로 0~30개. (기본 10개)';
+    d2.textContent='하루에 새로 배우는 표현 수의 상한이에요. 기본은 위 목표 개수와 동일(제한 없음) — 복습이 많은 날 신규를 줄이고 싶을 때만 낮추세요. 밀린 복습은 항상 전부 포함돼요. 5개 단위.';
     txt2.appendChild(t2); txt2.appendChild(d2);
     var ctrl2=document.createElement('div'); ctrl2.style.display='flex'; ctrl2.style.alignItems='center'; ctrl2.style.gap='10px'; ctrl2.style.flex='0 0 auto';
     var minus2=document.createElement('button'); minus2.className='mini-btn'; minus2.textContent='−';
