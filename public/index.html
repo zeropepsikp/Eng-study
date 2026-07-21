@@ -7949,28 +7949,16 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   }
   function shuffleArr(a){ for(var k=a.length-1;k>0;k--){ var j=Math.floor(Math.random()*(k+1)); var t=a[k]; a[k]=a[j]; a[j]=t; } return a; }
   // 오늘의 학습(청크) 신규 카드 하루 상한 (0~30, 5개 단위, 기본 10)
-  var TODAY_CHUNK_NEW_KEY = 'eng_today_chunk_new_cap';
-  function todayChunkNewCap(){
-    // 미설정 = 제한 없음 → 목표 개수까지 신규로 채움 (옵션에서 낮추면 그때부터 신규를 조인다)
-    var raw; try{ raw=localStorage.getItem(TODAY_CHUNK_NEW_KEY); }catch(e){}
-    if(raw==null || raw==='') return todayChunkCount();
-    var v=parseInt(raw,10); if(isNaN(v)) return todayChunkCount();
-    v=Math.round(v/5)*5; if(v<0) v=0; if(v>150) v=150;
-    return v;
-  }
-  function setTodayChunkNewCap(n){
-    n=Math.round(n/5)*5; if(n<0) n=0; if(n>150) n=150;
-    try{ localStorage.setItem(TODAY_CHUNK_NEW_KEY, String(n)); }catch(e){}
-  }
-  // 오늘의 세트 구성 = 밀린 복습 전부 + 어제 하다 만 것 + 신규(상한 개수까지). 하루 단위로 고정.
-  // 복습이 밀리면 신규가 자연히 줄어 다음날 복습 폭탄을 막는다.
+  // 오늘의 세트 = 목표 개수(옵션값) 그대로. 우선순위만 복습 → 진행중 → 신규. 하루 단위로 고정.
+  // (복습이 목표보다 많으면 가장 급한 것부터 목표 개수만큼, 나머지는 내일로)
+  var TODAY_CHUNK_SET_VER = 3;   // 세트 구성 규칙 버전 — 올리면 옛 캐시 무시
   function buildTodayChunkSet(force){
-    var n=todayChunkCount(), newCap=todayChunkNewCap();
+    var n=todayChunkCount();
     var day = STATS.todayKey ? STATS.todayKey() : '';
     if(!force){
       try{
         var saved=JSON.parse(localStorage.getItem(TODAY_CHUNK_KEY)||'null');
-        if(saved && saved.day===day && saved.count===n && saved.ncap===newCap && saved.set && saved.set.length){ todayChunkSet=saved.set; return; }
+        if(saved && saved.v===TODAY_CHUNK_SET_VER && saved.day===day && saved.count===n && saved.set && saved.set.length){ todayChunkSet=saved.set; return; }
       }catch(e){}
     }
     var refs=allChunkRefs();
@@ -7982,15 +7970,13 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       else fresh.push(r);                                                                      // 신규(본 적 없음)
     });
     shuffleArr(due); shuffleArr(inprog); shuffleArr(fresh);
-    var pool = due.concat(inprog);                       // 복습·진행중은 전부 (밀린 복습은 의무)
-    var slots = Math.max(0, n - pool.length);
-    pool = pool.concat(fresh.slice(0, Math.min(newCap, slots)));
-    if(!pool.length){                                    // 전부 마스터·복습 없음 → 앞당겨 복습으로 채움
+    var pool = due.concat(inprog).concat(fresh);          // 우선순위 순서
+    if(pool.length<n){                                    // 재료 부족(거의 다 마스터) → 이른 복습으로 채움
       var rest=refs.filter(function(r){ return !chunkNeedsWork(r.cat,r.idx,todayChunkStore); });
-      shuffleArr(rest); pool=rest.slice(0, Math.min(n, rest.length));
+      shuffleArr(rest); pool=pool.concat(rest);
     }
-    todayChunkSet = pool;
-    try{ localStorage.setItem(TODAY_CHUNK_KEY, JSON.stringify({day:day, count:n, ncap:newCap, set:todayChunkSet})); }catch(e){}
+    todayChunkSet = pool.slice(0, Math.min(n, pool.length));   // 목표 개수만큼
+    try{ localStorage.setItem(TODAY_CHUNK_KEY, JSON.stringify({v:TODAY_CHUNK_SET_VER, day:day, count:n, set:todayChunkSet})); }catch(e){}
   }
   function buildTodayChunkQueue(){
     todayChunkQueue=[]; todayChunkPos=0;
@@ -8759,7 +8745,6 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     var plus=document.createElement('button'); plus.className='mini-btn'; plus.textContent='+';
     function apply(n){
       setTodayChunkCount(n); num.textContent=String(todayChunkCount());
-      if(typeof num2!=='undefined' && num2) num2.textContent=String(todayChunkNewCap());  // 상한 미설정 시 목표 개수 따라감
       openTodayChunk(true);                                  // 청크 세트 새로 구성
       cefrPool=[]; cefrOrder=[]; cefrIdx=0; cefrSolved=0;    // 레벨(적응형) 세트도 새 목표로 재시작
       saveTodaySession();                                    // 저장된 옛 세트(옛 목표)가 복원되지 않도록 갱신
@@ -8770,28 +8755,6 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     ctrl.appendChild(minus); ctrl.appendChild(num); ctrl.appendChild(plus);
     row.appendChild(txt); row.appendChild(ctrl);
     wrap.appendChild(row);
-
-    // ---- 오늘의 학습(청크) 신규 카드 상한 ----
-    var row2=document.createElement('div'); row2.className='opt-row';
-    var txt2=document.createElement('div'); txt2.className='opt-text';
-    var t2=document.createElement('div'); t2.className='opt-title'; t2.textContent='오늘의 학습(청크) 신규 카드 상한';
-    var d2=document.createElement('div'); d2.className='opt-desc';
-    d2.textContent='하루에 새로 배우는 표현 수의 상한이에요. 기본은 위 목표 개수와 동일(제한 없음) — 복습이 많은 날 신규를 줄이고 싶을 때만 낮추세요. 밀린 복습은 항상 전부 포함돼요. 5개 단위.';
-    txt2.appendChild(t2); txt2.appendChild(d2);
-    var ctrl2=document.createElement('div'); ctrl2.style.display='flex'; ctrl2.style.alignItems='center'; ctrl2.style.gap='10px'; ctrl2.style.flex='0 0 auto';
-    var minus2=document.createElement('button'); minus2.className='mini-btn'; minus2.textContent='−';
-    var num2=document.createElement('div'); num2.style.minWidth='34px'; num2.style.textAlign='center'; num2.style.fontWeight='700'; num2.textContent=String(todayChunkNewCap());
-    var plus2=document.createElement('button'); plus2.className='mini-btn'; plus2.textContent='+';
-    function apply2(v){
-      setTodayChunkNewCap(v); num2.textContent=String(todayChunkNewCap());
-      openTodayChunk(true);
-      if(activePanel==='today') renderToday();
-    }
-    minus2.addEventListener('click',function(){ apply2(todayChunkNewCap()-5); });
-    plus2.addEventListener('click',function(){ apply2(todayChunkNewCap()+5); });
-    ctrl2.appendChild(minus2); ctrl2.appendChild(num2); ctrl2.appendChild(plus2);
-    row2.appendChild(txt2); row2.appendChild(ctrl2);
-    wrap.appendChild(row2);
   }
 
   function renderSpeakModeOption(wrap){
