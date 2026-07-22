@@ -9061,6 +9061,8 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       c.s=0; delete c.due;
       c.f=(c.f||0)+1;                                                                          // 누적 오답(약점 판별용)
     }
+    // 졸업(2연속 정답)하면 고정 예시 해제 → 다음 복습 땐 새 예시. 미졸업·오답이면 같은 예시 유지.
+    if(c.s>=CHUNK_STREAK_GOAL){ try{ delete chunkRepPin[cat+':'+idx]; }catch(e){} }
     c.seen = Date.now();   // 마지막으로 푼 시각
     setChunkCell(cat, idx, c, st);
   }
@@ -10412,18 +10414,28 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   // 이 카드에 쓸 예문 결정.
   // 매 카드마다 CHUNK_EX10 풀에서 무작위 예문 → 어휘는 매번 바뀌고, 표현(청크)만 빈칸으로 입력.
   // 카드당 한 번 뽑아 item에 캐시(표시·채점·발음이 일치하도록).
+  // 표현이 졸업(2연속 정답)할 때까지 같은 예시 문장을 고정한다. 오답으로 다시 나와도 동일 예시 → 난이도 안정.
+  // 졸업 시 chunkApplySrs 에서 핀을 지워, 다음 복습 때 새 예시가 나온다. key = cat:idx (메뉴·오늘 공용).
+  var chunkRepPin = {};
   function chunkRepFor(ch, cat, item){
     if(item && item._rep!==undefined) return item._rep;
-    var rep=null;
-    var pool=(window.CHUNK_EX10 && CHUNK_EX10[ch.en]) || null;   // 1순위: EX10 풀
-    if(pool && pool.length){
-      var e=pool[Math.floor(Math.random()*pool.length)];
-      rep={ en:e.en, ko:e.ko, blank:chunkBlankKey(ch.en, e.en) };
-    }
-    if(!rep) rep=chunkRep(ch);   // 2순위: 대표 예문(CHUNK_REP)
-    if(!rep && ch.ex && ch.ex.length){   // 3순위: 엔트리 자체 예문(핵심동사 등 EX10/REP 없는 도메인)
-      var e2=ch.ex[Math.floor(Math.random()*ch.ex.length)];
-      rep={ en:e2.en, ko:e2.ko, blank:chunkBlankKey(ch.en, e2.en) };
+    var key = cat+':'+(item && item.idx!=null ? item.idx : '_');
+    var rep;
+    if(Object.prototype.hasOwnProperty.call(chunkRepPin, key)){
+      rep = chunkRepPin[key];   // 이미 고정된 예시 재사용
+    } else {
+      rep=null;
+      var pool=(window.CHUNK_EX10 && CHUNK_EX10[ch.en]) || null;   // 1순위: EX10 풀
+      if(pool && pool.length){
+        var e=pool[Math.floor(Math.random()*pool.length)];
+        rep={ en:e.en, ko:e.ko, blank:chunkBlankKey(ch.en, e.en) };
+      }
+      if(!rep) rep=chunkRep(ch);   // 2순위: 대표 예문(CHUNK_REP)
+      if(!rep && ch.ex && ch.ex.length){   // 3순위: 엔트리 자체 예문(핵심동사 등 EX10/REP 없는 도메인)
+        var e2=ch.ex[Math.floor(Math.random()*ch.ex.length)];
+        rep={ en:e2.en, ko:e2.ko, blank:chunkBlankKey(ch.en, e2.en) };
+      }
+      if(item && item.idx!=null) chunkRepPin[key]=rep;   // 고정
     }
     if(item) item._rep=rep;
     return rep;
