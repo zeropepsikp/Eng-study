@@ -632,6 +632,34 @@
   /* 헷갈리는 짝 비교 힌트 (정답 공개 후) */
   .chunk-confuse{font-size:12px;color:var(--text2);line-height:1.55;margin-top:10px;text-align:left;
     background:var(--surface2);border-radius:10px;padding:8px 11px;}
+  /* OPIc 스크립트 암기 */
+  #panel-opic{padding-bottom:24px;}
+  .opic-picker{display:flex;flex-wrap:wrap;gap:7px;margin:4px 0 14px;}
+  .opic-chip{border:1px solid var(--border);background:var(--surface2);color:var(--text2);
+    border-radius:999px;padding:7px 13px;font-size:13px;font-weight:600;cursor:pointer;}
+  .opic-chip.on{background:var(--info);color:#fff;border-color:var(--info);}
+  .opic-chip.done{border-color:var(--green);color:var(--green);}
+  .opic-chip.on.done{background:var(--green);color:#fff;border-color:var(--green);}
+  .opic-head{margin-bottom:12px;}
+  .opic-title{font-size:19px;font-weight:800;}
+  .opic-lv{font-size:11px;font-weight:700;color:var(--info);border:1px solid var(--info);border-radius:6px;padding:1px 6px;margin-left:6px;vertical-align:middle;}
+  .opic-sub{font-size:12.5px;color:var(--text3);line-height:1.5;margin-top:5px;}
+  .opic-ctrl{display:flex;gap:8px;margin-bottom:14px;}
+  .opic-btn{flex:1;border:1px solid var(--border2);background:var(--surface2);color:var(--text);
+    border-radius:12px;padding:11px;font-size:14px;font-weight:700;cursor:pointer;}
+  .opic-btn.on{background:var(--info-bg);color:var(--info);border-color:var(--info);}
+  .opic-lines{display:flex;flex-direction:column;gap:12px;}
+  .opic-line{border-radius:12px;padding:11px 13px;background:var(--surface2);border:1px solid transparent;}
+  .opic-line.playing{border-color:var(--info);background:var(--info-bg);}
+  .opic-en-row{display:flex;align-items:flex-start;gap:8px;}
+  .opic-en{flex:1;font-size:16.5px;font-weight:700;line-height:1.5;color:var(--text);}
+  .opic-en.hidden{color:transparent;background:var(--border);border-radius:6px;user-select:none;cursor:pointer;min-height:1.2em;}
+  .opic-spk{flex:0 0 auto;margin-top:2px;}
+  .opic-ko{font-size:13.5px;color:var(--text2);line-height:1.5;margin-top:6px;}
+  .opic-donebox{margin-top:20px;text-align:center;}
+  .opic-done-btn{border:1px solid var(--green);color:var(--green);background:transparent;
+    border-radius:999px;padding:10px 20px;font-size:13.5px;font-weight:700;cursor:pointer;}
+  .opic-done-btn.on{background:var(--green);color:#fff;}
   .chunk-en{font-size:25px;font-weight:800;line-height:1.45;padding:6px 0;}
   .chunk-en .chunk-blank, .cstat-en .chunk-blank{opacity:.4;font-weight:600;}
   /* 청크 문법 힌트 (? 아이콘 + 툴팁) */
@@ -886,6 +914,11 @@
     <div id="core-card-wrap"></div>
   </div>
 
+  <!-- OPIC SCRIPTS PANEL (무지성 암기) -->
+  <div class="panel" id="panel-opic">
+    <div id="opic-body"></div>
+  </div>
+
   <!-- DRILL PANEL (청크 기반 대화 연습) -->
   <div class="panel" id="panel-drill">
     <div class="section-title">Drill Study</div>
@@ -969,6 +1002,10 @@
   <button class="bn-item" data-sec="core">
     <span class="bn-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13 2.5 5 13.2h5l-1 8.3 8-10.7h-5l1-8.3z" fill="currentColor" opacity="0.85"/></svg></span>
     <span class="bn-lab">5형식</span>
+  </button>
+  <button class="bn-item" data-sec="opic">
+    <span class="bn-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="3" width="14" height="18" rx="2" fill="currentColor" opacity="0.18"/><path d="M7 7h8M7 11h8M7 15h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M18 3v18l2.5-2 2.5 2V3z" fill="currentColor" opacity="0.5" transform="translate(-2,0)"/></svg></span>
+    <span class="bn-lab">오픽</span>
   </button>
   <button class="bn-item" data-sec="tutor">
     <span class="bn-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="8" r="4" fill="currentColor" opacity="0.55"/><path d="M4 20c0-3.6 3.6-6 8-6s8 2.4 8 6" fill="currentColor" opacity="0.2"/><circle cx="18" cy="6" r="3" fill="currentColor"/></svg></span>
@@ -3457,6 +3494,9 @@ window.CHUNK_DATA = CHUNK_DATA;
 // ===== CORE VERBS (핵심 동사 활용) 데이터 =====
 var CORE_DATA = {"1":{"name":"1형식","abbr":"1형식","ko":"주어(S) + 완전자동사(V)","blurb":"동사 하나로 문장이 완성돼요. (뒤에 부사구가 붙어도 1형식)","color":"info","chunks":[{"en":"Birds fly.","ko":"새들이 난다."},{"en":"The sun rises.","ko":"해가 뜬다."},{"en":"She smiled.","ko":"그녀가 미소 지었어."},{"en":"The baby is crying.","ko":"아기가 울고 있어."},{"en":"It works.","ko":"그거 작동해."},{"en":"We arrived early.","ko":"우리 일찍 도착했어."},{"en":"Everyone laughed.","ko":"다들 웃었어."},{"en":"The phone rang.","ko":"전화가 울렸어."},{"en":"Time flies.","ko":"시간 참 빠르다."},{"en":"He runs every morning.","ko":"걘 매일 아침 달려."},{"en":"The dog barked.","ko":"개가 짖었어."},{"en":"My back hurts.","ko":"나 허리 아파."},{"en":"The train left.","ko":"기차가 떠났어."},{"en":"Prices went up.","ko":"물가가 올랐어."},{"en":"She fell.","ko":"그녀가 넘어졌어."},{"en":"The wind blows.","ko":"바람이 분다."}]},"2":{"name":"2형식","abbr":"2형식","ko":"주어(S) + 불완전자동사(V) + 주격보어(C)","blurb":"be·look·feel 같은 동사 뒤에 '무엇/어떠하다'(보어)가 와요.","color":"green","chunks":[{"en":"She is a nurse.","ko":"그녀는 간호사야."},{"en":"He looks tired.","ko":"걔 피곤해 보여."},{"en":"It sounds great.","ko":"그거 좋은데."},{"en":"I feel happy.","ko":"나 행복해."},{"en":"This smells good.","ko":"이거 냄새 좋다."},{"en":"The soup tastes salty.","ko":"국이 짜."},{"en":"You seem busy.","ko":"너 바빠 보여."},{"en":"He became a doctor.","ko":"걘 의사가 됐어."},{"en":"The leaves turned red.","ko":"잎이 빨갛게 물들었어."},{"en":"That sounds fun.","ko":"재밌겠다."},{"en":"She stayed calm.","ko":"그녀는 침착했어."},{"en":"I am ready.","ko":"나 준비됐어."},{"en":"It got dark.","ko":"어두워졌어."},{"en":"They are friends.","ko":"걔넨 친구야."},{"en":"This is easy.","ko":"이건 쉬워."},{"en":"He grew tall.","ko":"걔 키가 컸어."}]},"3":{"name":"3형식","abbr":"3형식","ko":"주어(S) + 완전타동사(V) + 목적어(O)","blurb":"타동사 뒤에 목적어 하나. 가장 기본적인 '~을/를 …하다'.","color":"purple","chunks":[{"en":"I love you.","ko":"난 널 사랑해."},{"en":"She read a book.","ko":"그녀는 책을 읽었어."},{"en":"We watched a movie.","ko":"우리 영화 봤어."},{"en":"He plays the guitar.","ko":"걘 기타를 쳐."},{"en":"I need some help.","ko":"나 도움이 좀 필요해."},{"en":"They cleaned the room.","ko":"걔넨 방을 청소했어."},{"en":"She likes coffee.","ko":"그녀는 커피를 좋아해."},{"en":"I finished my homework.","ko":"나 숙제 끝냈어."},{"en":"He drives a truck.","ko":"걘 트럭을 몰아."},{"en":"We enjoyed the party.","ko":"우리 파티 즐겼어."},{"en":"I lost my keys.","ko":"나 열쇠 잃어버렸어."},{"en":"She wrote a letter.","ko":"그녀는 편지를 썼어."},{"en":"He opened the door.","ko":"걔가 문을 열었어."},{"en":"I know the answer.","ko":"나 답 알아."},{"en":"They built a house.","ko":"걔넨 집을 지었어."},{"en":"She caught the ball.","ko":"그녀가 공을 잡았어."}]},"4":{"name":"4형식","abbr":"4형식","ko":"주어(S) + 수여동사(V) + 간접목적어(I.O) + 직접목적어(D.O)","blurb":"'~에게(I.O) ~을(D.O)' 두 개의 목적어를 주는 동사.","color":"amber","chunks":[{"en":"He gave me a gift.","ko":"걔가 나한테 선물을 줬어."},{"en":"She told me a story.","ko":"그녀가 나한테 이야기를 해줬어."},{"en":"I sent him an email.","ko":"나 걔한테 이메일 보냈어."},{"en":"Mom made me lunch.","ko":"엄마가 나한테 점심 만들어줬어."},{"en":"He showed me a photo.","ko":"걔가 나한테 사진을 보여줬어."},{"en":"She bought me a coffee.","ko":"그녀가 나한테 커피 사줬어."},{"en":"I gave her my number.","ko":"나 걔한테 내 번호 줬어."},{"en":"He taught us English.","ko":"걔가 우리한테 영어를 가르쳐줬어."},{"en":"Can you pass me the salt?","ko":"소금 좀 건네줄래?"},{"en":"She asked me a question.","ko":"그녀가 나한테 질문을 했어."},{"en":"They offered him a job.","ko":"걔넨 걔한테 일자리를 제안했어."},{"en":"I lent you my book.","ko":"내가 너한테 책 빌려줬잖아."},{"en":"He wrote her a letter.","ko":"걔가 그녀한테 편지를 썼어."},{"en":"She cooked us dinner.","ko":"그녀가 우리한테 저녁 해줬어."},{"en":"Tell me the truth.","ko":"나한테 사실을 말해."},{"en":"He brought me flowers.","ko":"걔가 나한테 꽃을 가져다줬어."}]},"5":{"name":"5형식","abbr":"5형식","ko":"주어(S) + 불완전타동사(V) + 목적어(O) + 목적격보어(O.C)","blurb":"목적어 뒤에 그 목적어를 설명하는 보어(O.C)가 와요.","color":"pink","chunks":[{"en":"They made me happy.","ko":"걔넨 날 행복하게 만들었어."},{"en":"We call him Tom.","ko":"우린 걜 Tom이라고 불러."},{"en":"I found it easy.","ko":"난 그게 쉽다고 느꼈어."},{"en":"She kept the door open.","ko":"그녀는 문을 열어뒀어."},{"en":"He painted the wall white.","ko":"걔가 벽을 하얗게 칠했어."},{"en":"They elected her president.","ko":"걔넨 그녀를 회장으로 뽑았어."},{"en":"I want you to stay.","ko":"난 네가 있어줬으면 해."},{"en":"She let me go.","ko":"그녀가 날 보내줬어."},{"en":"He made her cry.","ko":"걔가 그녀를 울렸어."},{"en":"We named the dog Max.","ko":"우린 개를 Max라고 지었어."},{"en":"Leave me alone.","ko":"날 좀 내버려 둬."},{"en":"I saw him run.","ko":"나 걔가 뛰는 거 봤어."},{"en":"She considers him smart.","ko":"그녀는 걔가 똑똑하다고 생각해."},{"en":"The news made us sad.","ko":"그 소식은 우릴 슬프게 했어."},{"en":"Keep it simple.","ko":"간단하게 해."},{"en":"He asked me to wait.","ko":"걔가 나한테 기다리라고 했어."}]}};
 window.CORE_DATA = CORE_DATA;
+// ===== OPIc 스크립트 (무지성 암기) 데이터 =====
+var OPIC_DATA = {"1":{"topic":"자기소개","ko":"자기소개","level":"IM3","blurb":"오픽에서 거의 항상 처음 나오는 질문. 통째로 외워두면 든든해요.","lines":[{"en":"Sure, let me tell you a little about myself.","ko":"네, 제 소개를 간단히 할게요."},{"en":"Well, my name is Minji, and I'm in my late twenties.","ko":"음, 제 이름은 민지이고, 20대 후반이에요."},{"en":"I currently live in Seoul with my family, and I really like it here.","ko":"지금은 서울에서 가족들과 함께 살고 있는데, 여기가 정말 마음에 들어요."},{"en":"I work as an office worker at a small company downtown.","ko":"저는 시내에 있는 작은 회사에서 회사원으로 일하고 있어요."},{"en":"Actually, I've been working there for about three years now.","ko":"사실 그곳에서 일한 지 이제 3년쯤 됐어요."},{"en":"In my free time, I usually enjoy watching movies and going for walks.","ko":"여가 시간에는 보통 영화 보는 걸 즐기고 산책하러 나가요."},{"en":"You know, I would say I'm a pretty outgoing and easygoing person.","ko":"음, 저는 꽤 외향적이고 성격이 무던한 편인 것 같아요."},{"en":"I also love meeting new people and trying out new things.","ko":"그리고 새로운 사람들을 만나고 새로운 걸 시도하는 것도 정말 좋아해요."},{"en":"These days, I'm studying English hard to improve my speaking skills.","ko":"요즘은 말하기 실력을 키우려고 영어 공부를 열심히 하고 있어요."},{"en":"So, that's pretty much everything about me. Thanks for listening!","ko":"그래서, 이게 저에 대한 거의 전부예요. 들어주셔서 감사합니다!"}]},"2":{"topic":"사는 곳 소개","ko":"사는 곳 소개","level":"IM3","blurb":"집이나 동네를 묘사하는 문제. 방 구조와 분위기를 자연스럽게 설명하는 연습이에요.","lines":[{"en":"Okay, let me tell you about the place where I live.","ko":"좋아요, 제가 사는 곳에 대해 이야기해 볼게요."},{"en":"So, I live in a cozy apartment in a quiet neighborhood in Seoul.","ko":"저는 서울의 조용한 동네에 있는 아늑한 아파트에 살고 있어요."},{"en":"Well, it's not too big, but it's just perfect for me.","ko":"음, 아주 넓지는 않지만, 저한테는 딱 알맞아요."},{"en":"My apartment has two bedrooms, a living room, and a small kitchen.","ko":"저희 아파트에는 방 두 개와 거실, 그리고 작은 부엌이 있어요."},{"en":"Actually, my favorite spot is the living room, because it gets a lot of sunlight.","ko":"사실 제가 제일 좋아하는 공간은 거실인데, 햇빛이 많이 들어오거든요."},{"en":"I usually relax there on the sofa after a long day at work.","ko":"저는 보통 회사에서 긴 하루를 보낸 뒤에 그 소파에서 쉬어요."},{"en":"You know, the best thing about my place is that it's really convenient.","ko":"음, 저희 집의 가장 좋은 점은 정말 편리하다는 거예요."},{"en":"There's a subway station and a big park just a few minutes away.","ko":"지하철역이랑 큰 공원이 걸어서 몇 분 거리에 있어요."},{"en":"So, I can easily go grocery shopping or grab a coffee nearby.","ko":"그래서 근처에서 장을 보거나 커피 한잔 하기도 쉬워요."},{"en":"Overall, I'm really happy living here, and I feel comfortable every day.","ko":"전체적으로 저는 여기 사는 게 정말 만족스럽고, 매일 편안함을 느껴요."}]},"3":{"topic":"영화 보기","ko":"취미: 영화 보기","level":"IM3","blurb":"오픽 설문에서 자주 고르는 취미 주제. 통째로 외워두면 든든해요.","lines":[{"en":"So, one of my favorite things to do is watching movies.","ko":"음, 제가 제일 좋아하는 것 중 하나가 영화 보기예요."},{"en":"Actually, I watch movies almost every weekend to relax.","ko":"사실 저는 긴장을 풀려고 거의 매 주말마다 영화를 봐요."},{"en":"You know, I usually watch them at home on my laptop or TV.","ko":"아시다시피, 보통 집에서 노트북이나 TV로 봐요."},{"en":"But sometimes I go to the theater with my friends on the weekend.","ko":"근데 가끔은 주말에 친구들이랑 영화관에 가기도 해요."},{"en":"Well, I really love action movies because they're so exciting.","ko":"음, 저는 액션 영화를 정말 좋아하는데 너무 재밌거든요."},{"en":"I also enjoy romantic comedies when I want something light.","ko":"가볍게 뭔가 보고 싶을 땐 로맨틱 코미디도 즐겨 봐요."},{"en":"Honestly, watching movies is a great way to relieve my stress.","ko":"솔직히 영화 보기는 제 스트레스를 푸는 아주 좋은 방법이에요."},{"en":"After a long, tiring day, it really helps me forget my worries.","ko":"길고 피곤한 하루가 끝나면, 걱정을 잊는 데 정말 도움이 돼요."},{"en":"And I love talking about the movies with my friends afterwards.","ko":"그리고 나중에 친구들이랑 그 영화에 대해 얘기하는 것도 좋아해요."},{"en":"So yeah, that's why watching movies is my favorite hobby.","ko":"그래서 네, 이게 바로 영화 보기가 제 최애 취미인 이유예요."}]},"4":{"topic":"운동 루틴","ko":"운동: 규칙적으로 하는 운동 루틴","level":"IM3","blurb":"설문의 운동 주제 대비용. 자기 루틴을 자연스럽게 설명하는 틀로 외워두면 좋아요.","lines":[{"en":"Well, these days I try to work out about three times a week.","ko":"음, 요즘 저는 일주일에 세 번 정도 운동하려고 노력해요."},{"en":"Usually, I go to a gym that's really close to my place.","ko":"보통은 집에서 아주 가까운 헬스장에 가요."},{"en":"So, I normally start with some light stretching to warm up.","ko":"그래서 저는 보통 몸을 풀려고 가벼운 스트레칭으로 시작해요."},{"en":"After that, I run on the treadmill for about thirty minutes.","ko":"그다음엔 러닝머신에서 30분 정도 뛰어요."},{"en":"You know, I also do some weight training to build muscle.","ko":"아시다시피, 근육을 키우려고 웨이트 트레이닝도 좀 해요."},{"en":"Honestly, I'm not that strong, so I just use light weights.","ko":"솔직히 제가 그렇게 힘이 세지 않아서, 그냥 가벼운 무게를 써요."},{"en":"On the weekend, I like to go hiking or ride my bike outside.","ko":"주말에는 등산을 하거나 밖에서 자전거 타는 걸 좋아해요."},{"en":"I started working out because I wanted to stay healthy.","ko":"저는 건강을 유지하고 싶어서 운동을 시작했어요."},{"en":"After exercising, I feel refreshed and I sleep so much better.","ko":"운동을 하고 나면 개운하고 잠도 훨씬 잘 자요."},{"en":"So, working out has really become an important part of my life.","ko":"그래서 운동은 이제 제 삶에서 정말 중요한 부분이 됐어요."}]},"5":{"topic":"음악 감상","ko":"취미: 음악 감상","level":"IM3","blurb":"오픽 설문 단골 주제. 통째로 외워두면 든든해요.","lines":[{"en":"Well, listening to music is honestly a huge part of my daily life.","ko":"음, 음악 감상은 솔직히 제 일상에서 아주 큰 부분이에요."},{"en":"You know, I listen to music pretty much everywhere I go.","ko":"있잖아요, 저는 가는 곳마다 거의 다 음악을 들어요."},{"en":"So, in the morning I put on something upbeat to wake myself up.","ko":"그래서 아침에는 잠을 깨려고 신나는 곡을 틀어놓아요."},{"en":"And on my way to work, I always listen with my earphones on the subway.","ko":"그리고 출근할 때는 지하철에서 항상 이어폰을 끼고 들어요."},{"en":"Actually, I listen to all kinds of genres, but I mostly enjoy pop and R&B.","ko":"사실 저는 온갖 장르를 다 듣는데, 그래도 팝이랑 R&B를 제일 좋아해요."},{"en":"These days I use music apps like Spotify or YouTube Music a lot.","ko":"요즘에는 스포티파이나 유튜브 뮤직 같은 음악 앱을 많이 써요."},{"en":"The best thing is, they recommend new songs based on what I like.","ko":"제일 좋은 점은, 제 취향에 맞춰서 새 노래를 추천해 준다는 거예요."},{"en":"You know, music really helps me relax when I'm stressed out.","ko":"있잖아요, 음악은 제가 스트레스받을 때 정말 마음을 편하게 해 줘요."},{"en":"When I feel down, a good song can totally change my whole mood.","ko":"기분이 가라앉을 때, 좋은 노래 하나가 제 기분을 완전히 바꿔 놓기도 해요."},{"en":"So yeah, I honestly can't imagine my life without music.","ko":"그래서 정말이지, 음악 없는 제 삶은 상상이 안 돼요."}]},"6":{"topic":"카페 가기","ko":"취미: 카페 가기","level":"IM3","blurb":"오픽 설문 단골 주제. 통째로 외워두면 든든해요.","lines":[{"en":"Well, going to cafes is definitely one of my favorite things to do.","ko":"음, 카페 가기는 확실히 제가 가장 좋아하는 일 중 하나예요."},{"en":"You know, I probably go to a coffee shop three or four times a week.","ko":"있잖아요, 저는 일주일에 서너 번 정도는 카페에 가는 것 같아요."},{"en":"Actually, there's a cozy little cafe right near my place.","ko":"사실 저희 집 바로 근처에 아늑하고 작은 카페가 하나 있어요."},{"en":"I usually order an iced americano because I love it, even in winter.","ko":"저는 보통 아이스 아메리카노를 시키는데, 겨울에도 그걸 정말 좋아하거든요."},{"en":"So, sometimes I go there alone just to read or work on my laptop.","ko":"그래서 가끔은 혼자 가서 책을 읽거나 노트북으로 일을 하기도 해요."},{"en":"And other times, I meet up with my friends to catch up over coffee.","ko":"또 어떨 때는 친구들을 만나서 커피 마시며 밀린 얘기를 나눠요."},{"en":"You know, I really love the calm atmosphere and the smell of coffee.","ko":"있잖아요, 저는 그 차분한 분위기랑 커피 향을 정말 좋아해요."},{"en":"Honestly, a good cafe is the perfect place to clear my head.","ko":"솔직히 좋은 카페는 머리를 비우기에 딱 좋은 장소예요."},{"en":"I also enjoy trying out new trendy cafes on the weekends.","ko":"저는 주말에 새로 뜨는 트렌디한 카페들을 찾아다니는 것도 좋아해요."},{"en":"So for me, going to cafes is more than a habit; it's how I relax.","ko":"그래서 저에게 카페 가기는 단순한 습관을 넘어서, 제가 쉬는 방식이에요."}]}};
+window.OPIC_DATA = OPIC_DATA;
 
 if(LEVEL_DATA[2]) LEVEL_DATA[2].exprs.push({"pattern":"조언하기: You should ~ / You'd better ~ / You might want to ~","ko":"~하는 게 좋아 (상대에게 조언)","desc":"상대에게 권하는 틀. 'You should ~'(~하는 게 좋아), 'You'd better ~'(안 그러면 곤란할 때 경고조), 'You might want to ~'(부드럽게 권유). 뒤엔 동사원형.","bank":[{"en":"You should get more sleep before the exam.","lit":"너는 시험 전에 잠을 더 자는 게 좋아.","free":"시험 전에 잠 좀 더 자는 게 좋아."},{"en":"You should talk to your boss about the schedule.","lit":"너는 일정에 대해 상사에게 말하는 게 좋아.","free":"일정 문제 상사한테 얘기해 보는 게 좋아."},{"en":"You should try the soup here, it's amazing.","lit":"너는 여기 수프를 먹어 보는 게 좋아, 정말 맛있어.","free":"여기 수프 한번 먹어 봐, 진짜 맛있어."},{"en":"You'd better leave now or you'll miss the train.","lit":"너는 지금 떠나는 게 좋아, 안 그러면 기차를 놓칠 거야.","free":"지금 출발해, 안 그럼 기차 놓쳐."},{"en":"You'd better not tell her about the surprise party.","lit":"너는 깜짝 파티에 대해 그녀에게 말하지 않는 게 좋아.","free":"깜짝 파티 얘기 그 애한테 하면 안 돼."},{"en":"You'd better save some money for emergencies.","lit":"너는 비상시를 위해 돈을 좀 모아두는 게 좋아.","free":"비상금은 좀 모아두는 게 좋아, 안 그럼 곤란해."},{"en":"You might want to book the hotel early this time.","lit":"너는 이번엔 호텔을 일찍 예약하는 게 좋을지도 몰라.","free":"이번엔 호텔 좀 일찍 예약하는 게 어때."},{"en":"You might want to check the weather before you head out.","lit":"너는 나가기 전에 날씨를 확인하는 게 좋을지도 몰라.","free":"나가기 전에 날씨 한번 보는 게 좋을걸."},{"en":"You might want to see a doctor about that cough.","lit":"너는 그 기침에 대해 의사를 만나보는 게 좋을지도 몰라.","free":"그 기침 병원 한번 가보는 게 좋겠어."},{"en":"You should call your mom, she's been worried.","lit":"너는 엄마에게 전화하는 게 좋아, 엄마가 걱정하고 계셔.","free":"엄마한테 전화드려, 계속 걱정하셔."}]}, {"pattern":"바람·감정: I hope ~ / I'm afraid ~ / I'm worried that ~","ko":"~하면 좋겠어 / ~할까 봐 걱정돼","desc":"내 바람과 걱정을 꺼내는 틀. 'I hope (that) 주어+동사'(~하면 좋겠다), 'I'm afraid 주어+동사'(유감/걱정), 'I'm worried that ~'(~할까 봐 걱정).","bank":[{"en":"I hope you feel better soon.","lit":"나는 네가 곧 나아지기를 바라.","free":"빨리 나았으면 좋겠다."},{"en":"I hope the weather is nice for the trip.","lit":"나는 여행 동안 날씨가 좋기를 바라.","free":"여행 가는 동안 날씨 좋았으면 좋겠어."},{"en":"I hope we can meet up again next month.","lit":"나는 우리가 다음 달에 다시 만날 수 있기를 바라.","free":"다음 달에 또 만날 수 있으면 좋겠다."},{"en":"I'm afraid I can't make it to the party tonight.","lit":"나는 오늘 밤 파티에 갈 수 없을 것 같아 유감이야.","free":"미안한데 오늘 밤 파티는 못 갈 것 같아."},{"en":"I'm afraid the store is already closed.","lit":"나는 그 가게가 이미 문을 닫았을까 봐 걱정돼.","free":"아쉽지만 그 가게 벌써 문 닫은 것 같은데."},{"en":"I'm afraid we took a wrong turn back there.","lit":"나는 우리가 아까 길을 잘못 들었을까 봐 걱정돼.","free":"아무래도 우리 아까 길 잘못 든 것 같아."},{"en":"I'm worried that he won't pass the test.","lit":"나는 그가 시험에 통과하지 못할까 봐 걱정돼.","free":"걔가 시험에 떨어질까 봐 걱정돼."},{"en":"I'm worried that we're spending too much money.","lit":"나는 우리가 돈을 너무 많이 쓰고 있을까 봐 걱정돼.","free":"우리 돈 너무 많이 쓰는 것 같아서 걱정돼."},{"en":"I'm worried that she's working too hard these days.","lit":"나는 그녀가 요즘 너무 무리하고 있을까 봐 걱정돼.","free":"걔 요즘 너무 무리하는 것 같아서 걱정돼."},{"en":"I hope this medicine helps with your headache.","lit":"나는 이 약이 네 두통에 도움이 되기를 바라.","free":"이 약이 두통에 좀 들었으면 좋겠다."}]}, {"pattern":"되묻기·확인: Sorry? / Could you say that again? / How do you say ~ in English?","ko":"다시 말해 줄래요? / ~ 영어로 뭐예요?","desc":"못 알아들었을 때 자연스럽게 다시 묻고 확인하는 표현. 회화가 막힐 때 가장 먼저 쓰는 구조.","bank":[{"en":"Sorry? I didn't catch what you said.","lit":"뭐라고요? 방금 하신 말을 못 알아들었어요.","free":"네? 방금 뭐라고 하셨죠?"},{"en":"Sorry? Could you speak a little louder?","lit":"뭐라고요? 조금 더 크게 말해 주실래요?","free":"네? 조금만 크게 말해 주실래요?"},{"en":"Could you say that again, please?","lit":"다시 한 번 말해 주실래요?","free":"다시 한 번만 말해 주실래요?"},{"en":"Could you say that again more slowly?","lit":"좀 더 천천히 다시 말해 주실래요?","free":"좀 천천히 다시 말해 주실래요?"},{"en":"How do you say 'gamsahamnida' in English?","lit":"'감사합니다'를 영어로 어떻게 말해요?","free":"'감사합니다'는 영어로 뭐예요?"},{"en":"How do you say this word in English?","lit":"이 단어를 영어로 어떻게 말해요?","free":"이 단어 영어로 뭐라고 해요?"},{"en":"Sorry, what was that again?","lit":"죄송한데, 방금 그게 뭐였죠?","free":"죄송한데, 방금 뭐라고요?"},{"en":"Could you repeat the last part?","lit":"마지막 부분을 다시 말해 주실래요?","free":"마지막 부분만 다시 말해 주실래요?"},{"en":"How do you say this dish in English?","lit":"이 음식을 영어로 어떻게 말해요?","free":"이 음식 영어로 뭐라고 해요?"},{"en":"Sorry? I'm not sure I understood that.","lit":"뭐라고요? 제가 그걸 이해했는지 잘 모르겠어요.","free":"네? 제가 잘 이해 못 한 것 같아요."}]});
 if(LEVEL_DATA[3]) LEVEL_DATA[3].exprs.push({"pattern":"What if + 주어 + 동사? (가정해서 묻기)","ko":"~하면 어떡하지? / ~하면 어때?","desc":"가정 상황을 꺼내 묻는 틀. 걱정('비 오면 어떡해?')이나 제안('지금 가면 어때?') 둘 다 된다. 뒤엔 평서문 어순.","bank":[{"en":"What if it rains during the picnic?","lit":"소풍 도중에 비가 오면 어떡하지?","free":"소풍 가는데 비 오면 어떡해?"},{"en":"What if we miss the last bus home?","lit":"우리가 집에 가는 마지막 버스를 놓치면 어떡하지?","free":"집 가는 막차 놓치면 어떡해?"},{"en":"What if the interview goes badly?","lit":"면접이 잘 안 되면 어떡하지?","free":"면접 망치면 어떡하지?"},{"en":"What if we just order pizza tonight?","lit":"우리 오늘 밤 그냥 피자를 시키면 어때?","free":"우리 오늘 그냥 피자 시키면 어때?"},{"en":"What if you take a day off this week?","lit":"네가 이번 주에 하루 쉬면 어때?","free":"너 이번 주에 하루 쉬면 어때?"},{"en":"What if I forget my lines on stage?","lit":"내가 무대에서 대사를 까먹으면 어떡하지?","free":"나 무대에서 대사 까먹으면 어떡해?"},{"en":"What if we meet at the cafe instead?","lit":"우리 대신 그 카페에서 만나면 어때?","free":"우리 그냥 카페에서 만나면 어때?"},{"en":"What if the package gets lost in the mail?","lit":"소포가 배송 중에 분실되면 어떡하지?","free":"택배가 오다가 없어지면 어떡해?"},{"en":"What if we save up and travel next year?","lit":"우리 돈을 모아서 내년에 여행 가면 어때?","free":"우리 돈 모아서 내년에 여행 가면 어때?"},{"en":"What if she doesn't like the gift?","lit":"그녀가 그 선물을 좋아하지 않으면 어떡하지?","free":"걔가 선물 안 좋아하면 어떡하지?"}]}, {"pattern":"솔직·강조 서두: To be honest ~ / In my opinion ~ / The thing is ~","ko":"솔직히 ~ / 내 생각엔 ~ / 사실은 말이야","desc":"본론을 꺼내기 전 태도를 깔아주는 서두. 'To be honest'(솔직히), 'In my opinion'(내 생각엔), 'The thing is'(사실/문제는). 뒤에 하고 싶은 문장을 붙인다.","bank":[{"en":"To be honest, I didn't really enjoy the movie.","lit":"솔직히, 나는 그 영화가 별로 재미없었어.","free":"솔직히 그 영화 별로였어."},{"en":"To be honest, I forgot all about the meeting.","lit":"솔직히, 나는 그 회의를 완전히 잊고 있었어.","free":"솔직히 그 회의 완전 까먹고 있었어."},{"en":"To be honest, the food was a little too salty.","lit":"솔직히, 음식이 조금 너무 짰어.","free":"솔직히 음식이 좀 짰어."},{"en":"In my opinion, we should leave earlier next time.","lit":"내 생각엔, 우리가 다음엔 더 일찍 출발하는 게 좋아.","free":"내 생각엔 다음엔 좀 더 일찍 나가는 게 좋아."},{"en":"In my opinion, this apartment is too expensive.","lit":"내 생각엔, 이 아파트는 너무 비싸.","free":"내 생각엔 이 집 너무 비싸."},{"en":"In my opinion, the second plan is much safer.","lit":"내 생각엔, 두 번째 계획이 훨씬 더 안전해.","free":"내 생각엔 두 번째 안이 훨씬 안전해."},{"en":"The thing is, I already promised to help my sister.","lit":"사실은, 나는 이미 여동생을 도와주기로 약속했어.","free":"사실은 내가 이미 동생 도와주기로 했거든."},{"en":"The thing is, we don't have enough time today.","lit":"문제는, 우리가 오늘 시간이 충분하지 않다는 거야.","free":"근데 문제는 오늘 시간이 부족하다는 거야."},{"en":"The thing is, I'm not very good with money.","lit":"사실은, 나는 돈 관리를 잘 못해.","free":"사실 내가 돈 관리를 좀 못해."},{"en":"To be honest, I'm a little nervous about the trip.","lit":"솔직히, 나는 그 여행에 대해 조금 긴장돼.","free":"솔직히 이번 여행 좀 긴장돼."}]});
@@ -5764,9 +5804,9 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   var ttsCache = {};      // "voice\ntext" -> objectURL (재요청 방지)
   var ttsAudio = null;    // 현재 재생 중인 Audio
   // Azure 서버 음성 요청. 실패하면 onErr(폰 기본음성 폴백).
-  function cloudSpeak(text, voice, onErr){
+  function cloudSpeak(text, voice, onErr, onEnd){
     voice = voice || ttsVoice();
-    function play(u){ try{ if(ttsAudio){ ttsAudio.pause(); } }catch(e){} ttsAudio = new Audio(u); ttsAudio.playbackRate=getTtsRate(); applyAudioGain(ttsAudio, 1.5); ttsAudio.play().catch(function(){ onErr(); }); }
+    function play(u){ try{ if(ttsAudio){ ttsAudio.pause(); } }catch(e){} ttsAudio = new Audio(u); ttsAudio.playbackRate=getTtsRate(); applyAudioGain(ttsAudio, 1.5); if(onEnd){ ttsAudio.addEventListener('ended', onEnd, {once:true}); } ttsAudio.play().catch(function(){ onErr(); }); }
     function ok(u){ TTS_CONFIG.cloudOk=true; lastTtsEngine='azure'; updateTtsBadges(); play(u); }
     var ck = voice + '\n' + text;
     if(ttsCache[ck]){ ok(ttsCache[ck]); return; }
@@ -5825,14 +5865,15 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     try{ localStorage.setItem(TTS_RATE_KEY, String(v)); }catch(e){}
     return v;
   }
-  function webSpeak(text, lang){
-    if(!('speechSynthesis' in window)) return;
+  function webSpeak(text, lang, onEnd){
+    if(!('speechSynthesis' in window)){ if(onEnd) onEnd(); return; }
     try{
       var ss=window.speechSynthesis;
       ss.cancel();
       var u = new SpeechSynthesisUtterance(text);
       u.lang = lang==='ko' ? 'ko-KR' : 'en-US';
       u.rate = lang==='ko' ? 1.0 : getTtsRate();
+      if(onEnd){ u.onend=function(){ onEnd(); }; u.onerror=function(){ onEnd(); }; }
       if(IS_ANDROID){
         // 안드로이드 크롬: cancel() 직후 speak()는 씹히거나 선택 음성 무시(기본 여성)로
         // 재생되는 버그가 있음 → 짧게 지연 후 재생 + resume()으로 멈춤 상태 해제.
@@ -5840,7 +5881,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
       } else {
         ss.speak(u);
       }
-    }catch(e){}
+    }catch(e){ if(onEnd) onEnd(); }
   }
   function speak(text, lang){
     var v = ttsVoice();
@@ -5852,6 +5893,21 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     }
     // 폰 시스템 기본('phone') 또는 한국어
     webSpeak(text, lang);
+  }
+  // 한 문장을 재생하고 끝나면 onEnd 호출 (오픽 전체듣기 순차재생용)
+  function speakLine(text, onEnd){
+    var v=ttsVoice(), done=false;
+    function fin(){ if(done) return; done=true; if(onEnd) onEnd(); }
+    if(v!=='phone' && isServerVoice(v) && ttsAvailable()){
+      try{ if('speechSynthesis' in window) window.speechSynthesis.cancel(); }catch(e){}
+      cloudSpeak(text, v, function(){ webSpeak(text,'en', fin); }, fin);
+      return;
+    }
+    webSpeak(text,'en', fin);
+  }
+  function stopSpeak(){
+    try{ if(ttsAudio){ ttsAudio.pause(); } }catch(e){}
+    try{ if('speechSynthesis' in window) window.speechSynthesis.cancel(); }catch(e){}
   }
   var SPK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a9 9 0 0 1 0 14"/></svg>';
   function spkBtn(text, cls){
@@ -6113,6 +6169,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     else if(sec==='drill'){ activePanel='drill'; }
     else if(sec==='chunks'){ activePanel='chunks'; }
     else if(sec==='core'){ activePanel='core'; }
+    else if(sec==='opic'){ activePanel='opic'; }
     else if(sec==='tutor'){ activePanel='tutor'; }
     else if(sec==='settings'){ activePanel = settingsSub; }
     switchPanel();
@@ -6120,6 +6177,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     else if(sec==='study') openLevel(curLevel);
     else if(sec==='chunks') openChunkCat(curChunkCat);
     else if(sec==='core') openCoreCat(curCoreCat);
+    else if(sec==='opic') openOpic();
     else if(sec==='tutor') openTutor();
     else if(sec==='drill') openDrill();
     else if(sec==='settings'){ if(settingsSub==='options') renderOptions(); else if(settingsSub==='stats') renderStats(); }
@@ -6222,6 +6280,7 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
     $('panel-options').classList.toggle('show', activePanel==='options');
     $('panel-chunks').classList.toggle('show', activePanel==='chunks');
     var pcore=$('panel-core'); if(pcore) pcore.classList.toggle('show', activePanel==='core');
+    var popic=$('panel-opic'); if(popic) popic.classList.toggle('show', activePanel==='opic');
     var pt=$('panel-tutor'); if(pt) pt.classList.toggle('show', activePanel==='tutor');
     var pdr=$('panel-drill'); if(pdr) pdr.classList.toggle('show', activePanel==='drill');
     // 서브탭 표시 여부
@@ -10731,6 +10790,115 @@ Object.assign(window.HL_MAP, {"조언하기: You should ~ / You'd better ~ / You
   function resetCoreMenuData(){
     clearObjInPlace(coreProgress); saveCoreProgress();
     try{ if(activePanel==='core') openCoreCat(curCoreCat); }catch(e){}
+  }
+
+  // ============================================================
+  // OPIc 스크립트 (무지성 암기) — 읽기·전체듣기·영어 가리고 암송·암기완료 체크
+  // ============================================================
+  var OPIC_DONE_KEY = 'eng_opic_done_v1';
+  var opicDone = (function(){ try{ return JSON.parse(localStorage.getItem(OPIC_DONE_KEY))||{}; }catch(e){ return {}; } })();
+  function saveOpicDone(){ try{ localStorage.setItem(OPIC_DONE_KEY, JSON.stringify(opicDone)); }catch(e){} }
+  var curOpicId = null;      // 현재 스크립트 id (null이면 목록)
+  var opicHideEn = false;    // 영어 가리기 on/off
+  var opicPlaying = false;   // 전체듣기 재생중
+  var opicPlayToken = 0;     // 재생 취소 토큰
+
+  function opicFirstId(){ for(var k in OPIC_DATA){ return k; } return null; }
+  function openOpic(){
+    opicPlaying=false; opicPlayToken++;
+    if(curOpicId==null || !OPIC_DATA[curOpicId]) curOpicId=opicFirstId();
+    renderOpic();
+  }
+  function opicStopPlay(){ opicPlaying=false; opicPlayToken++; stopSpeak(); }
+
+  function renderOpic(){
+    var wrap=$('opic-body'); if(!wrap) return;
+    opicStopPlay();
+    wrap.innerHTML='';
+
+    // 상단: 주제 선택 칩
+    var picker=document.createElement('div'); picker.className='opic-picker';
+    for(var k in OPIC_DATA){ (function(k){
+      var s=OPIC_DATA[k];
+      var b=document.createElement('button');
+      b.className='opic-chip'+(String(curOpicId)===String(k)?' on':'')+(opicDone[k]?' done':'');
+      b.textContent=(opicDone[k]?'✓ ':'')+s.topic;
+      b.addEventListener('click',function(){ curOpicId=k; opicHideEn=false; renderOpic(); });
+      picker.appendChild(b);
+    })(k); }
+    wrap.appendChild(picker);
+
+    var s=OPIC_DATA[curOpicId]; if(!s) return;
+
+    // 제목 + 진행 요약
+    var doneN=0; for(var d in opicDone){ if(opicDone[d]) doneN++; }
+    var head=document.createElement('div'); head.className='opic-head';
+    head.innerHTML='<div class="opic-title">'+escHtml(s.topic)+' <span class="opic-lv">'+escHtml(s.level||'')+'</span></div>'+
+      '<div class="opic-sub">'+escHtml(s.blurb||'')+'</div>';
+    wrap.appendChild(head);
+
+    // 컨트롤: 전체 듣기 / 영어 가리기
+    var ctrl=document.createElement('div'); ctrl.className='opic-ctrl';
+    var playBtn=document.createElement('button'); playBtn.className='opic-btn';
+    function paintPlay(){ playBtn.innerHTML = opicPlaying ? '⏹ 정지' : '▶ 전체 듣기'; }
+    paintPlay();
+    playBtn.addEventListener('click',function(){
+      if(opicPlaying){ opicStopPlay(); paintPlay(); return; }
+      opicPlaying=true; paintPlay();
+      var myToken=++opicPlayToken;
+      var lines=s.lines, i=0;
+      (function next(){
+        if(!opicPlaying || myToken!==opicPlayToken || i>=lines.length){ opicPlaying=false; paintPlay(); return; }
+        var li=i; highlightOpicLine(li);
+        speakLine(lines[li].en, function(){
+          if(myToken!==opicPlayToken) return;
+          i++; setTimeout(next, 350);
+        });
+      })();
+    });
+    var hideBtn=document.createElement('button'); hideBtn.className='opic-btn'+(opicHideEn?' on':'');
+    function paintHide(){ hideBtn.innerHTML = opicHideEn ? '👁 영어 보이기' : '🙈 영어 가리기'; hideBtn.classList.toggle('on', opicHideEn); }
+    paintHide();
+    hideBtn.addEventListener('click',function(){ opicHideEn=!opicHideEn; renderOpic(); });
+    ctrl.appendChild(playBtn); ctrl.appendChild(hideBtn);
+    wrap.appendChild(ctrl);
+
+    // 스크립트 본문 (문장별)
+    var list=document.createElement('div'); list.className='opic-lines';
+    s.lines.forEach(function(ln, idx){
+      var row=document.createElement('div'); row.className='opic-line'; row.setAttribute('data-i', idx);
+      var en=document.createElement('div'); en.className='opic-en'+(opicHideEn?' hidden':'');
+      en.textContent=ln.en;
+      // 가린 상태에서 탭하면 그 줄만 잠깐 보여주기(살짝 보기)
+      if(opicHideEn){
+        en.addEventListener('click',function(ev){ ev.stopPropagation(); en.classList.toggle('hidden'); });
+      }
+      var ko=document.createElement('div'); ko.className='opic-ko'; ko.textContent=ln.ko;
+      var spk=spkBtn(ln.en,'small'); spk.classList.add('opic-spk');
+      var top=document.createElement('div'); top.className='opic-en-row';
+      top.appendChild(en); top.appendChild(spk);
+      row.appendChild(top); row.appendChild(ko);
+      list.appendChild(row);
+    });
+    wrap.appendChild(list);
+
+    // 암기완료 토글
+    var doneBox=document.createElement('div'); doneBox.className='opic-donebox';
+    var db=document.createElement('button'); db.className='opic-done-btn'+(opicDone[curOpicId]?' on':'');
+    db.textContent = opicDone[curOpicId] ? '✓ 암기완료 (해제하려면 탭)' : '이 스크립트 암기완료로 표시';
+    db.addEventListener('click',function(){
+      opicDone[curOpicId] = !opicDone[curOpicId];
+      if(!opicDone[curOpicId]) delete opicDone[curOpicId];
+      saveOpicDone(); renderOpic();
+    });
+    doneBox.appendChild(db); wrap.appendChild(doneBox);
+  }
+  function highlightOpicLine(i){
+    var wrap=$('opic-body'); if(!wrap) return;
+    var rows=wrap.querySelectorAll('.opic-line');
+    for(var k=0;k<rows.length;k++){ rows[k].classList.toggle('playing', String(rows[k].getAttribute('data-i'))===String(i)); }
+    var cur=wrap.querySelector('.opic-line.playing');
+    if(cur && cur.scrollIntoView){ try{ cur.scrollIntoView({block:'center', behavior:'smooth'}); }catch(e){} }
   }
 
   function renderExportImport(wrap){
